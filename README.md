@@ -23,11 +23,26 @@ Le cache est de 5 minutes ; le bouton « Recharger les données » force la rele
 
 ## Fonctionnalités
 
-- Carte Folium avec clustering, marqueurs colorés par catégorie, fond satellite optionnel
+- Carte Folium avec clustering, marqueurs colorés par catégorie, fonds
+  interchangeables (plan clair par défaut, plan détaillé, satellite)
 - Popup par établissement + lien direct vers Google Maps
 - Filtres : province/ville, catégorie, recherche par nom
 - Tableau détaillé + export CSV de la sélection
 - Section dédiée aux lignes dont les coordonnées ne sont pas exploitables
+
+## Design
+
+Le thème (couleurs, polices, rayons, bordures, style des tableaux) est défini
+dans `.streamlit/config.toml` ; `app.py` n'ajoute que les quelques règles CSS
+que le thème n'expose pas (en-tête, légende, cartes d'indicateurs).
+
+Conventions :
+
+- **aucun emoji** dans l'interface — les icônes viennent de Material Symbols
+  (`:material/...` côté Streamlit) et de Font Awesome 6 (marqueurs de la carte) ;
+- la couleur n'est jamais la seule information : chaque catégorie de la légende
+  porte son libellé, et chaque marqueur une icône distincte ;
+- une sélection de filtre vide équivaut à « tout afficher ».
 
 ## Structure attendue du Sheet
 
