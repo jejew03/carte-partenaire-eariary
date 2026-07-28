@@ -1,0 +1,32 @@
+[theme]
+base = "light"
+
+primaryColor = "#1E40AF"
+backgroundColor = "#FFFFFF"
+secondaryBackgroundColor = "#F8FAFC"
+textColor = "#0F172A"
+linkColor = "#1E40AF"
+linkUnderline = false
+
+borderColor = "#E2E8F0"
+dataframeBorderColor = "#E2E8F0"
+dataframeHeaderBackgroundColor = "#F1F5F9"
+showWidgetBorder = true
+showSidebarBorder = true
+
+baseRadius = "0.5rem"
+buttonRadius = "0.5rem"
+
+font = "Inter"
+headingFont = "Inter"
+codeFont = "Source Code Pro"
+baseFontSize = 15
+headingFontSizes = ["1.75rem", "1.25rem", "1.05rem", "0.95rem", "0.9rem", "0.85rem"]
+headingFontWeights = [700, 650, 600, 600, 600, 600]
+metricValueFontSize = "2rem"
+metricValueFontWeight = 650
+
+[theme.sidebar]
+backgroundColor = "#F8FAFC"
+secondaryBackgroundColor = "#FFFFFF"
+borderColor = "#E2E8F0"

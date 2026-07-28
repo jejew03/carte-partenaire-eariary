@@ -8,6 +8,7 @@ Lancement :  streamlit run app.py
 
 import io
 import re
+import unicodedata
 
 import pandas as pd
 import streamlit as st
@@ -20,17 +21,27 @@ SHEET_ID = "1D15egjrBB_9eNCXC-THxZcSqvNtf7ttfssdcVDRu8Yo"
 GID = "0"
 CSV_URL = f"https://docs.google.com/spreadsheets/d/{SHEET_ID}/export?format=csv&gid={GID}"
 
-# Couleurs Folium disponibles : red, blue, green, purple, orange, darkred,
-# lightred, beige, darkblue, darkgreen, cadetblue, darkpurple, pink, gray, black
+# Chaque catégorie : (couleur du marqueur Folium, icône Font Awesome 6, teinte
+# exacte du marqueur). La teinte sert à la légende, pour qu'elle corresponde
+# visuellement aux marqueurs de leaflet-awesome-markers.
 CATEGORY_STYLE = {
-    "Restaurant": ("red", "cutlery"),
-    "Hôtel": ("blue", "bed"),
-    "Boutique": ("green", "shopping-bag"),
-    "Épicerie": ("orange", "shopping-basket"),
-    "Magasin": ("purple", "shopping-cart"),
-    "Supermarché": ("darkred", "shopping-cart"),
+    "Restaurant": ("red", "utensils", "#D63E2A"),
+    "Hôtel": ("darkblue", "bed", "#0067A3"),
+    "Boutique": ("green", "bag-shopping", "#72B026"),
+    "Épicerie": ("orange", "basket-shopping", "#F69730"),
+    "Magasin": ("purple", "store", "#D252B9"),
+    "Supermarché": ("cadetblue", "cart-shopping", "#436978"),
 }
-DEFAULT_STYLE = ("gray", "map-marker")
+DEFAULT_STYLE = ("gray", "location-dot", "#575757")
+
+# Font Awesome 6 ne rattache la police qu'aux classes .fas / .fa-solid, alors que
+# leaflet-awesome-markers n'émet que .fa : sans ce correctif les marqueurs
+# affichent un carré vide à la place de l'icône.
+MAP_ICON_FIX = """
+<style>
+  .awesome-marker i.fa { font-family: "Font Awesome 6 Free"; font-weight: 900; }
+</style>
+"""
 
 # Copie de secours des données (au cas où le Sheet ne serait pas public)
 FALLBACK_CSV = """Province,Nom de l'établissement,Catégorie,Latitude / longitude
@@ -88,6 +99,15 @@ def normalize_header(raw: pd.DataFrame) -> pd.DataFrame:
     df = raw.iloc[header_row + 1 :].copy()
     df.columns = [str(c).strip() for c in raw.iloc[header_row].tolist()]
     return df
+
+
+def sort_fr(values):
+    """Tri alphabétique insensible aux accents : « Épicerie » suit « Boutique »."""
+    def key(value):
+        text = unicodedata.normalize("NFKD", str(value))
+        return "".join(c for c in text if not unicodedata.combining(c)).lower()
+
+    return sorted(values, key=key)
 
 
 def find_col(df, *keywords):
@@ -151,31 +171,162 @@ def load_data():
 # Interface
 # --------------------------------------------------------------------------- #
 
-st.set_page_config(page_title="Carte des établissements", page_icon="📍", layout="wide")
+st.set_page_config(
+    page_title="Carte des établissements — Madagascar",
+    page_icon=":material/location_on:",
+    layout="wide",
+    initial_sidebar_state="expanded",
+)
 
-st.title("📍 Carte des établissements — Madagascar")
+# Retouches ciblées : Streamlit gère déjà couleurs, polices et rayons via
+# .streamlit/config.toml — on ne complète ici que ce que le thème n'expose pas.
+st.html(
+    """
+    <style>
+      /* Respiration verticale et largeur de lecture confortable */
+      [data-testid="stMainBlockContainer"] { padding-top: 4.5rem; max-width: 1400px; }
+
+      /* En-tête de page */
+      .page-header { margin-bottom: .25rem; }
+      .page-header h1 {
+        font-size: 1.9rem; font-weight: 700; letter-spacing: -.02em;
+        margin: 0; color: #0F172A;
+      }
+      .page-header p {
+        margin: .35rem 0 0; color: #475569; font-size: .95rem; max-width: 65ch;
+      }
+
+      /* Pastille de provenance des données */
+      .source-badge {
+        display: inline-flex; align-items: center; gap: .45rem;
+        padding: .3rem .7rem; border-radius: 999px;
+        border: 1px solid #E2E8F0; background: #F8FAFC;
+        font-size: .8rem; color: #334155; white-space: nowrap;
+      }
+      .source-badge .dot {
+        width: .5rem; height: .5rem; border-radius: 50%; flex: none;
+      }
+      .dot-live { background: #16A34A; }
+      .dot-fallback { background: #D97706; }
+
+      /* Cartes d'indicateurs : chiffres alignés, libellés discrets */
+      [data-testid="stMetric"] {
+        padding: 1rem 1.15rem; background: #FFFFFF;
+        transition: border-color .18s ease, box-shadow .18s ease;
+      }
+      [data-testid="stMetric"]:hover {
+        border-color: #CBD5E1; box-shadow: 0 1px 3px rgb(15 23 42 / .07);
+      }
+      [data-testid="stMetricValue"] {
+        font-variant-numeric: tabular-nums; letter-spacing: -.02em;
+      }
+      [data-testid="stMetricLabel"] p {
+        font-size: .8rem; font-weight: 500; color: #64748B;
+        text-transform: uppercase; letter-spacing: .04em;
+      }
+
+      /* Légende de la carte */
+      .legend { display: flex; flex-wrap: wrap; gap: .45rem; margin: .85rem 0 .25rem; }
+      .legend-item {
+        display: inline-flex; align-items: center; gap: .45rem;
+        padding: .32rem .7rem; border-radius: 999px;
+        border: 1px solid #E2E8F0; background: #FFFFFF;
+        font-size: .82rem; color: #334155;
+      }
+      .legend-item .swatch {
+        width: .6rem; height: .6rem; border-radius: 50%; flex: none;
+      }
+
+      /* Titres de section plus calmes que le titre de page */
+      .section-title {
+        font-size: 1.05rem; font-weight: 600; color: #0F172A;
+        margin: 2rem 0 .2rem;
+      }
+      .section-title + .section-sub {
+        margin: 0 0 .75rem; color: #64748B; font-size: .875rem;
+      }
+
+      /* La carte Folium adopte le rayon et la bordure du reste de l'UI */
+      iframe[title="streamlit_folium.st_folium"] {
+        border: 1px solid #E2E8F0; border-radius: .5rem;
+      }
+
+      @media (max-width: 640px) {
+        [data-testid="stMainBlockContainer"] { padding-top: 3.5rem; }
+        .page-header h1 { font-size: 1.5rem; }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        [data-testid="stMetric"] { transition: none; }
+      }
+    </style>
+    """
+)
 
 data, source = load_data()
-located = data.dropna(subset=["lat", "lon"])
 unlocated = data[data["lat"].isna()]
+is_live = source.startswith("Google Sheet")
+
+head_left, head_right = st.columns([3, 1], vertical_alignment="center")
+with head_left:
+    st.html(
+        """
+        <div class="page-header">
+          <h1>Carte des établissements</h1>
+          <p>Réseau de partenaires à Madagascar — filtrez par ville, catégorie
+             ou nom, puis explorez la carte ou exportez la sélection.</p>
+        </div>
+        """
+    )
+with head_right:
+    st.html(
+        f"""
+        <div style="text-align:right">
+          <span class="source-badge">
+            <span class="dot {'dot-live' if is_live else 'dot-fallback'}"></span>
+            {source}
+          </span>
+        </div>
+        """
+    )
 
 # ------------------------------- Filtres ---------------------------------- #
 with st.sidebar:
-    st.header("Filtres")
+    st.subheader("Filtres")
 
-    provinces = sorted(data["Province"].unique())
-    sel_prov = st.multiselect("Province / ville", provinces, default=provinces,
-                              placeholder="Toutes les villes")
+    # Par défaut aucune puce n'est sélectionnée : le panneau reste lisible et
+    # une sélection vide affiche déjà l'ensemble des données.
+    provinces = sort_fr(data["Province"].unique())
+    sel_prov = st.multiselect(
+        "Province / ville",
+        provinces,
+        default=[],
+        placeholder="Toutes les villes",
+        help="Aucune sélection équivaut à toutes les villes.",
+    )
 
-    categories = sorted(data["Catégorie"].unique())
-    sel_cat = st.multiselect("Catégorie", categories, default=categories,
-                             placeholder="Toutes les catégories")
+    categories = sort_fr(data["Catégorie"].unique())
+    sel_cat = st.multiselect(
+        "Catégorie",
+        categories,
+        default=[],
+        placeholder="Toutes les catégories",
+        help="Aucune sélection équivaut à toutes les catégories.",
+    )
 
-    query = st.text_input("Recherche par nom", "").strip().lower()
+    query = st.text_input(
+        "Recherche par nom",
+        "",
+        placeholder="Nom de l'établissement",
+    ).strip().lower()
 
     st.divider()
-    st.caption(f"Source : {source}")
-    if st.button("🔄 Recharger les données"):
+    st.caption(f"Source des données : {source}")
+    if st.button(
+        "Recharger les données",
+        icon=":material/refresh:",
+        width="stretch",
+        help="Vide le cache (5 min) et relit le Google Sheet.",
+    ):
         st.cache_data.clear()
         st.rerun()
 
@@ -193,11 +344,11 @@ filtered = data[mask]
 filtered_located = filtered.dropna(subset=["lat", "lon"])
 
 # ------------------------------- Indicateurs ------------------------------- #
-c1, c2, c3, c4 = st.columns(4)
-c1.metric("Établissements affichés", len(filtered))
-c2.metric("Géolocalisés", len(filtered_located))
-c3.metric("Sans coordonnées", len(filtered) - len(filtered_located))
-c4.metric("Provinces / villes", filtered["Province"].nunique())
+c1, c2, c3, c4 = st.columns(4, gap="medium")
+c1.metric("Établissements", len(filtered), border=True)
+c2.metric("Géolocalisés", len(filtered_located), border=True)
+c3.metric("Sans coordonnées", len(filtered) - len(filtered_located), border=True)
+c4.metric("Villes couvertes", filtered["Province"].nunique(), border=True)
 
 # --------------------------------- Carte ----------------------------------- #
 try:
@@ -210,29 +361,71 @@ except ImportError:
     HAS_FOLIUM = False
 
 if filtered_located.empty:
-    st.warning("Aucun établissement géolocalisé ne correspond aux filtres.")
+    st.html('<div class="section-title">Carte</div>')
+    st.info(
+        "Aucun établissement géolocalisé ne correspond aux filtres. "
+        "Élargissez la sélection dans le panneau latéral pour afficher la carte.",
+        icon=":material/filter_alt_off:",
+    )
 elif HAS_FOLIUM:
-    center = [filtered_located["lat"].mean(), filtered_located["lon"].mean()]
-    fmap = folium.Map(location=center, zoom_start=6, tiles="OpenStreetMap")
+    st.html(
+        '<div class="section-title">Carte</div>'
+        f'<div class="section-sub">{len(filtered_located)} établissement(s) '
+        "positionné(s). Cliquez un marqueur pour le détail.</div>"
+    )
 
+    # Légende avant la carte : lisible sans faire défiler, et chaque catégorie
+    # porte son libellé — la couleur n'est jamais la seule information.
+    legend_items = "".join(
+        f'<span class="legend-item">'
+        f'<span class="swatch" style="background:{CATEGORY_STYLE.get(c, DEFAULT_STYLE)[2]}"></span>'
+        f"{c}</span>"
+        for c in sort_fr(filtered_located["Catégorie"].unique())
+    )
+    st.html(f'<div class="legend">{legend_items}</div>')
+
+    center = [filtered_located["lat"].mean(), filtered_located["lon"].mean()]
+    fmap = folium.Map(location=center, zoom_start=6, tiles=None, control_scale=True)
+    fmap.get_root().header.add_child(folium.Element(MAP_ICON_FIX))
+
+    # Fond clair par défaut : les marqueurs colorés priment sur le décor.
+    # show=False sur les autres, sinon le dernier fond ajouté s'affiche par-dessus.
+    folium.TileLayer("CartoDB positron", name="Plan clair").add_to(fmap)
+    folium.TileLayer("OpenStreetMap", name="Plan détaillé", show=False).add_to(fmap)
     folium.TileLayer(
         tiles="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
         attr="Esri",
         name="Satellite",
+        show=False,
     ).add_to(fmap)
 
     cluster = MarkerCluster(name="Établissements").add_to(fmap)
 
     for _, row in filtered_located.iterrows():
-        color, icon = CATEGORY_STYLE.get(row["Catégorie"], DEFAULT_STYLE)
+        color, icon, hexcolor = CATEGORY_STYLE.get(row["Catégorie"], DEFAULT_STYLE)
         popup_html = f"""
-            <div style="font-family:sans-serif;min-width:200px">
-              <b style="font-size:14px">{row['Établissement']}</b><br>
-              <span style="color:#666">{row['Catégorie']}</span><br>
-              📍 {row['Province']}<br>
-              <code style="font-size:11px">{row['lat']:.6f}, {row['lon']:.6f}</code><br>
+            <div style="font-family:Inter,system-ui,sans-serif;min-width:224px;color:#0F172A">
+              <div style="font-size:14px;font-weight:600;line-height:1.35">
+                {row['Établissement']}
+              </div>
+              <div style="display:inline-flex;align-items:center;gap:6px;margin:6px 0 8px;
+                          padding:2px 8px;border-radius:999px;background:#F1F5F9;
+                          font-size:11px;color:#334155">
+                <span style="width:7px;height:7px;border-radius:50%;background:{hexcolor}"></span>
+                {row['Catégorie']}
+              </div>
+              <div style="font-size:12px;color:#475569">{row['Province']}</div>
+              <div style="font-family:'Source Code Pro',monospace;font-size:11px;
+                          color:#64748B;margin-top:2px">
+                {row['lat']:.6f}, {row['lon']:.6f}
+              </div>
               <a href="https://www.google.com/maps?q={row['lat']},{row['lon']}"
-                 target="_blank">Ouvrir dans Google Maps ↗</a>
+                 target="_blank" rel="noopener"
+                 style="display:inline-block;margin-top:10px;padding:6px 12px;
+                        background:#1E40AF;color:#FFFFFF;border-radius:6px;
+                        font-size:12px;font-weight:500;text-decoration:none">
+                Ouvrir dans Google Maps
+              </a>
             </div>
         """
         folium.Marker(
@@ -245,42 +438,61 @@ elif HAS_FOLIUM:
     if len(filtered_located) > 1:
         fmap.fit_bounds(filtered_located[["lat", "lon"]].values.tolist(), padding=(30, 30))
 
-    folium.LayerControl().add_to(fmap)
-    st_folium(fmap, use_container_width=True, height=600, returned_objects=[])
-
-    # Légende
-    legend = " &nbsp;•&nbsp; ".join(
-        f"<span style='color:{CATEGORY_STYLE.get(c, DEFAULT_STYLE)[0]}'>●</span> {c}"
-        for c in sorted(filtered_located["Catégorie"].unique())
-    )
-    st.markdown(f"<div style='font-size:13px'>{legend}</div>", unsafe_allow_html=True)
+    folium.LayerControl(collapsed=True).add_to(fmap)
+    st_folium(fmap, use_container_width=True, height=580, returned_objects=[])
 else:
-    st.info("Installez `folium` et `streamlit-folium` pour la carte détaillée.")
+    st.info(
+        "Installez `folium` et `streamlit-folium` pour la carte détaillée.",
+        icon=":material/info:",
+    )
     st.map(filtered_located[["lat", "lon"]], size=200)
 
 # --------------------------------- Tableau --------------------------------- #
-st.subheader("Détail des établissements")
-st.dataframe(
-    filtered[["Province", "Établissement", "Catégorie", "lat", "lon"]],
-    use_container_width=True,
-    hide_index=True,
-    column_config={
-        "lat": st.column_config.NumberColumn("Latitude", format="%.6f"),
-        "lon": st.column_config.NumberColumn("Longitude", format="%.6f"),
-    },
+st.html(
+    '<div class="section-title">Détail des établissements</div>'
+    f'<div class="section-sub">{len(filtered)} ligne(s) — cliquez un en-tête '
+    "pour trier.</div>"
 )
 
-st.download_button(
-    "⬇️ Exporter la sélection (CSV)",
-    filtered.to_csv(index=False).encode("utf-8-sig"),
-    file_name="etablissements.csv",
-    mime="text/csv",
-)
+if filtered.empty:
+    st.info(
+        "Aucun établissement ne correspond aux filtres actuels.",
+        icon=":material/search_off:",
+    )
+else:
+    st.dataframe(
+        filtered[["Province", "Établissement", "Catégorie", "lat", "lon"]],
+        width="stretch",
+        hide_index=True,
+        column_config={
+            "Province": st.column_config.TextColumn("Province / ville", width="medium"),
+            "Établissement": st.column_config.TextColumn("Établissement", width="large"),
+            "Catégorie": st.column_config.TextColumn("Catégorie", width="small"),
+            "lat": st.column_config.NumberColumn("Latitude", format="%.6f"),
+            "lon": st.column_config.NumberColumn("Longitude", format="%.6f"),
+        },
+    )
+
+    st.download_button(
+        "Exporter la sélection (CSV)",
+        filtered.to_csv(index=False).encode("utf-8-sig"),
+        file_name="etablissements.csv",
+        mime="text/csv",
+        icon=":material/download:",
+    )
 
 if not unlocated.empty:
-    with st.expander(f"⚠️ {len(unlocated)} établissement(s) sans coordonnées exploitables"):
+    with st.expander(
+        f"{len(unlocated)} établissement(s) sans coordonnées exploitables",
+        icon=":material/wrong_location:",
+    ):
+        st.caption(
+            "Ces lignes n'apparaissent pas sur la carte : la cellule de "
+            "coordonnées du Sheet n'est pas au format « latitude, longitude »."
+        )
         st.dataframe(
             unlocated[["Province", "Établissement", "Catégorie", "Coordonnées brutes"]],
-            use_container_width=True,
+            width="stretch",
             hide_index=True,
         )
+        
