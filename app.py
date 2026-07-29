@@ -3,12 +3,17 @@ Carte des établissements — Madagascar
 Lit les données depuis un Google Sheet public (export CSV) avec repli
 sur une copie locale embarquée si le réseau ou le partage n'est pas disponible.
 
+Superpose les pré-souscripteurs eAriary (fichier Excel local), agrégés par
+localité : le fichier ne contient que des adresses textuelles, géocodées une
+fois pour toutes par `tools/geocode_souscripteurs.py`.
+
 Lancement :  streamlit run app.py
 """
 
 import io
 import re
 import unicodedata
+from pathlib import Path
 
 import pandas as pd
 import streamlit as st
@@ -33,6 +38,26 @@ CATEGORY_STYLE = {
     "Supermarché": ("cadetblue", "cart-shopping", "#436978"),
 }
 DEFAULT_STYLE = ("gray", "location-dot", "#575757")
+
+# Pré-souscripteurs eAriary : fichier local + cache de géocodage des adresses.
+BASE_DIR = Path(__file__).resolve().parent
+SUBSCRIBERS_XLSX = BASE_DIR / "Stat_Inscription_eAr_10072026_final.xlsx"
+GEOCODE_CACHE = BASE_DIR / "data" / "adresses_geocodees.csv"
+SUBSCRIBERS_AGGREGATE = BASE_DIR / "data" / "pre_souscripteurs_agreges.csv"
+
+# Un seul ton pour la couche pré-souscripteurs : c'est la taille du cercle qui
+# porte l'information (nombre d'inscrits), pas la couleur.
+SUBSCRIBER_COLOR = "#4F46E5"
+ACCOUNT_ORDER = ["Particulier", "Marchand", "Épicerie", "Grande Entreprise"]
+
+# Le champ « Adresse » du fichier d'inscription contient parfois une adresse
+# e-mail. Même règle que `tools/geocode_souscripteurs.py` : sans valeur
+# géographique, et affichée telle quelle elle identifierait une personne.
+EMAIL_LIKE = re.compile(
+    r"@|(?:gmail|yahoo|hotmail|outlook|orange|moov|telma|esemahay)\.?(?:com|fr|mg)",
+    re.IGNORECASE,
+)
+UNKNOWN_ADDRESS = "Adresse non renseignée"
 
 # Font Awesome 6 ne rattache la police qu'aux classes .fas / .fa-solid, alors que
 # leaflet-awesome-markers n'émet que .fa : sans ce correctif les marqueurs
@@ -168,6 +193,140 @@ def load_data():
 
 
 # --------------------------------------------------------------------------- #
+# Pré-souscripteurs eAriary
+# --------------------------------------------------------------------------- #
+
+def split_address(address):
+    """Découpe « Anosibe, Antananarivo, Analamanga, Madagascar ».
+
+    Retourne (localité, ville, région), du plus fin au plus large. Le dernier
+    segment est le pays, l'avant-dernier la région — mais une adresse saisie
+    sans virgule (« Ambondrona ») n'est qu'une localité : lui attribuer une
+    région gonflerait le décompte des régions couvertes.
+    """
+    parts = [p.strip() for p in str(address).split(",") if p.strip()]
+    structured = len(parts) > 1
+    if structured and parts[-1].lower().startswith("madagas"):
+        parts = parts[:-1]
+    if not parts:
+        return "Non renseignée", "Non renseignée", "Non renseignée"
+
+    locality = parts[0]
+    region = parts[-1] if structured else "Non renseignée"
+    city = parts[-2] if len(parts) >= 2 else parts[0]
+    return locality, city, region
+
+
+@st.cache_data(ttl=300, show_spinner=False)
+def load_subscribers():
+    """Charge le fichier Excel des pré-souscripteurs et y joint les coordonnées.
+
+    Retourne (DataFrame, message d'anomalie ou None). Le DataFrame est vide si
+    le fichier est absent : l'application reste utilisable sans lui.
+    """
+    if SUBSCRIBERS_XLSX.exists():
+        try:
+            raw = pd.read_excel(SUBSCRIBERS_XLSX, dtype=str)
+        except Exception as exc:
+            return pd.DataFrame(), f"Lecture impossible du fichier Excel ({exc})"
+    elif SUBSCRIBERS_AGGREGATE.exists():
+        # Repli sans donnée personnelle : chaque effectif est redéployé en
+        # lignes individuelles pour que la suite du traitement soit identique.
+        agg = pd.read_csv(SUBSCRIBERS_AGGREGATE, dtype=str)
+        agg["Inscrits"] = pd.to_numeric(agg["Inscrits"], errors="coerce").fillna(0)
+        raw = agg.loc[agg.index.repeat(agg["Inscrits"].astype(int))].drop(
+            columns="Inscrits"
+        )
+    else:
+        return pd.DataFrame(), (
+            f"Pré-souscripteurs indisponibles : ni {SUBSCRIBERS_XLSX.name} ni "
+            f"{SUBSCRIBERS_AGGREGATE.name} n'est présent."
+        )
+
+    # Index remis à plat : le repli agrégé duplique les libellés d'index.
+    raw = raw.reset_index(drop=True)
+    col_addr = find_col(raw, "adresse", "address") or raw.columns[0]
+    col_type = find_col(raw, "account", "compte", "type") or raw.columns[-1]
+
+    df = pd.DataFrame({"Adresse": raw[col_addr].astype(str).str.strip()})
+    df = df[df["Adresse"].str.len() > 0]
+    df = df[~df["Adresse"].str.lower().isin(["nan", "none"])]
+    df["Adresse"] = df["Adresse"].mask(
+        df["Adresse"].str.contains(EMAIL_LIKE), UNKNOWN_ADDRESS
+    )
+
+    account = raw.loc[df.index, col_type].astype(str).str.strip()
+    account = account.replace({"Epicerie": "Épicerie", "Epicerie ": "Épicerie"})
+    # Le fichier source contient quelques valeurs parasites (une adresse e-mail
+    # dans la colonne « Account ») : tout ce qui sort du référentiel est neutralisé.
+    df["Type de compte"] = account.where(account.isin(ACCOUNT_ORDER), "Non renseigné")
+
+    parts = df["Adresse"].apply(split_address)
+    df["Localité"] = [p[0] for p in parts]
+    df["Ville"] = [p[1] for p in parts]
+    df["Région"] = [p[2] for p in parts]
+
+    warning = None
+    if GEOCODE_CACHE.exists():
+        geo = pd.read_csv(GEOCODE_CACHE, dtype=str)
+        geo["lat"] = pd.to_numeric(geo["lat"], errors="coerce")
+        geo["lon"] = pd.to_numeric(geo["lon"], errors="coerce")
+        df = df.merge(
+            geo[["Adresse", "lat", "lon", "precision"]], on="Adresse", how="left"
+        )
+        # Une adresse absente du cache est une adresse jamais résolue : sans ce
+        # comblement, elle disparaîtrait du tableau des lignes non localisées,
+        # qui regroupe par motif.
+        df["precision"] = df["precision"].fillna("introuvable")
+    else:
+        df["lat"] = pd.NA
+        df["lon"] = pd.NA
+        df["precision"] = "introuvable"
+        warning = (
+            "Coordonnées des pré-souscripteurs indisponibles : lancez "
+            "`python tools/geocode_souscripteurs.py` pour générer "
+            f"`{GEOCODE_CACHE.relative_to(BASE_DIR)}`."
+        )
+
+    return df.reset_index(drop=True), warning
+
+
+def aggregate_subscribers(df):
+    """Regroupe les pré-souscripteurs par localité géolocalisée.
+
+    Une ligne par point de la carte, avec le total et le détail par type de
+    compte — aucune donnée nominative n'est conservée.
+    """
+    located = df.dropna(subset=["lat", "lon"])
+    if located.empty:
+        return pd.DataFrame(
+            columns=["Localité", "Ville", "Région", "Inscrits", "lat", "lon", "Détail"]
+        )
+
+    counts = (
+        located.groupby(["Adresse", "Localité", "Ville", "Région", "lat", "lon"])
+        .size()
+        .reset_index(name="Inscrits")
+    )
+    by_type = (
+        located.groupby(["Adresse", "Type de compte"]).size().unstack(fill_value=0)
+    )
+    for account in ACCOUNT_ORDER + ["Non renseigné"]:
+        if account not in by_type.columns:
+            by_type[account] = 0
+    by_type = by_type[ACCOUNT_ORDER + ["Non renseigné"]].reset_index()
+
+    out = counts.merge(by_type, on="Adresse")
+    out["Détail"] = out.apply(
+        lambda r: " · ".join(
+            f"{a} {int(r[a])}" for a in ACCOUNT_ORDER + ["Non renseigné"] if r[a]
+        ),
+        axis=1,
+    )
+    return out.sort_values("Inscrits", ascending=False).reset_index(drop=True)
+
+
+# --------------------------------------------------------------------------- #
 # Interface
 # --------------------------------------------------------------------------- #
 
@@ -266,6 +425,9 @@ data, source = load_data()
 unlocated = data[data["lat"].isna()]
 is_live = source.startswith("Google Sheet")
 
+subscribers, sub_warning = load_subscribers()
+has_subscribers = not subscribers.empty
+
 head_left, head_right = st.columns([3, 1], vertical_alignment="center")
 with head_left:
     st.html(
@@ -319,6 +481,46 @@ with st.sidebar:
         placeholder="Nom de l'établissement",
     ).strip().lower()
 
+    if has_subscribers:
+        st.divider()
+        st.subheader("Pré-souscripteurs eAriary")
+        show_subs = st.toggle(
+            "Afficher sur la carte",
+            value=True,
+            help="Cercles proportionnels au nombre d'inscrits par localité.",
+        )
+
+        sub_regions = sort_fr(subscribers["Région"].unique())
+        sel_sub_reg = st.multiselect(
+            "Région",
+            sub_regions,
+            default=[],
+            placeholder="Toutes les régions",
+            help="Aucune sélection équivaut à toutes les régions.",
+        )
+
+        sub_types = [t for t in ACCOUNT_ORDER + ["Non renseigné"]
+                     if t in set(subscribers["Type de compte"])]
+        sel_sub_type = st.multiselect(
+            "Type de compte",
+            sub_types,
+            default=[],
+            placeholder="Tous les types",
+            help="Aucune sélection équivaut à tous les types.",
+        )
+
+        n_uncertain = int((subscribers["precision"] == "incertaine").sum())
+        include_uncertain = st.checkbox(
+            f"Inclure les adresses incertaines ({n_uncertain})",
+            value=False,
+            help="Adresses saisies sans ville ni région : le géocodeur renvoie "
+                 "toujours un point à Madagascar, sans garantie qu'il soit le bon.",
+            disabled=n_uncertain == 0,
+        )
+    else:
+        show_subs, sel_sub_reg, sel_sub_type = False, [], []
+        include_uncertain = False
+
     st.divider()
     st.caption(f"Source des données : {source}")
     if st.button(
@@ -343,12 +545,38 @@ if query:
 filtered = data[mask]
 filtered_located = filtered.dropna(subset=["lat", "lon"])
 
+if has_subscribers:
+    sub_mask = pd.Series(True, index=subscribers.index)
+    if sel_sub_reg:
+        sub_mask &= subscribers["Région"].isin(sel_sub_reg)
+    if sel_sub_type:
+        sub_mask &= subscribers["Type de compte"].isin(sel_sub_type)
+    subs_filtered = subscribers[sub_mask].copy()
+    # Écartées de la carte comme des lignes non localisées : leur point existe
+    # mais ne veut rien dire tant que l'adresse n'a pas été précisée.
+    if not include_uncertain:
+        drop = subs_filtered["precision"] == "incertaine"
+        subs_filtered.loc[drop, ["lat", "lon"]] = pd.NA
+else:
+    subs_filtered = subscribers
+subs_points = aggregate_subscribers(subs_filtered)
+
 # ------------------------------- Indicateurs ------------------------------- #
 c1, c2, c3, c4 = st.columns(4, gap="medium")
 c1.metric("Établissements", len(filtered), border=True)
 c2.metric("Géolocalisés", len(filtered_located), border=True)
 c3.metric("Sans coordonnées", len(filtered) - len(filtered_located), border=True)
 c4.metric("Villes couvertes", filtered["Province"].nunique(), border=True)
+
+if has_subscribers:
+    s1, s2, s3, s4 = st.columns(4, gap="medium")
+    s1.metric("Pré-souscripteurs", len(subs_filtered), border=True)
+    s2.metric("Positionnés", int(subs_points["Inscrits"].sum()), border=True)
+    s3.metric("Localités", len(subs_points), border=True)
+    s4.metric("Régions couvertes", subs_filtered["Région"].nunique(), border=True)
+
+if sub_warning:
+    st.warning(sub_warning, icon=":material/warning:")
 
 # --------------------------------- Carte ----------------------------------- #
 try:
@@ -360,18 +588,27 @@ try:
 except ImportError:
     HAS_FOLIUM = False
 
-if filtered_located.empty:
+draw_subs = bool(show_subs) and not subs_points.empty
+map_empty = filtered_located.empty and not draw_subs
+
+if map_empty:
     st.html('<div class="section-title">Carte</div>')
     st.info(
-        "Aucun établissement géolocalisé ne correspond aux filtres. "
+        "Aucun point à afficher avec les filtres actuels. "
         "Élargissez la sélection dans le panneau latéral pour afficher la carte.",
         icon=":material/filter_alt_off:",
     )
 elif HAS_FOLIUM:
+    counts = [f"{len(filtered_located)} établissement(s) positionné(s)"]
+    if draw_subs:
+        counts.append(
+            f"{int(subs_points['Inscrits'].sum())} pré-souscripteur(s) "
+            f"sur {len(subs_points)} localité(s)"
+        )
     st.html(
         '<div class="section-title">Carte</div>'
-        f'<div class="section-sub">{len(filtered_located)} établissement(s) '
-        "positionné(s). Cliquez un marqueur pour le détail.</div>"
+        f'<div class="section-sub">{" — ".join(counts)}. Cliquez un marqueur '
+        "ou un cercle pour le détail.</div>"
     )
 
     # Légende avant la carte : lisible sans faire défiler, et chaque catégorie
@@ -382,9 +619,20 @@ elif HAS_FOLIUM:
         f"{c}</span>"
         for c in sort_fr(filtered_located["Catégorie"].unique())
     )
+    if draw_subs:
+        legend_items += (
+            f'<span class="legend-item">'
+            f'<span class="swatch" style="background:{SUBSCRIBER_COLOR};'
+            'opacity:.55;border:1px solid ' + SUBSCRIBER_COLOR + '"></span>'
+            "Pré-souscripteurs (taille = nombre d'inscrits)</span>"
+        )
     st.html(f'<div class="legend">{legend_items}</div>')
 
-    center = [filtered_located["lat"].mean(), filtered_located["lon"].mean()]
+    all_points = pd.concat(
+        [filtered_located[["lat", "lon"]]]
+        + ([subs_points[["lat", "lon"]]] if draw_subs else [])
+    )
+    center = [all_points["lat"].mean(), all_points["lon"].mean()]
     fmap = folium.Map(location=center, zoom_start=6, tiles=None, control_scale=True)
     fmap.get_root().header.add_child(folium.Element(MAP_ICON_FIX))
 
@@ -435,8 +683,49 @@ elif HAS_FOLIUM:
             icon=folium.Icon(color=color, icon=icon, prefix="fa"),
         ).add_to(cluster)
 
-    if len(filtered_located) > 1:
-        fmap.fit_bounds(filtered_located[["lat", "lon"]].values.tolist(), padding=(30, 30))
+    # ----------------------- Couche pré-souscripteurs ---------------------- #
+    if draw_subs:
+        subs_layer = folium.FeatureGroup(name="Pré-souscripteurs eAriary")
+        biggest = int(subs_points["Inscrits"].max())
+
+        for _, row in subs_points.iterrows():
+            count = int(row["Inscrits"])
+            # Rayon en racine carrée : c'est l'aire du disque, et non son rayon,
+            # qui reste proportionnelle au nombre d'inscrits.
+            radius = 7 + 21 * (count / biggest) ** 0.5
+            place = row["Localité"]
+            if row["Ville"] and row["Ville"] != row["Localité"]:
+                place = f"{place}, {row['Ville']}"
+
+            popup_html = f"""
+                <div style="font-family:Inter,system-ui,sans-serif;min-width:210px;color:#0F172A">
+                  <div style="font-size:14px;font-weight:600;line-height:1.35">{place}</div>
+                  <div style="font-size:12px;color:#475569;margin-top:2px">{row['Région']}</div>
+                  <div style="display:inline-flex;align-items:center;gap:6px;margin:8px 0 6px;
+                              padding:2px 8px;border-radius:999px;background:#EEF2FF;
+                              font-size:11px;color:#3730A3;font-weight:500">
+                    <span style="width:7px;height:7px;border-radius:50%;background:{SUBSCRIBER_COLOR}"></span>
+                    {count} pré-souscripteur{'s' if count > 1 else ''}
+                  </div>
+                  <div style="font-size:12px;color:#334155">{row['Détail']}</div>
+                </div>
+            """
+            folium.CircleMarker(
+                location=[row["lat"], row["lon"]],
+                radius=radius,
+                popup=folium.Popup(popup_html, max_width=300),
+                tooltip=f"{place} — {count} inscrit(s)",
+                color=SUBSCRIBER_COLOR,
+                weight=1.5,
+                fill=True,
+                fill_color=SUBSCRIBER_COLOR,
+                fill_opacity=0.35,
+            ).add_to(subs_layer)
+
+        subs_layer.add_to(fmap)
+
+    if len(all_points) > 1:
+        fmap.fit_bounds(all_points.values.tolist(), padding=(30, 30))
 
     folium.LayerControl(collapsed=True).add_to(fmap)
     st_folium(fmap, use_container_width=True, height=580, returned_objects=[])
@@ -445,7 +734,11 @@ else:
         "Installez `folium` et `streamlit-folium` pour la carte détaillée.",
         icon=":material/info:",
     )
-    st.map(filtered_located[["lat", "lon"]], size=200)
+    fallback_points = pd.concat(
+        [filtered_located[["lat", "lon"]]]
+        + ([subs_points[["lat", "lon"]]] if draw_subs else [])
+    )
+    st.map(fallback_points, size=200)
 
 # --------------------------------- Tableau --------------------------------- #
 st.html(
@@ -495,4 +788,72 @@ if not unlocated.empty:
             width="stretch",
             hide_index=True,
         )
+
+# --------------------- Récapitulatif des pré-souscripteurs ------------------ #
+if has_subscribers:
+    st.html(
+        '<div class="section-title">Pré-souscripteurs eAriary</div>'
+        f'<div class="section-sub">{len(subs_points)} localité(s) — le fichier '
+        "d'inscription ne contient pas de coordonnées : les adresses sont "
+        "géocodées puis agrégées, sans donnée nominative.</div>"
+    )
+
+    if subs_points.empty:
+        st.info(
+            "Aucun pré-souscripteur géolocalisé ne correspond aux filtres.",
+            icon=":material/search_off:",
+        )
+    else:
+        recap_cols = ["Localité", "Ville", "Région", "Inscrits"] + [
+            a for a in ACCOUNT_ORDER + ["Non renseigné"] if subs_points[a].sum()
+        ]
+        recap = subs_points[recap_cols]
+        st.dataframe(
+            recap,
+            width="stretch",
+            hide_index=True,
+            column_config={
+                "Localité": st.column_config.TextColumn("Localité", width="medium"),
+                "Ville": st.column_config.TextColumn("Ville", width="medium"),
+                "Région": st.column_config.TextColumn("Région", width="medium"),
+                "Inscrits": st.column_config.ProgressColumn(
+                    "Inscrits",
+                    format="%d",
+                    min_value=0,
+                    max_value=int(subs_points["Inscrits"].max()),
+                ),
+            },
+        )
+        st.download_button(
+            "Exporter le récapitulatif (CSV)",
+            recap.to_csv(index=False).encode("utf-8-sig"),
+            file_name="pre_souscripteurs_par_localite.csv",
+            mime="text/csv",
+            icon=":material/download:",
+        )
+
+    sub_unlocated = subs_filtered[subs_filtered["lat"].isna()]
+    if not sub_unlocated.empty:
+        with st.expander(
+            f"{len(sub_unlocated)} pré-souscripteur(s) sans adresse localisable",
+            icon=":material/wrong_location:",
+        ):
+            st.caption(
+                "Ces inscriptions n'apparaissent pas sur la carte : soit le "
+                "géocodeur n'a reconnu aucun niveau de l'adresse (introuvable), "
+                "soit celle-ci a été saisie sans ville ni région et le point "
+                "obtenu n'est pas fiable (incertaine)."
+            )
+            st.dataframe(
+                sub_unlocated.groupby(["Adresse", "precision"])
+                .size()
+                .reset_index(name="Inscrits")
+                .sort_values("Inscrits", ascending=False),
+                width="stretch",
+                hide_index=True,
+                column_config={
+                    "Adresse": st.column_config.TextColumn("Adresse", width="large"),
+                    "precision": st.column_config.TextColumn("Motif", width="small"),
+                },
+            )
         
