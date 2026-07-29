@@ -9,6 +9,10 @@ env/
 # Streamlit
 .streamlit/secrets.toml
 
+# Données nominatives des pré-souscripteurs (noms, téléphones, e-mails).
+# Seuls les dérivés anonymes de data/ sont versionnés.
+Stat_Inscription_*.xlsx
+
 # macOS
 .DS_Store
 

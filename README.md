@@ -21,14 +21,46 @@ Sinon l'app bascule automatiquement sur la copie embarquée dans `app.py`
 
 Le cache est de 5 minutes ; le bouton « Recharger les données » force la relecture.
 
+### Pré-souscripteurs eAriary
+
+Le classeur `Stat_Inscription_eAr_<date>_final.xlsx` (colonnes `Adresse` et
+`Account`) alimente une seconde couche de la carte. Il ne contient aucune
+coordonnée : les adresses sont géocodées une fois par
+
+```bash
+python tools/geocode_souscripteurs.py           # nouvelles adresses seulement
+python tools/geocode_souscripteurs.py --retry   # reprend tout ce qui n'est pas « exacte »
+```
+
+qui écrit dans `data/` :
+
+| Fichier | Contenu | Versionné |
+|---|---|---|
+| `adresses_geocodees.csv` | adresse → latitude/longitude + précision | oui |
+| `pre_souscripteurs_agreges.csv` | effectifs par adresse et type de compte | oui |
+
+Le classeur Excel, lui, **n'est pas versionné** (`.gitignore`) : il contient des
+noms, téléphones et e-mails. En son absence — sur un déploiement, par exemple —
+l'app repart de l'agrégat anonyme et affiche exactement la même carte.
+
+Le géocodeur (Nominatim, 1 requête/seconde) essaie l'adresse complète puis des
+variantes de plus en plus larges : `Anosibe, Antananarivo, Analamanga` devient
+au besoin `Antananarivo, Analamanga` puis `Analamanga`. La colonne `precision`
+distingue « exacte » d'« approchée ».
+
 ## Fonctionnalités
 
 - Carte Folium avec clustering, marqueurs colorés par catégorie, fonds
   interchangeables (plan clair par défaut, plan détaillé, satellite)
 - Popup par établissement + lien direct vers Google Maps
-- Filtres : province/ville, catégorie, recherche par nom
-- Tableau détaillé + export CSV de la sélection
-- Section dédiée aux lignes dont les coordonnées ne sont pas exploitables
+- Couche « Pré-souscripteurs eAriary » : un cercle par localité, d'aire
+  proportionnelle au nombre d'inscrits, avec la répartition par type de compte
+  (aucune donnée nominative n'atteint la carte)
+- Filtres : province/ville, catégorie, recherche par nom ; région et type de
+  compte pour les pré-souscripteurs
+- Tableau détaillé + export CSV de la sélection, récapitulatif par localité
+  des pré-souscripteurs + export
+- Sections dédiées aux lignes dont les coordonnées ne sont pas exploitables
 
 ## Design
 
