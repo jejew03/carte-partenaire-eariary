@@ -1,0 +1,1721 @@
+code_zone,nom_affiche,niveau,code_parent,nom_parent
+MG11,Analamanga,Région,,
+MG12,Vakinankaratra,Région,,
+MG13,Itasy,Région,,
+MG14,Bongolava,Région,,
+MG21,Haute Matsiatra,Région,,
+MG22,Amoron'i Mania,Région,,
+MG23,Vatovavy Fitovinany,Région,,
+MG24,Ihorombe,Région,,
+MG25,Atsimo Atsinanana,Région,,
+MG31,Atsinanana,Région,,
+MG32,Analanjirofo,Région,,
+MG33,Alaotra Mangoro,Région,,
+MG41,Boeny,Région,,
+MG42,Sofia,Région,,
+MG43,Betsiboka,Région,,
+MG44,Melaky,Région,,
+MG51,Atsimo Andrefana,Région,,
+MG52,Androy,Région,,
+MG53,Anosy,Région,,
+MG54,Menabe,Région,,
+MG71,Diana,Région,,
+MG72,Sava,Région,,
+MG11101001A,1er Arrondissement,District,MG11,Analamanga
+MG11101002A,2e Arrondissement,District,MG11,Analamanga
+MG11101003A,3e Arrondissement,District,MG11,Analamanga
+MG11101004A,4e Arrondissement,District,MG11,Analamanga
+MG11101005A,5e Arrondissement,District,MG11,Analamanga
+MG11101006A,6e Arrondissement,District,MG11,Analamanga
+MG11102,Antananarivo Avaradrano,District,MG11,Analamanga
+MG11103,Ambohidratrimo,District,MG11,Analamanga
+MG11104,Ankazobe,District,MG11,Analamanga
+MG11106,Manjakandriana,District,MG11,Analamanga
+MG11107,Anjozorobe,District,MG11,Analamanga
+MG11115,Andramasina,District,MG11,Analamanga
+MG11117,Antananarivo Atsimondrano,District,MG11,Analamanga
+MG12108,Antsirabe I,District,MG12,Vakinankaratra
+MG12109,Betafo,District,MG12,Vakinankaratra
+MG12110,Ambatolampy,District,MG12,Vakinankaratra
+MG12114,Antanifotsy,District,MG12,Vakinankaratra
+MG12116,Faratsiho,District,MG12,Vakinankaratra
+MG12118,Antsirabe II,District,MG12,Vakinankaratra
+MG12120,Mandoto,District,MG12,Vakinankaratra
+MG13105,Arivonimamo,District,MG13,Itasy
+MG13112,Miarinarivo,District,MG13,Itasy
+MG13113,Soavinandriana,District,MG13,Itasy
+MG14111,Tsiroanomandidy,District,MG14,Bongolava
+MG14119,Fenoarivobe,District,MG14,Bongolava
+MG21201,Fianarantsoa I,District,MG21,Haute Matsiatra
+MG21205,Ambalavao,District,MG21,Haute Matsiatra
+MG21208,Ambohimahasoa,District,MG21,Haute Matsiatra
+MG21219,Ikalamavony,District,MG21,Haute Matsiatra
+MG21220,Lalangina,District,MG21,Haute Matsiatra
+MG21224,Vohibato,District,MG21,Haute Matsiatra
+MG21225,Isandra,District,MG21,Haute Matsiatra
+MG22202,Ambatofinandrahana,District,MG22,Amoron'i Mania
+MG22203,Ambositra,District,MG22,Amoron'i Mania
+MG22204,Fandriana,District,MG22,Amoron'i Mania
+MG22223,Manandriana,District,MG22,Amoron'i Mania
+MG23206,Ifanadiana,District,MG23,Vatovavy Fitovinany
+MG23207,Nosy-Varika,District,MG23,Vatovavy Fitovinany
+MG23209,Mananjary,District,MG23,Vatovavy Fitovinany
+MG23210,Manakara Atsimo,District,MG23,Vatovavy Fitovinany
+MG23211,Ikongo,District,MG23,Vatovavy Fitovinany
+MG23212,Vohipeno,District,MG23,Vatovavy Fitovinany
+MG24216,Ihosy,District,MG24,Ihorombe
+MG24218,Ivohibe,District,MG24,Ihorombe
+MG24221,Iakora,District,MG24,Ihorombe
+MG25213,Farafangana,District,MG25,Atsimo Atsinanana
+MG25214,Vangaindrano,District,MG25,Atsimo Atsinanana
+MG25215,Midongy-Atsimo,District,MG25,Atsimo Atsinanana
+MG25217,Vondrozo,District,MG25,Atsimo Atsinanana
+MG25222,Befotaka,District,MG25,Atsimo Atsinanana
+MG31301,Toamasina I,District,MG31,Atsinanana
+MG31306,Brickaville,District,MG31,Atsinanana
+MG31307,Vatomandry,District,MG31,Atsinanana
+MG31308,Mahanoro,District,MG31,Atsinanana
+MG31309,Marolambo,District,MG31,Atsinanana
+MG31310,Toamasina II,District,MG31,Atsinanana
+MG31311,Antanambao Manampontsy,District,MG31,Atsinanana
+MG32302,Sainte Marie,District,MG32,Analanjirofo
+MG32303,Maroantsetra,District,MG32,Analanjirofo
+MG32304,Mananara-Avaratra,District,MG32,Analanjirofo
+MG32305,Fenerive Est,District,MG32,Analanjirofo
+MG32315,Vavatenina,District,MG32,Analanjirofo
+MG32318,Soanierana Ivongo,District,MG32,Analanjirofo
+MG33312,Amparafaravola,District,MG33,Alaotra Mangoro
+MG33313,Ambatondrazaka,District,MG33,Alaotra Mangoro
+MG33314,Moramanga,District,MG33,Alaotra Mangoro
+MG33316,Andilamena,District,MG33,Alaotra Mangoro
+MG33317,Anosibe-An'ala,District,MG33,Alaotra Mangoro
+MG41401,Mahajanga I,District,MG41,Boeny
+MG41403,Soalala,District,MG41,Boeny
+MG41405,Ambato Boeni,District,MG41,Boeny
+MG41406,Marovoay,District,MG41,Boeny
+MG41407,Mitsinjo,District,MG41,Boeny
+MG41415,Mahajanga II,District,MG41,Boeny
+MG42409,Port-Berge (Boriziny-Vaovao),District,MG42,Sofia
+MG42410,Mandritsara,District,MG42,Sofia
+MG42411,Analalava,District,MG42,Sofia
+MG42412,Befandriana Nord,District,MG42,Sofia
+MG42413,Antsohihy,District,MG42,Sofia
+MG42414,Bealanana,District,MG42,Sofia
+MG42423,Mampikony,District,MG42,Sofia
+MG43404,Maevatanana,District,MG43,Betsiboka
+MG43408,Tsaratanana,District,MG43,Betsiboka
+MG43416,Kandreho,District,MG43,Betsiboka
+MG44402,Besalampy,District,MG44,Melaky
+MG44417,Ambatomainty,District,MG44,Melaky
+MG44420,Antsalova,District,MG44,Melaky
+MG44421,Maintirano,District,MG44,Melaky
+MG44422,Morafenobe,District,MG44,Melaky
+MG51501,Toliary-I,District,MG51,Atsimo Andrefana
+MG51503,Beroroha,District,MG51,Atsimo Andrefana
+MG51504,Morombe,District,MG51,Atsimo Andrefana
+MG51505,Ankazoabo,District,MG51,Atsimo Andrefana
+MG51506,Betioky Atsimo,District,MG51,Atsimo Andrefana
+MG51507,Ampanihy Ouest,District,MG51,Atsimo Andrefana
+MG51512,Sakaraha,District,MG51,Atsimo Andrefana
+MG51520,Toliary-II,District,MG51,Atsimo Andrefana
+MG51521,Benenitra,District,MG51,Atsimo Andrefana
+MG52513,Beloha,District,MG52,Androy
+MG52514,Tsihombe,District,MG52,Androy
+MG52516,Ambovombe-Androy,District,MG52,Androy
+MG52518,Bekily,District,MG52,Androy
+MG53515,Taolagnaro,District,MG53,Anosy
+MG53517,Betroka,District,MG53,Anosy
+MG53519,Amboasary-Atsimo,District,MG53,Anosy
+MG54502,Manja,District,MG54,Menabe
+MG54508,Morondava,District,MG54,Menabe
+MG54509,Mahabo,District,MG54,Menabe
+MG54510,Belo Sur Tsiribihina,District,MG54,Menabe
+MG54511,Miandrivazo,District,MG54,Menabe
+MG71713,Antsiranana II,District,MG71,Diana
+MG71715,Antsiranana I,District,MG71,Diana
+MG71717,Ambilobe,District,MG71,Diana
+MG71718,Nosy-Be,District,MG71,Diana
+MG71719,Ambanja,District,MG71,Diana
+MG72710,Antalaha,District,MG72,Sava
+MG72711,Sambava,District,MG72,Sava
+MG72712,Andapa,District,MG72,Sava
+MG72716,Vohemar,District,MG72,Sava
+MG11101001,1er Arrondissement,Commune,MG11101001A,1er Arrondissement
+MG11101002,2e Arrondissement,Commune,MG11101002A,2e Arrondissement
+MG11101003,3e Arrondissement,Commune,MG11101003A,3e Arrondissement
+MG11101004,4e Arrondissement,Commune,MG11101004A,4e Arrondissement
+MG11101005,5e Arrondissement,Commune,MG11101005A,5e Arrondissement
+MG11101006,6e Arrondissement,Commune,MG11101006A,6e Arrondissement
+MG11102010,Alasora,Commune,MG11102,Antananarivo Avaradrano
+MG11102039,Ankadikely Ilafy,Commune,MG11102,Antananarivo Avaradrano
+MG11102050,Ambohimanambola,Commune,MG11102,Antananarivo Avaradrano
+MG11102079,Sabotsy Namehana,Commune,MG11102,Antananarivo Avaradrano
+MG11102099,Ambohimangakely,Commune,MG11102,Antananarivo Avaradrano
+MG11102210,Manandriana,Commune,MG11102,Antananarivo Avaradrano
+MG11102230,Ambohimalaza Miray,Commune,MG11102,Antananarivo Avaradrano
+MG11102279,Fiaferana,Commune,MG11102,Antananarivo Avaradrano
+MG11102319,Ambohimanga Rova,Commune,MG11102,Antananarivo Avaradrano
+MG11102350,Viliahazo,Commune,MG11102,Antananarivo Avaradrano
+MG11102379,Talata Volonondry,Commune,MG11102,Antananarivo Avaradrano
+MG11102390,Anjeva Gara,Commune,MG11102,Antananarivo Avaradrano
+MG11102410,Masindray,Commune,MG11102,Antananarivo Avaradrano
+MG11102430,Ankadinandriana,Commune,MG11102,Antananarivo Avaradrano
+MG11103010,Ambohidratrimo,Commune,MG11103,Ambohidratrimo
+MG11103030,Anosiala,Commune,MG11103,Ambohidratrimo
+MG11103050,Talatamaty,Commune,MG11103,Ambohidratrimo
+MG11103070,Antehiroka,Commune,MG11103,Ambohidratrimo
+MG11103090,Iarinarivo,Commune,MG11103,Ambohidratrimo
+MG11103111,Ivato Firaisana,Commune,MG11103,Ambohidratrimo
+MG11103112,Ivato Aeroport,Commune,MG11103,Ambohidratrimo
+MG11103130,Ambohitrimanjaka,Commune,MG11103,Ambohidratrimo
+MG11103150,Mahitsy,Commune,MG11103,Ambohidratrimo
+MG11103171,Merimandroso,Commune,MG11103,Ambohidratrimo
+MG11103172,Ambatolampy,Commune,MG11103,Ambohidratrimo
+MG11103190,Ampangabe,Commune,MG11103,Ambohidratrimo
+MG11103210,Ampanotokana,Commune,MG11103,Ambohidratrimo
+MG11103230,Mananjara,Commune,MG11103,Ambohidratrimo
+MG11103251,Manjakavaradrano,Commune,MG11103,Ambohidratrimo
+MG11103252,Antsahafilo,Commune,MG11103,Ambohidratrimo
+MG11103270,Ambohimanjaka,Commune,MG11103,Ambohidratrimo
+MG11103290,Fiadanana,Commune,MG11103,Ambohidratrimo
+MG11103310,Mahabo,Commune,MG11103,Ambohidratrimo
+MG11103330,Mahereza,Commune,MG11103,Ambohidratrimo
+MG11103350,Antanetibe,Commune,MG11103,Ambohidratrimo
+MG11103370,Ambohipihaonana,Commune,MG11103,Ambohidratrimo
+MG11103390,Ambato,Commune,MG11103,Ambohidratrimo
+MG11103410,Anjanadoria,Commune,MG11103,Ambohidratrimo
+MG11103430,Avaratsena,Commune,MG11103,Ambohidratrimo
+MG11104010,Ankazobe,Commune,MG11104,Ankazobe
+MG11104030,Talata Angavo,Commune,MG11104,Ankazobe
+MG11104050,Ambohitromby,Commune,MG11104,Ankazobe
+MG11104071,Antotohazo,Commune,MG11104,Ankazobe
+MG11104072,Marondry,Commune,MG11104,Ankazobe
+MG11104090,Fihaonana,Commune,MG11104,Ankazobe
+MG11104110,Mahavelona,Commune,MG11104,Ankazobe
+MG11104130,Fiadanana,Commune,MG11104,Ankazobe
+MG11104150,Tsaramasoandro,Commune,MG11104,Ankazobe
+MG11104170,Ambolotarakely,Commune,MG11104,Ankazobe
+MG11104190,Antakavana,Commune,MG11104,Ankazobe
+MG11104210,Kiangara,Commune,MG11104,Ankazobe
+MG11104230,Miantso,Commune,MG11104,Ankazobe
+MG11106011,Manjakandriana,Commune,MG11106,Manjakandriana
+MG11106012,Ambatolaona,Commune,MG11106,Manjakandriana
+MG11106030,Sambaina,Commune,MG11106,Manjakandriana
+MG11106050,Ambohibary,Commune,MG11106,Manjakandriana
+MG11106070,Ambatomanga,Commune,MG11106,Manjakandriana
+MG11106090,Alarobia,Commune,MG11106,Manjakandriana
+MG11106110,Mantasoa,Commune,MG11106,Manjakandriana
+MG11106130,Ranovao,Commune,MG11106,Manjakandriana
+MG11106150,Miadanandriana,Commune,MG11106,Manjakandriana
+MG11106170,Nandihizana,Commune,MG11106,Manjakandriana
+MG11106190,Anjepy,Commune,MG11106,Manjakandriana
+MG11106210,Ambanitsena,Commune,MG11106,Manjakandriana
+MG11106230,Ambohitrandriamanitra,Commune,MG11106,Manjakandriana
+MG11106251,Ambatomena,Commune,MG11106,Manjakandriana
+MG11106252,Ambohibao Sud,Commune,MG11106,Manjakandriana
+MG11106271,Ambohitseheno,Commune,MG11106,Manjakandriana
+MG11106272,Antsahalalina,Commune,MG11106,Manjakandriana
+MG11115031,Sabotsy Ambohitromby,Commune,MG11115,Andramasina
+MG11115032,Andohariana,Commune,MG11115,Andramasina
+MG11115050,Mandrosoa,Commune,MG11115,Andramasina
+MG11117470,Ambatofahavalo,Commune,MG11117,Antananarivo Atsimondrano
+MG12108001,Antsenakely Andraikiba,Commune,MG12108,Antsirabe I
+MG12108002,Ampatana Mandriankeniheny,Commune,MG12108,Antsirabe I
+MG12114050,Ampitatafika,Commune,MG12114,Antanifotsy
+MG12114079,Ambatomiady,Commune,MG12114,Antanifotsy
+MG12114090,Andranofito,Commune,MG12114,Antanifotsy
+MG21205290,Fenoarivo,Commune,MG21205,Ambalavao
+MG21208010,Ambohimahasoa,Commune,MG21208,Ambohimahasoa
+MG21208030,Ampitana,Commune,MG21208,Ambohimahasoa
+MG22223090,Ambohipo,Commune,MG22223,Manandriana
+MG22223110,Anjoman'ankona,Commune,MG22223,Manandriana
+MG22223130,Vinany Andakatanikely,Commune,MG22223,Manandriana
+MG23211111,Ankarimbelo,Commune,MG23211,Ikongo
+MG23211112,Antodinga,Commune,MG23211,Ikongo
+MG23211113,Kalafotsy,Commune,MG23211,Ikongo
+MG25222012,Antondabe,Commune,MG25222,Befotaka
+MG25222031,Marovitsika Sud,Commune,MG25222,Befotaka
+MG25222032,Antaninarenina,Commune,MG25222,Befotaka
+MG11106290,Ambohitrony,Commune,MG11106,Manjakandriana
+MG11106310,Merikanjaka,Commune,MG11106,Manjakandriana
+MG11106330,Anjoma Betoho,Commune,MG11106,Manjakandriana
+MG11106351,Ankazondandy,Commune,MG11106,Manjakandriana
+MG11106352,Soavinandriana,Commune,MG11106,Manjakandriana
+MG11106371,Ambohitrolomahitsy,Commune,MG11106,Manjakandriana
+MG11106372,Ampaneva,Commune,MG11106,Manjakandriana
+MG11106390,Sadabe,Commune,MG11106,Manjakandriana
+MG11107019,Anjozorobe,Commune,MG11107,Anjozorobe
+MG11107070,Mangamila,Commune,MG11107,Anjozorobe
+MG11107099,Ambongamarina,Commune,MG11107,Anjozorobe
+MG11107110,Tsarasaotra,Commune,MG11107,Anjozorobe
+MG11107130,Ambohimanarina Marovazaha,Commune,MG11107,Anjozorobe
+MG11107150,Betatao,Commune,MG11107,Anjozorobe
+MG11107170,Alakamisy,Commune,MG11107,Anjozorobe
+MG11107190,Analaroa,Commune,MG11107,Anjozorobe
+MG11107211,Antanetibe,Commune,MG11107,Anjozorobe
+MG11107212,Belanitra,Commune,MG11107,Anjozorobe
+MG11107230,Ambatomanoina,Commune,MG11107,Anjozorobe
+MG11107250,Amparatanjona,Commune,MG11107,Anjozorobe
+MG11107270,Amboasary Nord,Commune,MG11107,Anjozorobe
+MG11107290,Androvakely,Commune,MG11107,Anjozorobe
+MG11107310,Ambohibary Vohilena,Commune,MG11107,Anjozorobe
+MG11107330,Ambohimirary,Commune,MG11107,Anjozorobe
+MG11107350,Marotsipoy,Commune,MG11107,Anjozorobe
+MG11107370,Beronono,Commune,MG11107,Anjozorobe
+MG11115010,Andramasina,Commune,MG11115,Andramasina
+MG11115071,Alatsinainy Bakaro,Commune,MG11115,Andramasina
+MG11115072,Antotohazo,Commune,MG11115,Andramasina
+MG11115091,Ambohimiadana,Commune,MG11115,Andramasina
+MG11115092,Tankafatra,Commune,MG11115,Andramasina
+MG11115110,Alarobia Vatosola,Commune,MG11115,Andramasina
+MG11115130,Fitsinjovana Bakaro,Commune,MG11115,Andramasina
+MG11115150,Sabotsy Manjakavahoaka,Commune,MG11115,Andramasina
+MG11115170,Anosibe Trimoloharano,Commune,MG11115,Andramasina
+MG11117011,Ampitatafika,Commune,MG11117,Antananarivo Atsimondrano
+MG11117012,Anosizato Andrefana,Commune,MG11117,Antananarivo Atsimondrano
+MG11117030,Andranonahoatra,Commune,MG11117,Antananarivo Atsimondrano
+MG11117050,Ambohidrapeto,Commune,MG11117,Antananarivo Atsimondrano
+MG11117070,Bemasoandro,Commune,MG11117,Antananarivo Atsimondrano
+MG11117090,Fiombonana,Commune,MG11117,Antananarivo Atsimondrano
+MG11117110,Itaosy,Commune,MG11117,Antananarivo Atsimondrano
+MG11117130,Ambavahaditokana,Commune,MG11117,Antananarivo Atsimondrano
+MG11117150,Tanjombato,Commune,MG11117,Antananarivo Atsimondrano
+MG11117170,Andoharanofotsy,Commune,MG11117,Antananarivo Atsimondrano
+MG11117190,Ankaraobato,Commune,MG11117,Antananarivo Atsimondrano
+MG11117210,Soalandy,Commune,MG11117,Antananarivo Atsimondrano
+MG11117230,Antanetikely,Commune,MG11117,Antananarivo Atsimondrano
+MG11117250,Alatsinainy Ambazaha,Commune,MG11117,Antananarivo Atsimondrano
+MG11117270,Ampanefy,Commune,MG11117,Antananarivo Atsimondrano
+MG11117290,Ankadimanga,Commune,MG11117,Antananarivo Atsimondrano
+MG11117311,Fenoarivo,Commune,MG11117,Antananarivo Atsimondrano
+MG11117312,Alakamisy Fenoarivo,Commune,MG11117,Antananarivo Atsimondrano
+MG11117330,Soavina,Commune,MG11117,Antananarivo Atsimondrano
+MG11117350,Ambohijanaka,Commune,MG11117,Antananarivo Atsimondrano
+MG11117370,Ampahitrosy,Commune,MG11117,Antananarivo Atsimondrano
+MG11117390,Bongatsara,Commune,MG11117,Antananarivo Atsimondrano
+MG11117410,Androhibe,Commune,MG11117,Antananarivo Atsimondrano
+MG11117430,Tsiafahy,Commune,MG11117,Antananarivo Atsimondrano
+MG11117450,Ambalavao,Commune,MG11117,Antananarivo Atsimondrano
+MG12108003,Soamalaza Mahatsinjo,Commune,MG12108,Antsirabe I
+MG12108004,Antsirabe Afovoany Atsinanana,Commune,MG12108,Antsirabe I
+MG12108005,Manodidina Ny Gara Ambilombe,Commune,MG12108,Antsirabe I
+MG12108006,Mahazoarivo Avarabohitra,Commune,MG12108,Antsirabe I
+MG12109010,Betafo,Commune,MG12109,Betafo
+MG12109030,Andranomafana,Commune,MG12109,Betafo
+MG12109050,Mandritsara,Commune,MG12109,Betafo
+MG12109070,Alakamisy Anativato,Commune,MG12109,Betafo
+MG12109090,Antsoso,Commune,MG12109,Betafo
+MG12109110,Tritriva,Commune,MG12109,Betafo
+MG12109130,Soavina,Commune,MG12109,Betafo
+MG12109150,Manohisoa,Commune,MG12109,Betafo
+MG12109170,Ambatonikolahy,Commune,MG12109,Betafo
+MG12109190,Antohobe,Commune,MG12109,Betafo
+MG12109211,Mahaiza,Commune,MG12109,Betafo
+MG12109212,Anosiarivo Manapa,Commune,MG12109,Betafo
+MG12109230,Alakamisy Marososona,Commune,MG12109,Betafo
+MG12109250,Ambohimanambola,Commune,MG12109,Betafo
+MG12109270,Ambohimasina,Commune,MG12109,Betafo
+MG12109290,Inanantonana,Commune,MG12109,Betafo
+MG12109390,Alarobia Bemaha,Commune,MG12109,Betafo
+MG12109490,Andrembesoa,Commune,MG12109,Betafo
+MG12110010,Ambatolampy,Commune,MG12110,Ambatolampy
+MG12110030,Morarano,Commune,MG12110,Ambatolampy
+MG12110050,Ambohipihaonana,Commune,MG12110,Ambatolampy
+MG12110070,Manjakatompo,Commune,MG12110,Ambatolampy
+MG12110090,Ambatondrakalavao,Commune,MG12110,Ambatolampy
+MG12110110,Andriambilany,Commune,MG12110,Ambatolampy
+MG12110130,Belambo Firaisana,Commune,MG12110,Ambatolampy
+MG12110150,Andravola Vohipeno,Commune,MG12110,Ambatolampy
+MG12110170,Tsiafajavona Ankaratra,Commune,MG12110,Ambatolampy
+MG12110190,Ambodifarihy Fenomanana,Commune,MG12110,Ambatolampy
+MG12110210,Sabotsy Namatoana,Commune,MG12110,Ambatolampy
+MG12110230,Antanimasaka,Commune,MG12110,Ambatolampy
+MG12110250,Behenjy,Commune,MG12110,Ambatolampy
+MG12110270,Antsampandrano,Commune,MG12110,Ambatolampy
+MG12110291,Antanamalaza,Commune,MG12110,Ambatolampy
+MG12110292,Antakasina,Commune,MG12110,Ambatolampy
+MG12110310,Tsinjoarivo,Commune,MG12110,Ambatolampy
+MG12110330,Andranovelona,Commune,MG12110,Ambatolampy
+MG12114010,Antanifotsy,Commune,MG12114,Antanifotsy
+MG12114030,Ambatolahy,Commune,MG12114,Antanifotsy
+MG12114110,Ambohimandroso,Commune,MG12114,Antanifotsy
+MG12114150,Ambatotsipihina,Commune,MG12114,Antanifotsy
+MG12114171,Ambohitompoina,Commune,MG12114,Antanifotsy
+MG12114172,Belanitra,Commune,MG12114,Antanifotsy
+MG12114199,Antsahalava,Commune,MG12114,Antanifotsy
+MG12114230,Ambodiriana,Commune,MG12114,Antanifotsy
+MG12114290,Antsampandrano,Commune,MG12114,Antanifotsy
+MG12116010,Faratsiho,Commune,MG12116,Faratsiho
+MG12116030,Antsampanimahazo,Commune,MG12116,Faratsiho
+MG12116050,Faravohitra,Commune,MG12116,Faratsiho
+MG12116070,Ramainandro,Commune,MG12116,Faratsiho
+MG12116090,Andranomiady,Commune,MG12116,Faratsiho
+MG12116110,Vinaninony Atsimo,Commune,MG12116,Faratsiho
+MG12116130,Ambohiborona,Commune,MG12116,Faratsiho
+MG12116150,Miandrarivo,Commune,MG12116,Faratsiho
+MG12116170,Valabetokana,Commune,MG12116,Faratsiho
+MG12118010,Ambano,Commune,MG12118,Antsirabe II
+MG12118030,Belazao,Commune,MG12118,Antsirabe II
+MG12118050,Alakamisy,Commune,MG12118,Antsirabe II
+MG12118070,Antanimandry,Commune,MG12118,Antsirabe II
+MG12118090,Vinaninkarena,Commune,MG12118,Antsirabe II
+MG12118110,Andranomanelatra,Commune,MG12118,Antsirabe II
+MG12118130,Ambohidranandriana,Commune,MG12118,Antsirabe II
+MG12118150,Ambohimiarivo,Commune,MG12118,Antsirabe II
+MG12118170,Ambohitsimanova,Commune,MG12118,Antsirabe II
+MG12118190,Mangarano,Commune,MG12118,Antsirabe II
+MG12118210,Manandona,Commune,MG12118,Antsirabe II
+MG12118230,Antsoatany,Commune,MG12118,Antsirabe II
+MG12118250,Alatsinainy Ibity,Commune,MG12118,Antsirabe II
+MG12118270,Sahanivotry Manandona,Commune,MG12118,Antsirabe II
+MG12118290,Soanindrariny,Commune,MG12118,Antsirabe II
+MG12118310,Ambatomena,Commune,MG12118,Antsirabe II
+MG12118331,Ambohibary,Commune,MG12118,Antsirabe II
+MG12118332,Mandrosohasina,Commune,MG12118,Antsirabe II
+MG12118350,Tsarahonenana Sahanivotry,Commune,MG12118,Antsirabe II
+MG12118370,Antanambao,Commune,MG12118,Antsirabe II
+MG12120010,Mandoto,Commune,MG12120,Mandoto
+MG12120030,Betsohana,Commune,MG12120,Mandoto
+MG12120050,Antanambao Ambary,Commune,MG12120,Mandoto
+MG12120070,Anjoma Ramartina,Commune,MG12120,Mandoto
+MG12120090,Ankazomiriotra,Commune,MG12120,Mandoto
+MG12120110,Fidirana,Commune,MG12120,Mandoto
+MG12120130,Vasiana,Commune,MG12120,Mandoto
+MG12120150,Vinany,Commune,MG12120,Mandoto
+MG13105010,Arivonimamo I,Commune,MG13105,Arivonimamo
+MG13105030,Arivonimamo II,Commune,MG13105,Arivonimamo
+MG13105050,Ambohitrambo,Commune,MG13105,Arivonimamo
+MG13105070,Ampahimanga,Commune,MG13105,Arivonimamo
+MG13105090,Amboanana,Commune,MG13105,Arivonimamo
+MG13105110,Morafeno,Commune,MG13105,Arivonimamo
+MG13105130,Imerintsiatosika,Commune,MG13105,Arivonimamo
+MG13105150,Morarano,Commune,MG13105,Arivonimamo
+MG13105170,Ambatomirahavavy,Commune,MG13105,Arivonimamo
+MG13105190,Ambatomanga,Commune,MG13105,Arivonimamo
+MG13105211,Manalalondo,Commune,MG13105,Arivonimamo
+MG13105212,Antenimbe,Commune,MG13105,Arivonimamo
+MG13105213,Alakamisikely,Commune,MG13105,Arivonimamo
+MG13105214,Mahatsinjo Est,Commune,MG13105,Arivonimamo
+MG13105215,Marofangady,Commune,MG13105,Arivonimamo
+MG13105216,Rambolamasoandro Andranomiely,Commune,MG13105,Arivonimamo
+MG13105230,Ambohimandry,Commune,MG13105,Arivonimamo
+MG13105250,Antambolo,Commune,MG13105,Arivonimamo
+MG13105270,Ambohimasina,Commune,MG13105,Arivonimamo
+MG13105291,Ambohipandrano,Commune,MG13105,Arivonimamo
+MG13105292,Miandrandra,Commune,MG13105,Arivonimamo
+MG13105310,Miantsoarivo,Commune,MG13105,Arivonimamo
+MG13112010,Miarinarivo I,Commune,MG13112,Miarinarivo
+MG13112030,Miarinarivo II,Commune,MG13112,Miarinarivo
+MG13112050,Ambatomanjaka,Commune,MG13112,Miarinarivo
+MG13112071,Manazary,Commune,MG13112,Miarinarivo
+MG13112072,Antoby Est,Commune,MG13112,Miarinarivo
+MG13112090,Soamahamanina,Commune,MG13112,Miarinarivo
+MG13112111,Analavory,Commune,MG13112,Miarinarivo
+MG13112112,Alatsinainikely,Commune,MG13112,Miarinarivo
+MG13112130,Mandiavato,Commune,MG13112,Miarinarivo
+MG13112151,Anosibe Ifanja,Commune,MG13112,Miarinarivo
+MG13112152,Sarobaratra Ifanja,Commune,MG13112,Miarinarivo
+MG13112170,Zoma Bealoka,Commune,MG13112,Miarinarivo
+MG13112190,Soavimbazaha,Commune,MG13112,Miarinarivo
+MG13112210,Andolofotsy,Commune,MG13112,Miarinarivo
+MG13113011,Soavinandriana,Commune,MG13113,Soavinandriana
+MG13113012,Dondona,Commune,MG13113,Soavinandriana
+MG13113030,Ampary,Commune,MG13113,Soavinandriana
+MG13113050,Mananasy,Commune,MG13113,Soavinandriana
+MG13113071,Masindray,Commune,MG13113,Soavinandriana
+MG13113072,Amparibohitra,Commune,MG13113,Soavinandriana
+MG13113090,Ampefy,Commune,MG13113,Soavinandriana
+MG13113110,Antanetibe,Commune,MG13113,Soavinandriana
+MG13113131,Amparaky,Commune,MG13113,Soavinandriana
+MG13113132,Amberomanga,Commune,MG13113,Soavinandriana
+MG13113150,Ankaranana,Commune,MG13113,Soavinandriana
+MG13113170,Mahavelona,Commune,MG13113,Soavinandriana
+MG13113190,Ankisabe,Commune,MG13113,Soavinandriana
+MG13113210,Ambatoasana Centre,Commune,MG13113,Soavinandriana
+MG13113230,Tamponala,Commune,MG13113,Soavinandriana
+MG14111010,Tsiroanomandidy Ville,Commune,MG14111,Tsiroanomandidy
+MG14111030,Tsiroanomandidy Fihaonana,Commune,MG14111,Tsiroanomandidy
+MG14111051,Ambatolampy,Commune,MG14111,Tsiroanomandidy
+MG14111052,Maritampona,Commune,MG14111,Tsiroanomandidy
+MG14111070,Bevato,Commune,MG14111,Tsiroanomandidy
+MG14111090,Ankadinondry Sakay,Commune,MG14111,Tsiroanomandidy
+MG14111110,Ankerana Avaratra,Commune,MG14111,Tsiroanomandidy
+MG14111130,Miandrarivo,Commune,MG14111,Tsiroanomandidy
+MG14111150,Tsinjoarivo Imanga,Commune,MG14111,Tsiroanomandidy
+MG14111170,Soanierana,Commune,MG14111,Tsiroanomandidy
+MG14111190,Anosy,Commune,MG14111,Tsiroanomandidy
+MG14111210,Ambararatabe,Commune,MG14111,Tsiroanomandidy
+MG14111230,Belobaka,Commune,MG14111,Tsiroanomandidy
+MG14111250,Ambalanirana,Commune,MG14111,Tsiroanomandidy
+MG14111270,Mahasolo,Commune,MG14111,Tsiroanomandidy
+MG14111290,Bemahatazana,Commune,MG14111,Tsiroanomandidy
+MG14111310,Fierenana,Commune,MG14111,Tsiroanomandidy
+MG14111330,Maroharona,Commune,MG14111,Tsiroanomandidy
+MG14119010,Fenoarivo Centre,Commune,MG14119,Fenoarivobe
+MG14119031,Firavahana,Commune,MG14119,Fenoarivobe
+MG14119032,Morarano Maritampona,Commune,MG14119,Fenoarivobe
+MG14119051,Kiranomena,Commune,MG14119,Fenoarivobe
+MG14119052,Tsinjoarivo 22,Commune,MG14119,Fenoarivobe
+MG14119053,Mahajeby,Commune,MG14119,Fenoarivobe
+MG14119071,Ambohitromby,Commune,MG14119,Fenoarivobe
+MG14119072,Ambatomainty Atsimo,Commune,MG14119,Fenoarivobe
+MG21201001,Tanana Ambony,Commune,MG21201,Fianarantsoa I
+MG21201002,Tanana Ambany,Commune,MG21201,Fianarantsoa I
+MG21201003,Andrainjato Avaratra,Commune,MG21201,Fianarantsoa I
+MG21201004,Andrainjato Sud,Commune,MG21201,Fianarantsoa I
+MG21201005,Manolafaka,Commune,MG21201,Fianarantsoa I
+MG21201006,Lalazana,Commune,MG21201,Fianarantsoa I
+MG21201007,Vatosola,Commune,MG21201,Fianarantsoa I
+MG21205010,Ambalavao,Commune,MG21205,Ambalavao
+MG21205030,Manamisoa,Commune,MG21205,Ambalavao
+MG21205050,Iarintsena,Commune,MG21205,Ambalavao
+MG21205071,Ambohimandroso,Commune,MG21205,Ambalavao
+MG21205072,Andrainjato,Commune,MG21205,Ambalavao
+MG21205090,Anjoma,Commune,MG21205,Ambalavao
+MG21205110,Kirano,Commune,MG21205,Ambalavao
+MG21205130,Sendrisoa,Commune,MG21205,Ambalavao
+MG21205150,Besoa,Commune,MG21205,Ambalavao
+MG21205170,Mahazony,Commune,MG21205,Ambalavao
+MG21205190,Ambinanindovoka,Commune,MG21205,Ambalavao
+MG21205211,Ankaramena,Commune,MG21205,Ambalavao
+MG21205212,Ambinaniroa,Commune,MG21205,Ambalavao
+MG21205230,Ambohimahamasina,Commune,MG21205,Ambalavao
+MG21205250,Miarinarivo,Commune,MG21205,Ambalavao
+MG21205270,Vohitsaoka,Commune,MG21205,Ambalavao
+MG21208050,Ankerana,Commune,MG21208,Ambohimahasoa
+MG21208071,Manandroy,Commune,MG21208,Ambohimahasoa
+MG21208072,Ambalakindresy,Commune,MG21208,Ambohimahasoa
+MG21208090,Ankafina Tsarafidy,Commune,MG21208,Ambohimahasoa
+MG21208110,Sahave,Commune,MG21208,Ambohimahasoa
+MG21208130,Morafeno,Commune,MG21208,Ambohimahasoa
+MG21208150,Ikalalao,Commune,MG21208,Ambohimahasoa
+MG21208170,Vohiposa,Commune,MG21208,Ambohimahasoa
+MG21208190,Ambatosoa,Commune,MG21208,Ambohimahasoa
+MG21208211,Isaka,Commune,MG21208,Ambohimahasoa
+MG21208212,Vohitrarivo,Commune,MG21208,Ambohimahasoa
+MG21208230,Ambohinamboarina,Commune,MG21208,Ambohimahasoa
+MG21208251,Sahatona,Commune,MG21208,Ambohimahasoa
+MG21208252,Camp Robin,Commune,MG21208,Ambohimahasoa
+MG21208270,Befeta,Commune,MG21208,Ambohimahasoa
+MG21208290,Fiadanana,Commune,MG21208,Ambohimahasoa
+MG21219010,Ikalamavony,Commune,MG21219,Ikalamavony
+MG21219030,Mangidy,Commune,MG21219,Ikalamavony
+MG21219050,Solila,Commune,MG21219,Ikalamavony
+MG21219070,Ambatomainty,Commune,MG21219,Ikalamavony
+MG21219090,Fitampito,Commune,MG21219,Ikalamavony
+MG21219110,Tanamarina Sakay,Commune,MG21219,Ikalamavony
+MG21219130,Tsitondroina,Commune,MG21219,Ikalamavony
+MG21219150,Tanamarina Bekisopa,Commune,MG21219,Ikalamavony
+MG21220011,Andrainjato Centre,Commune,MG21220,Lalangina
+MG21220012,Andrainjato Est,Commune,MG21220,Lalangina
+MG21220030,Ambalakely,Commune,MG21220,Lalangina
+MG21220070,Ivoamba,Commune,MG21220,Lalangina
+MG21220090,Taindambo,Commune,MG21220,Lalangina
+MG21220111,Mahatsinjony,Commune,MG21220,Lalangina
+MG21220112,Sahambavy,Commune,MG21220,Lalangina
+MG21220210,Ambalamahasoa,Commune,MG21220,Lalangina
+MG21220250,Alakamisy Ambohimaha,Commune,MG21220,Lalangina
+MG21220330,Androy,Commune,MG21220,Lalangina
+MG21220350,Alatsinainy Ialamarina,Commune,MG21220,Lalangina
+MG21220430,Fandrandava,Commune,MG21220,Lalangina
+MG21220630,Ialananindro,Commune,MG21220,Lalangina
+MG21224010,Mahasoabe,Commune,MG21224,Vohibato
+MG21224030,Vinanitelo,Commune,MG21224,Vohibato
+MG21224050,Alakamisy Itenina,Commune,MG21224,Vohibato
+MG21224070,Talata Ampano,Commune,MG21224,Vohibato
+MG21224090,Ihazoara,Commune,MG21224,Vohibato
+MG21224110,Ankaromalaza Mifanasoa,Commune,MG21224,Vohibato
+MG21224130,Vohimarina,Commune,MG21224,Vohibato
+MG21224150,Maneva,Commune,MG21224,Vohibato
+MG21224170,Vohitrafeno,Commune,MG21224,Vohibato
+MG21224190,Andranovorivato,Commune,MG21224,Vohibato
+MG21224210,Vohibato Ouest,Commune,MG21224,Vohibato
+MG21224230,Andranomiditra,Commune,MG21224,Vohibato
+MG21224250,Soaindrana,Commune,MG21224,Vohibato
+MG21224270,Mahaditra,Commune,MG21224,Vohibato
+MG21225010,Isorana,Commune,MG21225,Isandra
+MG21225030,Anjoma Itsara,Commune,MG21225,Isandra
+MG21225050,Andoharanomaitso,Commune,MG21225,Isandra
+MG21225070,Ambondrona,Commune,MG21225,Isandra
+MG21225090,Ambalamidera II,Commune,MG21225,Isandra
+MG21225110,Ankarinarivo Manirisoa,Commune,MG21225,Isandra
+MG21225130,Soatanana,Commune,MG21225,Isandra
+MG21225150,Nasandratrony,Commune,MG21225,Isandra
+MG21225170,Mahazoarivo,Commune,MG21225,Isandra
+MG21225190,Fanjakana,Commune,MG21225,Isandra
+MG21225210,Iavonomby Vohibola,Commune,MG21225,Isandra
+MG22202010,Ambatofinandrahana,Commune,MG22202,Ambatofinandrahana
+MG22202030,Itremo,Commune,MG22202,Ambatofinandrahana
+MG22202050,Fenoarivo,Commune,MG22202,Ambatofinandrahana
+MG22202070,Soavina,Commune,MG22202,Ambatofinandrahana
+MG22202090,Ambondromisotra,Commune,MG22202,Ambatofinandrahana
+MG22202110,Ambatomifanongoa,Commune,MG22202,Ambatofinandrahana
+MG22202130,Amborompotsy,Commune,MG22202,Ambatofinandrahana
+MG22202150,Mandrosonoro,Commune,MG22202,Ambatofinandrahana
+MG22202170,Mangataboahangy,Commune,MG22202,Ambatofinandrahana
+MG22203010,Ambositra I,Commune,MG22203,Ambositra
+MG22203030,Ambositra II,Commune,MG22203,Ambositra
+MG22203050,Ankazoambo,Commune,MG22203,Ambositra
+MG22203070,Ivony Miaramiasa,Commune,MG22203,Ambositra
+MG22203090,Andina,Commune,MG22203,Ambositra
+MG22203110,Imerina Imady,Commune,MG22203,Ambositra
+MG22203130,Ivato,Commune,MG22203,Ambositra
+MG22203150,Tsarasaotra,Commune,MG22203,Ambositra
+MG22203170,Marosoa,Commune,MG22203,Ambositra
+MG22203190,Fahizay,Commune,MG22203,Ambositra
+MG22203210,Alakamisy Ambohijato,Commune,MG22203,Ambositra
+MG22203230,Kianjandrakefina,Commune,MG22203,Ambositra
+MG22203250,Ambalamanakana,Commune,MG22203,Ambositra
+MG22203290,Ilaka Centre,Commune,MG22203,Ambositra
+MG22203310,Ihadilanana,Commune,MG22203,Ambositra
+MG22203390,Ambatofitorahana,Commune,MG22203,Ambositra
+MG22203410,Antoetra,Commune,MG22203,Ambositra
+MG22203430,Mahazina Ambohipierenana,Commune,MG22203,Ambositra
+MG22203450,Sahatsiho Ambohimanjaka,Commune,MG22203,Ambositra
+MG22203491,Ambohimitombo I,Commune,MG22203,Ambositra
+MG22203492,Ambohimitombo II,Commune,MG22203,Ambositra
+MG22203551,Ambinanindrano,Commune,MG22203,Ambositra
+MG22203552,Vohidahy,Commune,MG22203,Ambositra
+MG22204010,Fandriana,Commune,MG22204,Fandriana
+MG22204030,Milamaina,Commune,MG22204,Fandriana
+MG22204050,Sahamadio Fisakana,Commune,MG22204,Fandriana
+MG22204070,Fiadanana,Commune,MG22204,Fandriana
+MG22204090,Tsarazaza,Commune,MG22204,Fandriana
+MG22204110,Tatamalaza,Commune,MG22204,Fandriana
+MG22204130,Ankarinoro,Commune,MG22204,Fandriana
+MG22204150,Sandrandahy,Commune,MG22204,Fandriana
+MG22204170,Mahazoarivo,Commune,MG22204,Fandriana
+MG22204191,Miarinavaratra,Commune,MG22204,Fandriana
+MG22204192,Betsimisotra,Commune,MG22204,Fandriana
+MG22204210,Alakamisy Ambohimahazo,Commune,MG22204,Fandriana
+MG22204230,Imito,Commune,MG22204,Fandriana
+MG22223010,Ambovombe Centre,Commune,MG22223,Manandriana
+MG22223030,Ambohimahazo,Commune,MG22223,Manandriana
+MG22223050,Anjoma Nandihizana,Commune,MG22223,Manandriana
+MG22223070,Ambohimilanja,Commune,MG22223,Manandriana
+MG22223150,Talata Vohimena,Commune,MG22223,Manandriana
+MG22223171,Ambatomarina,Commune,MG22223,Manandriana
+MG22223172,Andakatany,Commune,MG22223,Manandriana
+MG23206011,Ifanadiana,Commune,MG23206,Ifanadiana
+MG23206012,Antaretra,Commune,MG23206,Ifanadiana
+MG23206030,Tsaratanana,Commune,MG23206,Ifanadiana
+MG23206051,Ranomafana,Commune,MG23206,Ifanadiana
+MG23206052,Kelilalina,Commune,MG23206,Ifanadiana
+MG23206071,Androrangavola,Commune,MG23206,Ifanadiana
+MG23206072,Marotoko,Commune,MG23206,Ifanadiana
+MG23206090,Ambohimiera,Commune,MG23206,Ifanadiana
+MG23206110,Antsindra,Commune,MG23206,Ifanadiana
+MG23206130,Ambohimanga Du Sud,Commune,MG23206,Ifanadiana
+MG23206150,Analampasina,Commune,MG23206,Ifanadiana
+MG23206170,Fasintsara,Commune,MG23206,Ifanadiana
+MG23206190,Maroharatra,Commune,MG23206,Ifanadiana
+MG23207010,Nosy Varika,Commune,MG23207,Nosy-Varika
+MG23207031,Ambahy,Commune,MG23207,Nosy-Varika
+MG23207032,Andara,Commune,MG23207,Nosy-Varika
+MG23207051,Fiadanana,Commune,MG23207,Nosy-Varika
+MG23207052,Ambodirian'i Sahafary,Commune,MG23207,Nosy-Varika
+MG23207070,Sahavato,Commune,MG23207,Nosy-Varika
+MG23207090,Vohilava,Commune,MG23207,Nosy-Varika
+MG23207111,Vohitrandriana,Commune,MG23207,Nosy-Varika
+MG23207112,Vohidroa,Commune,MG23207,Nosy-Varika
+MG23207113,Ambakobe,Commune,MG23207,Nosy-Varika
+MG23207130,Soavina,Commune,MG23207,Nosy-Varika
+MG23207151,Ambodilafa,Commune,MG23207,Nosy-Varika
+MG23207152,Androrangavola,Commune,MG23207,Nosy-Varika
+MG23207171,Ampasinambo,Commune,MG23207,Nosy-Varika
+MG23207172,Antanambao,Commune,MG23207,Nosy-Varika
+MG23207173,Angodongodona,Commune,MG23207,Nosy-Varika
+MG23207191,Befody,Commune,MG23207,Nosy-Varika
+MG23207192,Ambodiara,Commune,MG23207,Nosy-Varika
+MG23209010,Mananjary,Commune,MG23209,Mananjary
+MG23209031,Tsaravary,Commune,MG23209,Mananjary
+MG23209032,Ankatafana,Commune,MG23209,Mananjary
+MG23209050,Mahatsara Sud,Commune,MG23209,Mananjary
+MG23209070,Tsiatosika,Commune,MG23209,Mananjary
+MG23209090,Mahatsara Iefaka,Commune,MG23209,Mananjary
+MG23209110,Marokarima,Commune,MG23209,Mananjary
+MG23209130,Morafeno,Commune,MG23209,Mananjary
+MG23209150,Antsenavolo,Commune,MG23209,Mananjary
+MG23209170,Marosangy,Commune,MG23209,Mananjary
+MG23209190,Ambohimiarina II,Commune,MG23209,Mananjary
+MG23209210,Andranambolava,Commune,MG23209,Mananjary
+MG23209230,Vohilava,Commune,MG23209,Mananjary
+MG23209251,Mahela,Commune,MG23209,Mananjary
+MG23209252,Ambohitsara Est,Commune,MG23209,Mananjary
+MG23209270,Mahavoky Nord,Commune,MG23209,Mananjary
+MG23209290,Andonabe,Commune,MG23209,Mananjary
+MG23209310,Ambohinihaonana,Commune,MG23209,Mananjary
+MG23209331,Marofototra,Commune,MG23209,Mananjary
+MG23209332,Andranomavo,Commune,MG23209,Mananjary
+MG23209350,Vatohandrina,Commune,MG23209,Mananjary
+MG23209370,Ambalahosy Nord,Commune,MG23209,Mananjary
+MG23209391,Ambodinonoka,Commune,MG23209,Mananjary
+MG23209392,Antaretra,Commune,MG23209,Mananjary
+MG23209410,Kianjavato,Commune,MG23209,Mananjary
+MG23209430,Sandrohy,Commune,MG23209,Mananjary
+MG23209450,Anosimparihy,Commune,MG23209,Mananjary
+MG23209470,Manakana Nord,Commune,MG23209,Mananjary
+MG23209490,Namorona,Commune,MG23209,Mananjary
+MG23210010,Manakara,Commune,MG23210,Manakara Atsimo
+MG23210031,Tataho,Commune,MG23210,Manakara Atsimo
+MG23210032,Mangatsiotra,Commune,MG23210,Manakara Atsimo
+MG23210051,Marofarihy,Commune,MG23210,Manakara Atsimo
+MG23210052,Anosiala,Commune,MG23210,Manakara Atsimo
+MG23210070,Ambila,Commune,MG23210,Manakara Atsimo
+MG23210090,Sorombo,Commune,MG23210,Manakara Atsimo
+MG23210110,Mizilo Gara,Commune,MG23210,Manakara Atsimo
+MG23210130,Ambohitsara M,Commune,MG23210,Manakara Atsimo
+MG23210151,Sahasinaka,Commune,MG23210,Manakara Atsimo
+MG23210152,Sahanambohitra,Commune,MG23210,Manakara Atsimo
+MG23210153,Ambahatrazo,Commune,MG23210,Manakara Atsimo
+MG23210171,Amboanjo,Commune,MG23210,Manakara Atsimo
+MG23210172,Anorombato,Commune,MG23210,Manakara Atsimo
+MG23210190,Vohimasy,Commune,MG23210,Manakara Atsimo
+MG23210211,Lokomby,Commune,MG23210,Manakara Atsimo
+MG23210212,Vatana,Commune,MG23210,Manakara Atsimo
+MG23210213,Sakoana,Commune,MG23210,Manakara Atsimo
+MG23210231,Ambahive,Commune,MG23210,Manakara Atsimo
+MG23210232,Ambandrika,Commune,MG23210,Manakara Atsimo
+MG23210233,Ambalaroka,Commune,MG23210,Manakara Atsimo
+MG23210250,Vohimanitra,Commune,MG23210,Manakara Atsimo
+MG23210271,Mitanty,Commune,MG23210,Manakara Atsimo
+MG23210272,Analavory,Commune,MG23210,Manakara Atsimo
+MG23210291,Bekatra,Commune,MG23210,Manakara Atsimo
+MG23210292,Vinanitelo,Commune,MG23210,Manakara Atsimo
+MG23210311,Ampasimanjeva,Commune,MG23210,Manakara Atsimo
+MG23210312,Ambotaka,Commune,MG23210,Manakara Atsimo
+MG23210313,Nihaonana,Commune,MG23210,Manakara Atsimo
+MG23210330,Mavorano,Commune,MG23210,Manakara Atsimo
+MG23210351,Vohimasina Nord,Commune,MG23210,Manakara Atsimo
+MG23210352,Vohimasina Sud,Commune,MG23210,Manakara Atsimo
+MG23210353,Betampona,Commune,MG23210,Manakara Atsimo
+MG23210370,Vohilava,Commune,MG23210,Manakara Atsimo
+MG23210390,Fenomby,Commune,MG23210,Manakara Atsimo
+MG23210410,Ambalavero,Commune,MG23210,Manakara Atsimo
+MG23210430,Amborondra,Commune,MG23210,Manakara Atsimo
+MG23210451,Mahabako,Commune,MG23210,Manakara Atsimo
+MG23210452,Onilahy,Commune,MG23210,Manakara Atsimo
+MG23210471,Mahamaibe,Commune,MG23210,Manakara Atsimo
+MG23210472,Kianjanomby,Commune,MG23210,Manakara Atsimo
+MG23210490,Ampasimpotsy Sud,Commune,MG23210,Manakara Atsimo
+MG23210510,Anteza,Commune,MG23210,Manakara Atsimo
+MG23210531,Saharefo,Commune,MG23210,Manakara Atsimo
+MG23210532,Ampasimboraka,Commune,MG23210,Manakara Atsimo
+MG23211011,Ikongo,Commune,MG23211,Ikongo
+MG23211012,Ambolomadinika,Commune,MG23211,Ikongo
+MG23211031,Ambatofotsy,Commune,MG23211,Ikongo
+MG23211032,Belemoka,Commune,MG23211,Ikongo
+MG23211033,Maromiandra,Commune,MG23211,Ikongo
+MG23211051,Manampatrana,Commune,MG23211,Ikongo
+MG23211052,Ambinanitromby,Commune,MG23211,Ikongo
+MG23211071,Ifanirea,Commune,MG23211,Ikongo
+MG23211072,Tanakambana,Commune,MG23211,Ikongo
+MG23211073,Sahalanona,Commune,MG23211,Ikongo
+MG23211091,Tolongoina,Commune,MG23211,Ikongo
+MG23211092,Ambohimisafy,Commune,MG23211,Ikongo
+MG23212010,Vohipeno,Commune,MG23212,Vohipeno
+MG23212031,Vohitrindry,Commune,MG23212,Vohipeno
+MG23212032,Vohindava,Commune,MG23212,Vohipeno
+MG23212051,Ivato,Commune,MG23212,Vohipeno
+MG23212052,Savana,Commune,MG23212,Vohipeno
+MG23212053,Anoloka,Commune,MG23212,Vohipeno
+MG23212070,Mahabo,Commune,MG23212,Vohipeno
+MG23212090,Ankarimbary,Commune,MG23212,Vohipeno
+MG23212110,Lanivo,Commune,MG23212,Vohipeno
+MG23212130,Nato,Commune,MG23212,Vohipeno
+MG23212150,Mahasoabe,Commune,MG23212,Vohipeno
+MG23212171,Onjatsy,Commune,MG23212,Vohipeno
+MG23212172,Vohilany,Commune,MG23212,Vohipeno
+MG23212190,Andemaka,Commune,MG23212,Vohipeno
+MG23212211,Ifatsy,Commune,MG23212,Vohipeno
+MG23212212,Antananabo,Commune,MG23212,Vohipeno
+MG23212230,Ilakatra,Commune,MG23212,Vohipeno
+MG23212250,Sahalava,Commune,MG23212,Vohipeno
+MG23212270,Mahazoarivo,Commune,MG23212,Vohipeno
+MG24216010,Ihosy,Commune,MG24216,Ihosy
+MG24216031,Ankily,Commune,MG24216,Ihosy
+MG24216032,Ambia,Commune,MG24216,Ihosy
+MG24216033,Tolohomiady,Commune,MG24216,Ihosy
+MG24216050,Irina,Commune,MG24216,Ihosy
+MG24216070,Sahambano,Commune,MG24216,Ihosy
+MG24216090,Analaliry,Commune,MG24216,Ihosy
+MG24216110,Mahasoa,Commune,MG24216,Ihosy
+MG24216131,Ambatolahy,Commune,MG24216,Ihosy
+MG24216132,Soamatasy,Commune,MG24216,Ihosy
+MG24216151,Zazafotsy,Commune,MG24216,Ihosy
+MG24216152,Antsoha,Commune,MG24216,Ihosy
+MG24216170,Sakalalina,Commune,MG24216,Ihosy
+MG24216191,Satrokala,Commune,MG24216,Ihosy
+MG24216192,Andiolava,Commune,MG24216,Ihosy
+MG24216210,Analavoka,Commune,MG24216,Ihosy
+MG24216231,Ranohira,Commune,MG24216,Ihosy
+MG24216232,Ilakaka,Commune,MG24216,Ihosy
+MG24216250,Menamaty Iloto,Commune,MG24216,Ihosy
+MG24218010,Ivohibe,Commune,MG24218,Ivohibe
+MG24218030,Antambohobe,Commune,MG24218,Ivohibe
+MG24218050,Maropaika,Commune,MG24218,Ivohibe
+MG24218070,Ivongo,Commune,MG24218,Ivohibe
+MG24221010,Iakora,Commune,MG24221,Iakora
+MG24221030,Ranotsara Nord,Commune,MG24221,Iakora
+MG24221050,Begogo,Commune,MG24221,Iakora
+MG25213010,Farafangana,Commune,MG25213,Farafangana
+MG25213030,Vohimasy,Commune,MG25213,Farafangana
+MG25213050,Anosivelo,Commune,MG25213,Farafangana
+MG25213070,Anosy Tsararafa,Commune,MG25213,Farafangana
+MG25213090,Vohitromby,Commune,MG25213,Farafangana
+MG25213110,Ivandrika,Commune,MG25213,Farafangana
+MG25213130,Manambotra Atsimo,Commune,MG25213,Farafangana
+MG25213150,Mahavelo,Commune,MG25213,Farafangana
+MG25213170,Mahafasa Centre,Commune,MG25213,Farafangana
+MG25213190,Amporoforo,Commune,MG25213,Farafangana
+MG25213210,Iabohazo,Commune,MG25213,Farafangana
+MG25213230,Tangainony,Commune,MG25213,Farafangana
+MG25213250,Beretra Bevoay,Commune,MG25213,Farafangana
+MG25213270,Ambohigogo,Commune,MG25213,Farafangana
+MG25213290,Maheriraty,Commune,MG25213,Farafangana
+MG25213310,Mahabo Mananivo,Commune,MG25213,Farafangana
+MG25213330,Ambohimandroso,Commune,MG25213,Farafangana
+MG25213350,Ankarana Miraihina,Commune,MG25213,Farafangana
+MG25213370,Evato,Commune,MG25213,Farafangana
+MG25213390,Etrotroka Atsimo,Commune,MG25213,Farafangana
+MG25213410,Ambalavato Nord,Commune,MG25213,Farafangana
+MG25213430,Efatsy,Commune,MG25213,Farafangana
+MG25213450,Tovona,Commune,MG25213,Farafangana
+MG25213471,Ambalatany,Commune,MG25213,Farafangana
+MG25213472,Namohora Iaborano,Commune,MG25213,Farafangana
+MG25213490,Sahamadio,Commune,MG25213,Farafangana
+MG25213510,Fenoarivo,Commune,MG25213,Farafangana
+MG25213530,Antseranambe,Commune,MG25213,Farafangana
+MG25213551,Ihorombe,Commune,MG25213,Farafangana
+MG25213552,Ambalavato Antevato,Commune,MG25213,Farafangana
+MG25213570,Vohilengo,Commune,MG25213,Farafangana
+MG25213590,Marovandrika,Commune,MG25213,Farafangana
+MG25214010,Vangaindrano,Commune,MG25214,Vangaindrano
+MG25214031,Ampasimalemy,Commune,MG25214,Vangaindrano
+MG25214032,Tsianofana,Commune,MG25214,Vangaindrano
+MG25214033,Bekaraoky,Commune,MG25214,Vangaindrano
+MG25214050,Tsiately,Commune,MG25214,Vangaindrano
+MG25214070,Soamanova,Commune,MG25214,Vangaindrano
+MG25214091,Lopary,Commune,MG25214,Vangaindrano
+MG25214092,Bema,Commune,MG25214,Vangaindrano
+MG25214111,Vohitrambo,Commune,MG25214,Vangaindrano
+MG25214112,Anilobe,Commune,MG25214,Vangaindrano
+MG25214131,Lohafary,Commune,MG25214,Vangaindrano
+MG25214132,Ampataka,Commune,MG25214,Vangaindrano
+MG25214151,Matanga,Commune,MG25214,Vangaindrano
+MG25214152,Masianaka,Commune,MG25214,Vangaindrano
+MG25214171,Vohipaho,Commune,MG25214,Vangaindrano
+MG25214172,Marokibo,Commune,MG25214,Vangaindrano
+MG25214190,Ranomena,Commune,MG25214,Vangaindrano
+MG25214211,Ambongo,Commune,MG25214,Vangaindrano
+MG25214212,Ambatolava,Commune,MG25214,Vangaindrano
+MG25214230,Iara,Commune,MG25214,Vangaindrano
+MG25214251,Bevata,Commune,MG25214,Vangaindrano
+MG25214252,Karimbary,Commune,MG25214,Vangaindrano
+MG25214270,Manambondro,Commune,MG25214,Vangaindrano
+MG25214290,Fenoambany,Commune,MG25214,Vangaindrano
+MG25214311,Isahara,Commune,MG25214,Vangaindrano
+MG25214312,Vohimalaza,Commune,MG25214,Vangaindrano
+MG25214313,Vatanato,Commune,MG25214,Vangaindrano
+MG25214331,Amparihy Est,Commune,MG25214,Vangaindrano
+MG25214332,Sandravinany,Commune,MG25214,Vangaindrano
+MG25215011,Nosifeno,Commune,MG25215,Midongy-Atsimo
+MG25215012,Ankazovelo,Commune,MG25215,Midongy-Atsimo
+MG25215031,Andranolalina,Commune,MG25215,Midongy-Atsimo
+MG25215032,Maliorano,Commune,MG25215,Midongy-Atsimo
+MG25215051,Ivondro,Commune,MG25215,Midongy-Atsimo
+MG25215052,Soakibany,Commune,MG25215,Midongy-Atsimo
+MG25217011,Vondrozo,Commune,MG25217,Vondrozo
+MG25217012,Manambidala,Commune,MG25217,Vondrozo
+MG25217013,Anandravy,Commune,MG25217,Vondrozo
+MG25217030,Mahatsinjo,Commune,MG25217,Vondrozo
+MG25217051,Mahazoarivo,Commune,MG25217,Vondrozo
+MG25217052,Iamonta,Commune,MG25217,Vondrozo
+MG25217071,Vohimary,Commune,MG25217,Vondrozo
+MG25217072,Antokonala,Commune,MG25217,Vondrozo
+MG25217090,Ambohimana,Commune,MG25217,Vondrozo
+MG25217111,Karianga,Commune,MG25217,Vondrozo
+MG25217112,Manato,Commune,MG25217,Vondrozo
+MG25217130,Ivato,Commune,MG25217,Vondrozo
+MG25217150,Mahavelo,Commune,MG25217,Vondrozo
+MG25217170,Andakana,Commune,MG25217,Vondrozo
+MG25217191,Moroteza,Commune,MG25217,Vondrozo
+MG25217192,Vohiboreka,Commune,MG25217,Vondrozo
+MG25222011,Befotaka Sud,Commune,MG25222,Befotaka
+MG25222051,Ranotsara Sud,Commune,MG25222,Befotaka
+MG25222052,Beharena,Commune,MG25222,Befotaka
+MG25222053,Bekofafa Sud,Commune,MG25222,Befotaka
+MG31301001,Ambodimanga,Commune,MG31301,Toamasina I
+MG31301002,Anjoma,Commune,MG31301,Toamasina I
+MG31301003,Morarano,Commune,MG31301,Toamasina I
+MG31301004,Tanambao V,Commune,MG31301,Toamasina I
+MG31301005,Ankirihiry,Commune,MG31301,Toamasina I
+MG31306010,Brickaville,Commune,MG31306,Brickaville
+MG31306030,Vohitranivona,Commune,MG31306,Brickaville
+MG31306050,Anivorano Est,Commune,MG31306,Brickaville
+MG31306070,Mahatsara,Commune,MG31306,Brickaville
+MG31306090,Andovoranto,Commune,MG31306,Brickaville
+MG31306110,Ambinaninony,Commune,MG31306,Brickaville
+MG31306130,Fetraomby,Commune,MG31306,Brickaville
+MG31306150,Vohipeno Razanaka,Commune,MG31306,Brickaville
+MG31306171,Ranomafana Est,Commune,MG31306,Brickaville
+MG31306172,Ampasimbe,Commune,MG31306,Brickaville
+MG31306190,Fanasana,Commune,MG31306,Brickaville
+MG31306210,Ambalarondra,Commune,MG31306,Brickaville
+MG31306230,Maroseranana,Commune,MG31306,Brickaville
+MG31306251,Lohariandava,Commune,MG31306,Brickaville
+MG31306252,Andekaleka,Commune,MG31306,Brickaville
+MG31306270,Ambohimanana,Commune,MG31306,Brickaville
+MG31306290,Anjahamana,Commune,MG31306,Brickaville
+MG31307010,Vatomandry,Commune,MG31307,Vatomandry
+MG31307030,Ambodivoananto,Commune,MG31307,Vatomandry
+MG31307051,Maintinandry,Commune,MG31307,Vatomandry
+MG31307052,Tanambao Vahatrakaka,Commune,MG31307,Vatomandry
+MG31307053,Tsarasambo,Commune,MG31307,Vatomandry
+MG31307070,Sahamatevina,Commune,MG31307,Vatomandry
+MG31307091,Antanambao Mahatsara,Commune,MG31307,Vatomandry
+MG31307092,Iamborano,Commune,MG31307,Vatomandry
+MG31307110,Ambalavolo,Commune,MG31307,Vatomandry
+MG31307131,Amboditavolo,Commune,MG31307,Vatomandry
+MG31307132,Niherenana,Commune,MG31307,Vatomandry
+MG31307151,Ilaka Est,Commune,MG31307,Vatomandry
+MG31307152,Niarovana Caroline,Commune,MG31307,Vatomandry
+MG31307171,Tsivangiana,Commune,MG31307,Vatomandry
+MG31307172,Ampasimazava,Commune,MG31307,Vatomandry
+MG31307190,Ampasimadinika,Commune,MG31307,Vatomandry
+MG31307210,Ifasina I,Commune,MG31307,Vatomandry
+MG31307230,Ambalabe,Commune,MG31307,Vatomandry
+MG31307250,Ifasina II,Commune,MG31307,Vatomandry
+MG31308011,Mahanoro,Commune,MG31308,Mahanoro
+MG31308012,Betsizaraina,Commune,MG31308,Mahanoro
+MG31308030,Tsaravinany,Commune,MG31308,Mahanoro
+MG31308050,Ambodiharina,Commune,MG31308,Mahanoro
+MG31308070,Manjakandriana,Commune,MG31308,Mahanoro
+MG31308090,Masomeloka,Commune,MG31308,Mahanoro
+MG31308110,Ambinanidilana,Commune,MG31308,Mahanoro
+MG31308130,Ambodibonara,Commune,MG31308,Mahanoro
+MG31308150,Ankazotsifantatra,Commune,MG31308,Mahanoro
+MG31308170,Ambinanindrano,Commune,MG31308,Mahanoro
+MG31308190,Befotaka,Commune,MG31308,Mahanoro
+MG31309010,Marolambo,Commune,MG31309,Marolambo
+MG31309031,Betampona,Commune,MG31309,Marolambo
+MG31309032,Tanambao Rabemanana,Commune,MG31309,Marolambo
+MG31309050,Andonabe Sud,Commune,MG31309,Marolambo
+MG31309071,Ambalapaiso II,Commune,MG31309,Marolambo
+MG31309072,Ambodivoangy,Commune,MG31309,Marolambo
+MG31309090,Ambohimilanja,Commune,MG31309,Marolambo
+MG31309110,Ambatofisaka II,Commune,MG31309,Marolambo
+MG31309131,Androrangavola,Commune,MG31309,Marolambo
+MG31309132,Anosiarivo I,Commune,MG31309,Marolambo
+MG31309150,Amboasary,Commune,MG31309,Marolambo
+MG31309170,Lohavanana,Commune,MG31309,Marolambo
+MG31309191,Ambodinonoka,Commune,MG31309,Marolambo
+MG31309192,Sahakevo,Commune,MG31309,Marolambo
+MG31310010,Toamasina Suburbaine,Commune,MG31310,Toamasina II
+MG31310030,Antetezambaro,Commune,MG31310,Toamasina II
+MG31310050,Fanandrana,Commune,MG31310,Toamasina II
+MG31310070,Ambodiriana,Commune,MG31310,Toamasina II
+MG31310091,Ampasimadinika Manambolo,Commune,MG31310,Toamasina II
+MG31310092,Amboditandroroho,Commune,MG31310,Toamasina II
+MG31310110,Mahavelona (Foulpointe),Commune,MG31310,Toamasina II
+MG31310130,Sahambala,Commune,MG31310,Toamasina II
+MG31310150,Ambodilazana,Commune,MG31310,Toamasina II
+MG31310170,Ampasimbe Onibe,Commune,MG31310,Toamasina II
+MG31310191,Mangabe,Commune,MG31310,Toamasina II
+MG31310192,Amporoforo,Commune,MG31310,Toamasina II
+MG31310193,Antenina,Commune,MG31310,Toamasina II
+MG31310211,Andondabe,Commune,MG31310,Toamasina II
+MG31310212,Ampisokina,Commune,MG31310,Toamasina II
+MG31310230,Andranobolaha,Commune,MG31310,Toamasina II
+MG31310250,Fito,Commune,MG31310,Toamasina II
+MG31311010,Antanambao Manampontsy,Commune,MG31311,Antanambao Manampontsy
+MG31311030,Mahela,Commune,MG31311,Antanambao Manampontsy
+MG31311050,Saivaza,Commune,MG31311,Antanambao Manampontsy
+MG31311070,Antanandehibe,Commune,MG31311,Antanambao Manampontsy
+MG31311090,Manakana,Commune,MG31311,Antanambao Manampontsy
+MG32302019,Sainte Marie,Commune,MG32302,Sainte Marie
+MG32303010,Maroantsetra,Commune,MG32303,Maroantsetra
+MG32303031,Anjanazana,Commune,MG32303,Maroantsetra
+MG32303032,Manambolo,Commune,MG32303,Maroantsetra
+MG32303051,Andranofotsy,Commune,MG32303,Maroantsetra
+MG32303052,Antakotako,Commune,MG32303,Maroantsetra
+MG32303070,Ankofa,Commune,MG32303,Maroantsetra
+MG32303090,Ambinanitelo,Commune,MG32303,Maroantsetra
+MG32303111,Anjahana,Commune,MG32303,Maroantsetra
+MG32303112,Ambanizana,Commune,MG32303,Maroantsetra
+MG32303113,Mahalevona,Commune,MG32303,Maroantsetra
+MG32303131,Voloina,Commune,MG32303,Maroantsetra
+MG32303132,Ankofabe,Commune,MG32303,Maroantsetra
+MG32303133,Antsirabe Sahatany,Commune,MG32303,Maroantsetra
+MG32303151,Rantabe,Commune,MG32303,Maroantsetra
+MG32303152,Morafeno,Commune,MG32303,Maroantsetra
+MG32303153,Androndrono,Commune,MG32303,Maroantsetra
+MG32303154,Ambodimanga Rantabe,Commune,MG32303,Maroantsetra
+MG32303155,Anandrivola,Commune,MG32303,Maroantsetra
+MG32304011,Mananara Avaratra,Commune,MG32304,Mananara-Avaratra
+MG32304012,Ambodivoanio,Commune,MG32304,Mananara-Avaratra
+MG32304013,Imorona,Commune,MG32304,Mananara-Avaratra
+MG32304031,Antanambaobe,Commune,MG32304,Mananara-Avaratra
+MG32304032,Antanananivo,Commune,MG32304,Mananara-Avaratra
+MG32304050,Manambolosy,Commune,MG32304,Mananara-Avaratra
+MG32304070,Ambodiampana,Commune,MG32304,Mananara-Avaratra
+MG32304091,Sandrakatsy,Commune,MG32304,Mananara-Avaratra
+MG32304092,Tanibe,Commune,MG32304,Mananara-Avaratra
+MG32304093,Ambatoharanana,Commune,MG32304,Mananara-Avaratra
+MG32318012,Fotsialanana,Commune,MG32318,Soanierana Ivongo
+MG32318030,Antanifotsy,Commune,MG32318,Soanierana Ivongo
+MG32318050,Ambodiampana,Commune,MG32318,Soanierana Ivongo
+MG41405052,Andranofasika,Commune,MG41405,Ambato Boeni
+MG41405070,Madirovalo,Commune,MG41405,Ambato Boeni
+MG41405090,Anjiajia,Commune,MG41405,Ambato Boeni
+MG42409091,Andranomeva,Commune,MG42409,Port-Berge (Boriziny-Vaovao)
+MG42409092,Amparihy,Commune,MG42409,Port-Berge (Boriziny-Vaovao)
+MG42409111,Leanja,Commune,MG42409,Port-Berge (Boriziny-Vaovao)
+MG42409150,Marovato,Commune,MG42409,Port-Berge (Boriziny-Vaovao)
+MG42409171,Ambodimahabibo,Commune,MG42409,Port-Berge (Boriziny-Vaovao)
+MG42409172,Ambodivongo,Commune,MG42409,Port-Berge (Boriziny-Vaovao)
+MG44402011,Besalampy,Commune,MG44402,Besalampy
+MG44402012,Ampako,Commune,MG44402,Besalampy
+MG44402030,Marovoay Sud,Commune,MG44402,Besalampy
+MG51503091,Mandronarivo,Commune,MG51503,Beroroha
+MG51503092,Tanamary,Commune,MG51503,Beroroha
+MG51503093,Sakena,Commune,MG51503,Beroroha
+MG51504130,Antanimieva,Commune,MG51504,Morombe
+MG51504150,Basibasy,Commune,MG51504,Morombe
+MG51505011,Ankazoabo Sud,Commune,MG51505,Ankazoabo
+MG32304110,Antanambe,Commune,MG32304,Mananara-Avaratra
+MG32304130,Saromaona,Commune,MG32304,Mananara-Avaratra
+MG32304151,Vanono,Commune,MG32304,Mananara-Avaratra
+MG32304152,Andasibe I,Commune,MG32304,Mananara-Avaratra
+MG32305010,Fenerive Est,Commune,MG32305,Fenerive Est
+MG32305030,Ambodimanga II,Commune,MG32305,Fenerive Est
+MG32305050,Mahambo,Commune,MG32305,Fenerive Est
+MG32305070,Ampasina Maningory,Commune,MG32305,Fenerive Est
+MG32305090,Ambatoharanana,Commune,MG32305,Fenerive Est
+MG32305110,Vohilengo,Commune,MG32305,Fenerive Est
+MG32305130,Saranambana,Commune,MG32305,Fenerive Est
+MG32305150,Ampasimbe Manantsatrana,Commune,MG32305,Fenerive Est
+MG32305170,Miorimivalana,Commune,MG32305,Fenerive Est
+MG32305190,Vohipeno,Commune,MG32305,Fenerive Est
+MG32305210,Antsiatsiaka,Commune,MG32305,Fenerive Est
+MG32305238,Mahanoro,Commune,MG32305,Fenerive Est
+MG32315010,Vavatenina,Commune,MG32315,Vavatenina
+MG32315030,Maromitety,Commune,MG32315,Vavatenina
+MG32315050,Ambohibe,Commune,MG32315,Vavatenina
+MG32315070,Ampasimazava,Commune,MG32315,Vavatenina
+MG32315091,Anjahambe,Commune,MG32315,Vavatenina
+MG32315092,Ambatoharanana,Commune,MG32315,Vavatenina
+MG32315110,Andasibe,Commune,MG32315,Vavatenina
+MG32315130,Miarinarivo,Commune,MG32315,Vavatenina
+MG32315150,Sahatavy,Commune,MG32315,Vavatenina
+MG32315170,Ambodimangavalo,Commune,MG32315,Vavatenina
+MG32318011,Soanierana Ivongo,Commune,MG32318,Soanierana Ivongo
+MG32318070,Andapafito,Commune,MG32318,Soanierana Ivongo
+MG32318090,Ambahoabe,Commune,MG32318,Soanierana Ivongo
+MG32318110,Manompana,Commune,MG32318,Soanierana Ivongo
+MG32318130,Antenina,Commune,MG32318,Soanierana Ivongo
+MG33312011,Amparafaravola,Commune,MG33312,Amparafaravola
+MG33312012,Bedidy,Commune,MG33312,Amparafaravola
+MG33312013,Ambohimandroso,Commune,MG33312,Amparafaravola
+MG33312014,Sahamamy,Commune,MG33312,Amparafaravola
+MG33312031,Ambatomainty,Commune,MG33312,Amparafaravola
+MG33312032,Ampasikely,Commune,MG33312,Amparafaravola
+MG33312033,Andrebakely Sud,Commune,MG33312,Amparafaravola
+MG33312051,Ambohitrarivo,Commune,MG33312,Amparafaravola
+MG33312052,Anororo,Commune,MG33312,Amparafaravola
+MG33312071,Morarano Chrome,Commune,MG33312,Amparafaravola
+MG33312072,Ranomainty,Commune,MG33312,Amparafaravola
+MG33312090,Ambohijanahary,Commune,MG33312,Amparafaravola
+MG33312111,Tanambe,Commune,MG33312,Amparafaravola
+MG33312112,Beanana,Commune,MG33312,Amparafaravola
+MG33312113,Vohitsara,Commune,MG33312,Amparafaravola
+MG33312131,Amboavory,Commune,MG33312,Amparafaravola
+MG33312132,Andilana Nord,Commune,MG33312,Amparafaravola
+MG33312133,Ambodimanga,Commune,MG33312,Amparafaravola
+MG33312151,Vohimena,Commune,MG33312,Amparafaravola
+MG33312152,Andrebakely Nord,Commune,MG33312,Amparafaravola
+MG33313010,Ambatondrazaka,Commune,MG33313,Ambatondrazaka
+MG33313031,Feramanga Nord,Commune,MG33313,Ambatondrazaka
+MG33313032,Ambatondrazaka Suburbaine,Commune,MG33313,Ambatondrazaka
+MG33313033,Ambandrika,Commune,MG33313,Ambatondrazaka
+MG33313050,Ampitatsimo,Commune,MG33313,Ambatondrazaka
+MG33313070,Ambohitsilaozana,Commune,MG33313,Ambatondrazaka
+MG33313090,Ilafy,Commune,MG33313,Ambatondrazaka
+MG33313111,Manakambahiny Andrefana,Commune,MG33313,Ambatondrazaka
+MG33313112,Antsangasanga,Commune,MG33313,Ambatondrazaka
+MG33313130,Ambatosoratra,Commune,MG33313,Ambatondrazaka
+MG33313151,Andilanatoby,Commune,MG33313,Ambatondrazaka
+MG33313152,Bejofo,Commune,MG33313,Ambatondrazaka
+MG33313170,Didy,Commune,MG33313,Ambatondrazaka
+MG33313191,Imerimandroso,Commune,MG33313,Ambatondrazaka
+MG33313192,Amparihintsokatra,Commune,MG33313,Ambatondrazaka
+MG33313193,Antanandava,Commune,MG33313,Ambatondrazaka
+MG33313194,Andromba,Commune,MG33313,Ambatondrazaka
+MG33313210,Manakambahiny Antsinanana,Commune,MG33313,Ambatondrazaka
+MG33313231,Soalazaina,Commune,MG33313,Ambatondrazaka
+MG33313232,Tanambao Besakay,Commune,MG33313,Ambatondrazaka
+MG33314010,Moramanga,Commune,MG33314,Moramanga
+MG33314030,Ambohibary,Commune,MG33314,Moramanga
+MG33314050,Ampasimpotsy Gara,Commune,MG33314,Moramanga
+MG33314070,Andasibe,Commune,MG33314,Moramanga
+MG33314091,Anosibe Ifody,Commune,MG33314,Moramanga
+MG33314092,Vodiriana,Commune,MG33314,Moramanga
+MG33314110,Morarano Gara,Commune,MG33314,Moramanga
+MG33314130,Belavabary,Commune,MG33314,Moramanga
+MG33314150,Sabotsy Anjiro,Commune,MG33314,Moramanga
+MG33314170,Ambohidronono,Commune,MG33314,Moramanga
+MG33314190,Beforona,Commune,MG33314,Moramanga
+MG33314210,Ambatovola,Commune,MG33314,Moramanga
+MG33314230,Lakato,Commune,MG33314,Moramanga
+MG33314250,Amboasary,Commune,MG33314,Moramanga
+MG33314270,Fierenana,Commune,MG33314,Moramanga
+MG33314291,Mandialaza,Commune,MG33314,Moramanga
+MG33314292,Antaniditra,Commune,MG33314,Moramanga
+MG33314293,Ampasipotsy Mandialaza,Commune,MG33314,Moramanga
+MG33314310,Antanandava,Commune,MG33314,Moramanga
+MG33314330,Mangarivotra,Commune,MG33314,Moramanga
+MG33314350,Andaingo,Commune,MG33314,Moramanga
+MG33316011,Andilamena,Commune,MG33316,Andilamena
+MG33316012,Bemaitso,Commune,MG33316,Andilamena
+MG33316031,Antanimenabaka,Commune,MG33316,Andilamena
+MG33316032,Tanananifololahy,Commune,MG33316,Andilamena
+MG33316051,Maroadabo,Commune,MG33316,Andilamena
+MG33316052,Marovato,Commune,MG33316,Andilamena
+MG33316071,Miarinarivo,Commune,MG33316,Andilamena
+MG33316072,Maitsokely,Commune,MG33316,Andilamena
+MG33317011,Anosibe An'ala,Commune,MG33317,Anosibe-An'ala
+MG33317012,Ampasimaneva,Commune,MG33317,Anosibe-An'ala
+MG33317031,Ampandroantraka,Commune,MG33317,Anosibe-An'ala
+MG33317032,Tratramarina,Commune,MG33317,Anosibe-An'ala
+MG33317051,Antandrokomby,Commune,MG33317,Anosibe-An'ala
+MG33317052,Ambalaomby,Commune,MG33317,Anosibe-An'ala
+MG33317053,Niarovana Marosampanana,Commune,MG33317,Anosibe-An'ala
+MG33317054,Tsaravinany,Commune,MG33317,Anosibe-An'ala
+MG33317071,Longozabe,Commune,MG33317,Anosibe-An'ala
+MG33317072,Ambatoharanana,Commune,MG33317,Anosibe-An'ala
+MG41401001,Mahajanga,Commune,MG41401,Mahajanga I
+MG41401002,Mahabibo,Commune,MG41401,Mahajanga I
+MG41403010,Soalala,Commune,MG41403,Soalala
+MG41403030,Ambohipaky,Commune,MG41403,Soalala
+MG41403050,Andranomavo,Commune,MG41403,Soalala
+MG41405019,Ambato Ambarimay,Commune,MG41405,Ambato Boeni
+MG41405051,Ankijabe,Commune,MG41405,Ambato Boeni
+MG41405111,Tsaramandroso,Commune,MG41405,Ambato Boeni
+MG41405112,Ambondromamy,Commune,MG41405,Ambato Boeni
+MG41405130,Ankirihitra,Commune,MG41405,Ambato Boeni
+MG41405150,Andranomamy,Commune,MG41405,Ambato Boeni
+MG41405170,Manerinerina,Commune,MG41405,Ambato Boeni
+MG41405190,Sitampiky,Commune,MG41405,Ambato Boeni
+MG41406010,Marovoay Ville,Commune,MG41406,Marovoay
+MG41406031,Marovoay Banlieue,Commune,MG41406,Marovoay
+MG41406032,Antanambao Andranolava,Commune,MG41406,Marovoay
+MG41406033,Anosinalainolona,Commune,MG41406,Marovoay
+MG41406051,Ambolomoty,Commune,MG41406,Marovoay
+MG41406052,Marovoay,Commune,MG41406,Marovoay
+MG41406070,Tsararano,Commune,MG41406,Marovoay
+MG41406090,Ankazomborona,Commune,MG41406,Marovoay
+MG41406111,Manaratsandry,Commune,MG41406,Marovoay
+MG41406112,Antanimasaka,Commune,MG41406,Marovoay
+MG41406130,Bemaharivo,Commune,MG41406,Marovoay
+MG41406158,Ankaraobato,Commune,MG41406,Marovoay
+MG41407011,Mitsinjo,Commune,MG41407,Mitsinjo
+MG41407012,Antseza,Commune,MG41407,Mitsinjo
+MG41407030,Antongomena Bevary,Commune,MG41407,Mitsinjo
+MG41407050,Matsakabanja,Commune,MG41407,Mitsinjo
+MG41407070,Katsepy,Commune,MG41407,Mitsinjo
+MG41407091,Bekipay,Commune,MG41407,Mitsinjo
+MG41407092,Ambarimaninga,Commune,MG41407,Mitsinjo
+MG41415011,Belobaka,Commune,MG41415,Mahajanga II
+MG41415012,Boanamary,Commune,MG41415,Mahajanga II
+MG41415031,Ambalakida,Commune,MG41415,Mahajanga II
+MG41415032,Betsako,Commune,MG41415,Mahajanga II
+MG41415050,Mariarano,Commune,MG41415,Mahajanga II
+MG41415071,Bekobay,Commune,MG41415,Mahajanga II
+MG41415072,Andranoboka,Commune,MG41415,Mahajanga II
+MG41415091,Mahajamba Usine,Commune,MG41415,Mahajanga II
+MG41415092,Ambalabe Befanjava,Commune,MG41415,Mahajanga II
+MG42409010,Port Berge,Commune,MG42409,Port-Berge (Boriziny-Vaovao)
+MG42409031,Ambanjabe,Commune,MG42409,Port-Berge (Boriziny-Vaovao)
+MG42409032,Tsaratanana I,Commune,MG42409,Port-Berge (Boriziny-Vaovao)
+MG42409050,Tsarahasina,Commune,MG42409,Port-Berge (Boriziny-Vaovao)
+MG42409070,Tsiningia,Commune,MG42409,Port-Berge (Boriziny-Vaovao)
+MG42409112,Ambodisakoana,Commune,MG42409,Port-Berge (Boriziny-Vaovao)
+MG42409131,Tsinjomitondraka,Commune,MG42409,Port-Berge (Boriziny-Vaovao)
+MG42409132,Maevaranohely,Commune,MG42409,Port-Berge (Boriziny-Vaovao)
+MG42409190,Port Berge II,Commune,MG42409,Port-Berge (Boriziny-Vaovao)
+MG42410010,Mandritsara,Commune,MG42410,Mandritsara
+MG42410030,Antanandava,Commune,MG42410,Mandritsara
+MG42410050,Antsoha,Commune,MG42410,Mandritsara
+MG42410070,Tsaratanana,Commune,MG42410,Mandritsara
+MG42410090,Kalandy,Commune,MG42410,Mandritsara
+MG42410111,Antsirabe Centre,Commune,MG42410,Mandritsara
+MG42410112,Antsiatsiaka,Commune,MG42410,Mandritsara
+MG42410130,Amboaboa,Commune,MG42410,Mandritsara
+MG42410150,Manampaneva,Commune,MG42410,Mandritsara
+MG42410171,Ambarikorano,Commune,MG42410,Mandritsara
+MG42410172,Andratamarina,Commune,MG42410,Mandritsara
+MG42410191,Ambaripaika,Commune,MG42410,Mandritsara
+MG42410192,Ambodiamontana Kianga,Commune,MG42410,Mandritsara
+MG42410211,Ambalakirajy,Commune,MG42410,Mandritsara
+MG42410212,Tsarajomoka,Commune,MG42410,Mandritsara
+MG42410231,Antsatramidola,Commune,MG42410,Mandritsara
+MG42410232,Ankiakabe-Fonoko,Commune,MG42410,Mandritsara
+MG42410250,Marotandrano,Commune,MG42410,Mandritsara
+MG42410270,Ambilombe,Commune,MG42410,Mandritsara
+MG42410290,Andohajango,Commune,MG42410,Mandritsara
+MG42410310,Anjiabe,Commune,MG42410,Mandritsara
+MG42410330,Ambohisoa,Commune,MG42410,Mandritsara
+MG42410350,Ampatakamaroreny,Commune,MG42410,Mandritsara
+MG42410371,Ankiabe-Salohy,Commune,MG42410,Mandritsara
+MG42410372,Pont Sofia,Commune,MG42410,Mandritsara
+MG42410391,Ambodiadabo,Commune,MG42410,Mandritsara
+MG42410392,Amborondolo,Commune,MG42410,Mandritsara
+MG42410410,Antanambaon'amberina,Commune,MG42410,Mandritsara
+MG42411011,Analalava,Commune,MG42411,Analalava
+MG42411012,Ambarijeby Sud,Commune,MG42411,Analalava
+MG42411030,Ambolobozo,Commune,MG42411,Analalava
+MG42411050,Befotaka Nord,Commune,MG42411,Analalava
+MG42411070,Ambaliha,Commune,MG42411,Analalava
+MG42411090,Maromandia,Commune,MG42411,Analalava
+MG42411110,Marovatolena,Commune,MG42411,Analalava
+MG42411131,Andribavontsona,Commune,MG42411,Analalava
+MG42411132,Angoaka Sud,Commune,MG42411,Analalava
+MG42411150,Marovantaza,Commune,MG42411,Analalava
+MG42411170,Ankaramy,Commune,MG42411,Analalava
+MG42411190,Antonibe,Commune,MG42411,Analalava
+MG42411210,Mahadrodroka,Commune,MG42411,Analalava
+MG42412010,Befandriana Nord,Commune,MG42412,Befandriana Nord
+MG42412030,Morafeno,Commune,MG42412,Befandriana Nord
+MG42412050,Ambodimotso Sud,Commune,MG42412,Befandriana Nord
+MG42412070,Tsiamalao,Commune,MG42412,Befandriana Nord
+MG42412090,Maroamalona,Commune,MG42412,Befandriana Nord
+MG42412110,Tsarahonenana,Commune,MG42412,Befandriana Nord
+MG42412130,Antsakanalabe,Commune,MG42412,Befandriana Nord
+MG42412150,Ambararata,Commune,MG42412,Befandriana Nord
+MG42412170,Ambolidibe Est,Commune,MG42412,Befandriana Nord
+MG42412190,Ankarongana,Commune,MG42412,Befandriana Nord
+MG42412210,Antsakabary,Commune,MG42412,Befandriana Nord
+MG42412230,Matsondakana,Commune,MG42412,Befandriana Nord
+MG42413010,Antsohihy,Commune,MG42413,Antsohihy
+MG42413030,Ankerika,Commune,MG42413,Antsohihy
+MG42413051,Ampandriankilandy,Commune,MG42413,Antsohihy
+MG42413052,Anjalazala,Commune,MG42413,Antsohihy
+MG42413070,Anahidrano,Commune,MG42413,Antsohihy
+MG42413090,Ambodimandresy,Commune,MG42413,Antsohihy
+MG42413110,Anjiamangirana,Commune,MG42413,Antsohihy
+MG42413130,Ambodimanary,Commune,MG42413,Antsohihy
+MG42413150,Antsahabe,Commune,MG42413,Antsohihy
+MG42413171,Ambodimadiro,Commune,MG42413,Antsohihy
+MG42413172,Andreba,Commune,MG42413,Antsohihy
+MG42413190,Maroala,Commune,MG42413,Antsohihy
+MG42414010,Bealanana,Commune,MG42414,Bealanana
+MG42414031,Beandrarezona,Commune,MG42414,Bealanana
+MG42414032,Antananivo Haut,Commune,MG42414,Bealanana
+MG42414050,Antsamaka,Commune,MG42414,Bealanana
+MG42414071,Ambatosia,Commune,MG42414,Bealanana
+MG42414072,Ambodiampana,Commune,MG42414,Bealanana
+MG42414090,Ambatoriha Est,Commune,MG42414,Bealanana
+MG42414110,Ambovonomby,Commune,MG42414,Bealanana
+MG42414131,Analila,Commune,MG42414,Bealanana
+MG42414132,Anjozoromadosy,Commune,MG42414,Bealanana
+MG42414151,Mangindrano,Commune,MG42414,Bealanana
+MG42414152,Ambararatabe Nord,Commune,MG42414,Bealanana
+MG42414171,Ambodisikidy,Commune,MG42414,Bealanana
+MG42414172,Ambararata Sofia,Commune,MG42414,Bealanana
+MG42414190,Marotolana,Commune,MG42414,Bealanana
+MG42414211,Ambodiadabo M,Commune,MG42414,Bealanana
+MG42414212,Ankazotokana,Commune,MG42414,Bealanana
+MG42414213,Ambalaromba,Commune,MG42414,Bealanana
+MG42423010,Mampikony I,Commune,MG42423,Mampikony
+MG42423030,Mampikony II,Commune,MG42423,Mampikony
+MG42423051,Ambohitoaka,Commune,MG42423,Mampikony
+MG42423052,Ankiririky,Commune,MG42423,Mampikony
+MG42423071,Bekoratsaka,Commune,MG42423,Mampikony
+MG42423072,Malakialina,Commune,MG42423,Mampikony
+MG42423073,Betaramahamay,Commune,MG42423,Mampikony
+MG42423090,Komajia,Commune,MG42423,Mampikony
+MG42423111,Ampasimatera,Commune,MG42423,Mampikony
+MG42423112,Ambodihazoambo,Commune,MG42423,Mampikony
+MG43404010,Maevatanana I,Commune,MG43404,Maevatanana
+MG43404031,Maevatanana II,Commune,MG43404,Maevatanana
+MG43404032,Beratsimanina,Commune,MG43404,Maevatanana
+MG43404050,Bemokotra,Commune,MG43404,Maevatanana
+MG43404070,Mahazoma,Commune,MG43404,Maevatanana
+MG43404091,Antsiafabositra,Commune,MG43404,Maevatanana
+MG43404092,Antanimbary,Commune,MG43404,Maevatanana
+MG43404111,Tsararano,Commune,MG43404,Maevatanana
+MG43404112,Ambalajia,Commune,MG43404,Maevatanana
+MG43404131,Ambalanjanakomby,Commune,MG43404,Maevatanana
+MG43404132,Marokoro,Commune,MG43404,Maevatanana
+MG43404150,Maria,Commune,MG43404,Maevatanana
+MG43404171,Andriba,Commune,MG43404,Maevatanana
+MG43404172,Mahatsinjo,Commune,MG43404,Maevatanana
+MG43404173,Morafeno,Commune,MG43404,Maevatanana
+MG43404191,Mangabe,Commune,MG43404,Maevatanana
+MG43404192,Madiromirafy,Commune,MG43404,Maevatanana
+MG43408010,Tsaratanana,Commune,MG43408,Tsaratanana
+MG43408030,Bekapaika,Commune,MG43408,Tsaratanana
+MG43408050,Tsararova,Commune,MG43408,Tsaratanana
+MG43408070,Betrandraka,Commune,MG43408,Tsaratanana
+MG43408090,Keliloha,Commune,MG43408,Tsaratanana
+MG43408110,Sarobaratra,Commune,MG43408,Tsaratanana
+MG43408130,Ampandrana,Commune,MG43408,Tsaratanana
+MG43408150,Andriamena,Commune,MG43408,Tsaratanana
+MG43408170,Ambakireny,Commune,MG43408,Tsaratanana
+MG43408190,Brieville,Commune,MG43408,Tsaratanana
+MG43408210,Sakoamadinika,Commune,MG43408,Tsaratanana
+MG43408230,Manakana,Commune,MG43408,Tsaratanana
+MG43416011,Kandreho,Commune,MG43416,Kandreho
+MG43416012,Ambaliha,Commune,MG43416,Kandreho
+MG43416013,Behazomaty,Commune,MG43416,Kandreho
+MG43416030,Antanimbaribe,Commune,MG43416,Kandreho
+MG43416051,Betaimboay,Commune,MG43416,Kandreho
+MG43416052,Andasibe,Commune,MG43416,Kandreho
+MG44402050,Soanenga,Commune,MG44402,Besalampy
+MG44402071,Bekodoka,Commune,MG44402,Besalampy
+MG44402072,Ambolodia Sud,Commune,MG44402,Besalampy
+MG44402090,Ankasakasa Tsibiray,Commune,MG44402,Besalampy
+MG44402110,Mahabe,Commune,MG44402,Besalampy
+MG44417011,Ambatomainty,Commune,MG44417,Ambatomainty
+MG44417012,Bemarivo,Commune,MG44417,Ambatomainty
+MG44417031,Sarodrano,Commune,MG44417,Ambatomainty
+MG44417032,Marotsialeha,Commune,MG44417,Ambatomainty
+MG44420010,Antsalova,Commune,MG44420,Antsalova
+MG44420030,Soahany,Commune,MG44420,Antsalova
+MG44420050,Masoarivo,Commune,MG44420,Antsalova
+MG44420070,Trangahy,Commune,MG44420,Antsalova
+MG44420090,Bekopaka,Commune,MG44420,Antsalova
+MG44421010,Maintirano,Commune,MG44421,Maintirano
+MG44421030,Mafaijijo,Commune,MG44421,Maintirano
+MG44421050,Andabotoka,Commune,MG44421,Maintirano
+MG44421070,Betanatanana,Commune,MG44421,Maintirano
+MG44421090,Andrea,Commune,MG44421,Maintirano
+MG44421110,Ankisatra,Commune,MG44421,Maintirano
+MG44421130,Marohazo,Commune,MG44421,Maintirano
+MG44421150,Antsondrodava,Commune,MG44421,Maintirano
+MG44421170,Belitsaky,Commune,MG44421,Maintirano
+MG44421191,Tambohorano,Commune,MG44421,Maintirano
+MG44421192,Veromanga,Commune,MG44421,Maintirano
+MG44421193,Maromavo,Commune,MG44421,Maintirano
+MG44421194,Andranovao,Commune,MG44421,Maintirano
+MG44421210,Antsaidoha Bebao,Commune,MG44421,Maintirano
+MG44421231,Berevo/Ranobe,Commune,MG44421,Maintirano
+MG44421232,Bebaboky Sud,Commune,MG44421,Maintirano
+MG44421233,Bemokotra Sud,Commune,MG44421,Maintirano
+MG44422010,Morafenobe,Commune,MG44422,Morafenobe
+MG44422030,Andramy,Commune,MG44422,Morafenobe
+MG44422050,Beravina,Commune,MG44422,Morafenobe
+MG51501001,Tanambao I,Commune,MG51501,Toliary-I
+MG51501002,Tanambao II Tsf Nord,Commune,MG51501,Toliary-I
+MG51501003,Mahavatse I,Commune,MG51501,Toliary-I
+MG51501004,Mahavatse II,Commune,MG51501,Toliary-I
+MG51501005,Betania,Commune,MG51501,Toliary-I
+MG51501006,Besakoa,Commune,MG51501,Toliary-I
+MG51503011,Beroroha,Commune,MG51503,Beroroha
+MG51503012,Bemavo,Commune,MG51503,Beroroha
+MG51503030,Fanjakana,Commune,MG51503,Beroroha
+MG51503050,Behisatsy,Commune,MG51503,Beroroha
+MG51503070,Marerano,Commune,MG51503,Beroroha
+MG51504010,Morombe,Commune,MG51504,Morombe
+MG51504030,Befandefa,Commune,MG51504,Morombe
+MG51504050,Ambahikily,Commune,MG51504,Morombe
+MG51504070,Antongo Vaovao,Commune,MG51504,Morombe
+MG51504090,Nosy Ambositra,Commune,MG51504,Morombe
+MG51504110,Befandriana Sud,Commune,MG51504,Morombe
+MG51505012,Fotivolo,Commune,MG51505,Ankazoabo
+MG51505030,Tandrano,Commune,MG51505,Ankazoabo
+MG51505050,Andranomafana,Commune,MG51505,Ankazoabo
+MG51505071,Berenty,Commune,MG51505,Ankazoabo
+MG51505072,Ilemby,Commune,MG51505,Ankazoabo
+MG51506011,Betioky Atsimo,Commune,MG51506,Betioky Atsimo
+MG51506012,Sakamasay,Commune,MG51506,Betioky Atsimo
+MG51506013,Ambatry Mitsinjo,Commune,MG51506,Betioky Atsimo
+MG51506014,Ankazomanga Ouest,Commune,MG51506,Betioky Atsimo
+MG51506015,Maroarivo Ankazomanga,Commune,MG51506,Betioky Atsimo
+MG51506030,Beantake,Commune,MG51506,Betioky Atsimo
+MG51506050,Masiaboay,Commune,MG51506,Betioky Atsimo
+MG51506070,Antohabato,Commune,MG51506,Betioky Atsimo
+MG51506090,Tameantsoa,Commune,MG51506,Betioky Atsimo
+MG51506111,Tongobory,Commune,MG51506,Betioky Atsimo
+MG51506112,Besely,Commune,MG51506,Betioky Atsimo
+MG51506113,Vatolatsaka,Commune,MG51506,Betioky Atsimo
+MG51506130,Ankazombalala,Commune,MG51506,Betioky Atsimo
+MG51506150,Bezaha,Commune,MG51506,Betioky Atsimo
+MG51506170,Manalobe,Commune,MG51506,Betioky Atsimo
+MG51506191,Andranomangatsiaka,Commune,MG51506,Betioky Atsimo
+MG51507030,Ankiliabo,Commune,MG51507,Ampanihy Ouest
+MG51507050,Amborompotsy,Commune,MG51507,Ampanihy Ouest
+MG51507070,Ankilizato,Commune,MG51507,Ampanihy Ouest
+MG51506192,Ankilivalo,Commune,MG51506,Betioky Atsimo
+MG51506210,Soamanonga,Commune,MG51506,Betioky Atsimo
+MG51506230,Fenoandala,Commune,MG51506,Betioky Atsimo
+MG51506251,Soaserana,Commune,MG51506,Betioky Atsimo
+MG51506252,Marosavoa,Commune,MG51506,Betioky Atsimo
+MG51506270,Salobe,Commune,MG51506,Betioky Atsimo
+MG51506290,Tanambao Haut,Commune,MG51506,Betioky Atsimo
+MG51506311,Belamoty,Commune,MG51506,Betioky Atsimo
+MG51506312,Antsavoa,Commune,MG51506,Betioky Atsimo
+MG51506313,Montifeno,Commune,MG51506,Betioky Atsimo
+MG51506330,Lazarivo,Commune,MG51506,Betioky Atsimo
+MG51507010,Ampanihy Ouest,Commune,MG51507,Ampanihy Ouest
+MG51507090,Maniry,Commune,MG51507,Ampanihy Ouest
+MG51507110,Antaly,Commune,MG51507,Ampanihy Ouest
+MG51507130,Ankilimivory,Commune,MG51507,Ampanihy Ouest
+MG51507150,Ejeda,Commune,MG51507,Ampanihy Ouest
+MG51507170,Belafike Haut,Commune,MG51507,Ampanihy Ouest
+MG51507190,Beahitse,Commune,MG51507,Ampanihy Ouest
+MG51507210,Gogogogo,Commune,MG51507,Ampanihy Ouest
+MG51507230,Androka,Commune,MG51507,Ampanihy Ouest
+MG51507250,Vohitany,Commune,MG51507,Ampanihy Ouest
+MG51507270,Beroy Atsimo,Commune,MG51507,Ampanihy Ouest
+MG51507290,Fotadrevo,Commune,MG51507,Ampanihy Ouest
+MG51507310,Itampolo,Commune,MG51507,Ampanihy Ouest
+MG51512011,Sakaraha,Commune,MG51512,Sakaraha
+MG51512012,Miary Taheza,Commune,MG51512,Sakaraha
+MG51512030,Miary Lamatihy,Commune,MG51512,Sakaraha
+MG51512050,Mahaboboka,Commune,MG51512,Sakaraha
+MG51512070,Amboronabo,Commune,MG51512,Sakaraha
+MG51512090,Bereketa,Commune,MG51512,Sakaraha
+MG51512111,Andamasiny Vineta,Commune,MG51512,Sakaraha
+MG51512112,Mihavatsy,Commune,MG51512,Sakaraha
+MG51512130,Andranolava,Commune,MG51512,Sakaraha
+MG51512150,Ambinany,Commune,MG51512,Sakaraha
+MG51512171,Mikoboka,Commune,MG51512,Sakaraha
+MG51512172,Mitsinjo,Commune,MG51512,Sakaraha
+MG51520010,Mitsinjo Betanimena,Commune,MG51520,Toliary-II
+MG51520030,Belalanda,Commune,MG51520,Toliary-II
+MG51520050,Betsinjaka,Commune,MG51520,Toliary-II
+MG51520071,Miary Ambohibola,Commune,MG51520,Toliary-II
+MG51520072,Behompy,Commune,MG51520,Toliary-II
+MG51520090,Maromiandra,Commune,MG51520,Toliary-II
+MG51520111,Ambohimahavelona,Commune,MG51520,Toliary-II
+MG51520112,Andranohinaly,Commune,MG51520,Toliary-II
+MG51520131,Saint Augustin,Commune,MG51520,Toliary-II
+MG51520132,Anakao,Commune,MG51520,Toliary-II
+MG51520133,Soalara Sud,Commune,MG51520,Toliary-II
+MG51520150,Ambolofoty,Commune,MG51520,Toliary-II
+MG51520170,Ankilimalinike,Commune,MG51520,Toliary-II
+MG51520191,Antanimena Onilahy,Commune,MG51520,Toliary-II
+MG51520192,Manorofify,Commune,MG51520,Toliary-II
+MG51520210,Marofoty,Commune,MG51520,Toliary-II
+MG51520230,Tsianisiha,Commune,MG51520,Toliary-II
+MG51520250,Manombo Sud,Commune,MG51520,Toliary-II
+MG51520270,Andranovory,Commune,MG51520,Toliary-II
+MG51520290,Milenaka,Commune,MG51520,Toliary-II
+MG51520310,Ankililoaka,Commune,MG51520,Toliary-II
+MG51520330,Analamisampy,Commune,MG51520,Toliary-II
+MG51520358,Beheloka,Commune,MG51520,Toliary-II
+MG51521010,Benenitra,Commune,MG51521,Benenitra
+MG51521031,Ianapera,Commune,MG51521,Benenitra
+MG51521032,Ambalavato,Commune,MG51521,Benenitra
+MG51521050,Ehara,Commune,MG51521,Benenitra
+MG52513010,Beloha,Commune,MG52513,Beloha
+MG52513030,Tranovaho,Commune,MG52513,Beloha
+MG52513050,Kopoky,Commune,MG52513,Beloha
+MG52513070,Marolinta,Commune,MG52513,Beloha
+MG52513091,Tranoroa,Commune,MG52513,Beloha
+MG52513092,Behabobo,Commune,MG52513,Beloha
+MG52514011,Tsihombe,Commune,MG52514,Tsihombe
+MG52514012,Nikoly,Commune,MG52514,Tsihombe
+MG52514031,Betanty (Faux Cap),Commune,MG52514,Tsihombe
+MG52514032,Anjampaly,Commune,MG52514,Tsihombe
+MG52514050,Marovato,Commune,MG52514,Tsihombe
+MG52514071,Antaritarika,Commune,MG52514,Tsihombe
+MG52514072,Imongy,Commune,MG52514,Tsihombe
+MG52516011,Ambovombe,Commune,MG52516,Ambovombe-Androy
+MG52516012,Tsimananada,Commune,MG52516,Ambovombe-Androy
+MG52516013,Erada,Commune,MG52516,Ambovombe-Androy
+MG52516014,Anjeky Ankilikira,Commune,MG52516,Ambovombe-Androy
+MG52516031,Ambanisarika,Commune,MG52516,Ambovombe-Androy
+MG52516032,Analamary,Commune,MG52516,Ambovombe-Androy
+MG52516033,Ambohimalaza,Commune,MG52516,Ambovombe-Androy
+MG52516050,Ambonaivo,Commune,MG52516,Ambovombe-Androy
+MG52516071,Maroalomainty,Commune,MG52516,Ambovombe-Androy
+MG52516072,Maroalopoty,Commune,MG52516,Ambovombe-Androy
+MG52516091,Ambondro,Commune,MG52516,Ambovombe-Androy
+MG52516092,Ambazoa,Commune,MG52516,Ambovombe-Androy
+MG52516111,Sihanamaro,Commune,MG52516,Ambovombe-Androy
+MG52516112,Marovato Befeno,Commune,MG52516,Ambovombe-Androy
+MG52516130,Antanimora Atsimo,Commune,MG52516,Ambovombe-Androy
+MG52516151,Andalatanosy,Commune,MG52516,Ambovombe-Androy
+MG52516152,Ampamata,Commune,MG52516,Ambovombe-Androy
+MG52516170,Jafaro,Commune,MG52516,Ambovombe-Androy
+MG52516190,Imanombo,Commune,MG52516,Ambovombe-Androy
+MG52518010,Morafeno Bekily,Commune,MG52518,Bekily
+MG52518031,Ankaranabo Nord,Commune,MG52518,Bekily
+MG52518032,Besakoa,Commune,MG52518,Bekily
+MG52518050,Anja Nord,Commune,MG52518,Bekily
+MG52518070,Antsakoamaro,Commune,MG52518,Bekily
+MG52518091,Ambatosola,Commune,MG52518,Bekily
+MG52518092,Tsirandrany,Commune,MG52518,Bekily
+MG52518110,Tsikolaky,Commune,MG52518,Bekily
+MG52518130,Manakompy,Commune,MG52518,Bekily
+MG52518151,Ambahita,Commune,MG52518,Bekily
+MG52518152,Maroviro,Commune,MG52518,Bekily
+MG52518170,Belindo Mahasoa,Commune,MG52518,Bekily
+MG52518190,Beteza,Commune,MG52518,Bekily
+MG52518210,Tanandava,Commune,MG52518,Bekily
+MG52518230,Bekitro,Commune,MG52518,Bekily
+MG52518251,Beraketa,Commune,MG52518,Bekily
+MG52518252,Vohimanga,Commune,MG52518,Bekily
+MG52518270,Bevitiky,Commune,MG52518,Bekily
+MG52518290,Anivorano Mitsinjo,Commune,MG52518,Bekily
+MG53515010,Fort-Dauphin,Commune,MG53515,Taolagnaro
+MG53515031,Ampasy Nahampoana,Commune,MG53515,Taolagnaro
+MG53515032,Mandromondromotra,Commune,MG53515,Taolagnaro
+MG53515033,Soanierana,Commune,MG53515,Taolagnaro
+MG53515051,Ifarantsa,Commune,MG53515,Taolagnaro
+MG53515052,Isaka-Ivondro,Commune,MG53515,Taolagnaro
+MG53515053,Mandiso,Commune,MG53515,Taolagnaro
+MG53515071,Manambaro,Commune,MG53515,Taolagnaro
+MG53515072,Sarisambo,Commune,MG53515,Taolagnaro
+MG53515090,Ankaramena,Commune,MG53515,Taolagnaro
+MG53515111,Ranopiso,Commune,MG53515,Taolagnaro
+MG53515112,Ambatoabo,Commune,MG53515,Taolagnaro
+MG53515113,Ankariera,Commune,MG53515,Taolagnaro
+MG53515114,Analapatsy,Commune,MG53515,Taolagnaro
+MG53515115,Andranobory,Commune,MG53515,Taolagnaro
+MG53515131,Mahatalaky,Commune,MG53515,Taolagnaro
+MG53515132,Iaboakoho,Commune,MG53515,Taolagnaro
+MG53515151,Enaniliha,Commune,MG53515,Taolagnaro
+MG53515152,Fenoevo-Efita,Commune,MG53515,Taolagnaro
+MG53515170,Enakara-Haut,Commune,MG53515,Taolagnaro
+MG53515191,Ranomafana,Commune,MG53515,Taolagnaro
+MG53515192,Emagnobo,Commune,MG53515,Taolagnaro
+MG53515210,Bevoay,Commune,MG53515,Taolagnaro
+MG53515230,Ampasimena,Commune,MG53515,Taolagnaro
+MG53515251,Manantenina,Commune,MG53515,Taolagnaro
+MG53515252,Analamary,Commune,MG53515,Taolagnaro
+MG53515253,Soavary,Commune,MG53515,Taolagnaro
+MG53517010,Betroka,Commune,MG53517,Betroka
+MG53517030,Tsaraitso,Commune,MG53517,Betroka
+MG53517050,Naninora,Commune,MG53517,Betroka
+MG53517070,Ambalasoa,Commune,MG53517,Betroka
+MG53517090,Ivahona,Commune,MG53517,Betroka
+MG53517110,Analamary,Commune,MG53517,Betroka
+MG53517130,Ianabinda,Commune,MG53517,Betroka
+MG53517150,Benato Toby,Commune,MG53517,Betroka
+MG53517170,Mahabo,Commune,MG53517,Betroka
+MG53517190,Beampombo I,Commune,MG53517,Betroka
+MG53517210,Jangany,Commune,MG53517,Betroka
+MG53517230,Mahasoa Est,Commune,MG53517,Betroka
+MG53517250,Bekorobo,Commune,MG53517,Betroka
+MG53517270,Iaborotra,Commune,MG53517,Betroka
+MG53517291,Isoanala,Commune,MG53517,Betroka
+MG53517292,Beampombo II,Commune,MG53517,Betroka
+MG53517293,Nanarena Besakoa,Commune,MG53517,Betroka
+MG53517310,Ianakafy,Commune,MG53517,Betroka
+MG53517331,Andriandampy,Commune,MG53517,Betroka
+MG53517332,Sakamahily,Commune,MG53517,Betroka
+MG53517350,Ambatomivary,Commune,MG53517,Betroka
+MG53519010,Amboasary Atsimo,Commune,MG53519,Amboasary-Atsimo
+MG53519030,Behara,Commune,MG53519,Amboasary-Atsimo
+MG53519050,Tanandava Sud,Commune,MG53519,Amboasary-Atsimo
+MG53519070,Sampona,Commune,MG53519,Amboasary-Atsimo
+MG53519090,Ifotaka,Commune,MG53519,Amboasary-Atsimo
+MG53519110,Tranomaro,Commune,MG53519,Amboasary-Atsimo
+MG53519130,Maromby,Commune,MG53519,Amboasary-Atsimo
+MG53519150,Elonty,Commune,MG53519,Amboasary-Atsimo
+MG53519170,Esira,Commune,MG53519,Amboasary-Atsimo
+MG53519190,Mahaly,Commune,MG53519,Amboasary-Atsimo
+MG53519210,Manevy,Commune,MG53519,Amboasary-Atsimo
+MG53519230,Tsivory,Commune,MG53519,Amboasary-Atsimo
+MG53519250,Marotsiraka,Commune,MG53519,Amboasary-Atsimo
+MG53519270,Tomboarivo,Commune,MG53519,Amboasary-Atsimo
+MG53519291,Ebelo,Commune,MG53519,Amboasary-Atsimo
+MG53519292,Ranobe,Commune,MG53519,Amboasary-Atsimo
+MG54502010,Manja,Commune,MG54502,Manja
+MG54502030,Beharona,Commune,MG54502,Manja
+MG54502050,Anontsibe Centre,Commune,MG54502,Manja
+MG54502070,Soaserana,Commune,MG54502,Manja
+MG54502090,Ankiliabo,Commune,MG54502,Manja
+MG54502110,Andranopasy,Commune,MG54502,Manja
+MG54508010,Morondava,Commune,MG54508,Morondava
+MG54508059,Bemanonga,Commune,MG54508,Morondava
+MG54508079,Analaiva,Commune,MG54508,Morondava
+MG54508159,Befasy,Commune,MG54508,Morondava
+MG54508179,Belo Sur Mer,Commune,MG54508,Morondava
+MG54509010,Mahabo,Commune,MG54509,Mahabo
+MG54509030,Ankilivalo,Commune,MG54509,Mahabo
+MG54509051,Analamitsivalana,Commune,MG54509,Mahabo
+MG54509052,Befotaka,Commune,MG54509,Mahabo
+MG54509070,Ampanihy,Commune,MG54509,Mahabo
+MG54509091,Ankilizato,Commune,MG54509,Mahabo
+MG54509092,Ambia,Commune,MG54509,Mahabo
+MG54509110,Mandabe,Commune,MG54509,Mahabo
+MG54509130,Malaimbandy,Commune,MG54509,Mahabo
+MG54509150,Beronono,Commune,MG54509,Mahabo
+MG54509170,Mazavasoa,Commune,MG54509,Mahabo
+MG54510011,Belo Sur Tsiribihina,Commune,MG54510,Belo Sur Tsiribihina
+MG54510012,Andimaky Manambolo,Commune,MG54510,Belo Sur Tsiribihina
+MG54510013,Bemarivo Ankirondro,Commune,MG54510,Belo Sur Tsiribihina
+MG54510031,Tsimafana,Commune,MG54510,Belo Sur Tsiribihina
+MG54510032,Beroboka Nord,Commune,MG54510,Belo Sur Tsiribihina
+MG54510050,Tsaraotana,Commune,MG54510,Belo Sur Tsiribihina
+MG54510070,Masoarivo,Commune,MG54510,Belo Sur Tsiribihina
+MG54510090,Aboalimena,Commune,MG54510,Belo Sur Tsiribihina
+MG54510111,Ankalalobe,Commune,MG54510,Belo Sur Tsiribihina
+MG54510112,Ambiky,Commune,MG54510,Belo Sur Tsiribihina
+MG54510131,Berevo,Commune,MG54510,Belo Sur Tsiribihina
+MG54510132,Antsoha,Commune,MG54510,Belo Sur Tsiribihina
+MG54510151,Belinta,Commune,MG54510,Belo Sur Tsiribihina
+MG54510152,Ankiroroky,Commune,MG54510,Belo Sur Tsiribihina
+MG54511011,Miandrivazo,Commune,MG54511,Miandrivazo
+MG54511012,Dabolava,Commune,MG54511,Miandrivazo
+MG54511031,Bemahatazana,Commune,MG54511,Miandrivazo
+MG54511032,Ampanihy,Commune,MG54511,Miandrivazo
+MG54511033,Anosimena,Commune,MG54511,Miandrivazo
+MG54511050,Manandaza,Commune,MG54511,Miandrivazo
+MG54511071,Ankotrofotsy,Commune,MG54511,Miandrivazo
+MG54511072,Isalo,Commune,MG54511,Miandrivazo
+MG54511091,Ambatolahy,Commune,MG54511,Miandrivazo
+MG54511092,Manambina,Commune,MG54511,Miandrivazo
+MG54511110,Itondy,Commune,MG54511,Miandrivazo
+MG54511130,Ankavandra,Commune,MG54511,Miandrivazo
+MG54511150,Soaloka,Commune,MG54511,Miandrivazo
+MG54511170,Betsipolitra,Commune,MG54511,Miandrivazo
+MG54511210,Ankondromena,Commune,MG54511,Miandrivazo
+MG71713010,Ramena,Commune,MG71713,Antsiranana II
+MG71713031,Sakaramy,Commune,MG71713,Antsiranana II
+MG71713032,Antanamitarana,Commune,MG71713,Antsiranana II
+MG71713033,Joffre Ville,Commune,MG71713,Antsiranana II
+MG71713050,Antsahampano,Commune,MG71713,Antsiranana II
+MG71713070,Mahavanona,Commune,MG71713,Antsiranana II
+MG71713090,Mangaoka,Commune,MG71713,Antsiranana II
+MG71713110,Andrafiabe,Commune,MG71713,Antsiranana II
+MG71713130,Anketrakabe,Commune,MG71713,Antsiranana II
+MG71713151,Sadjoavato,Commune,MG71713,Antsiranana II
+MG71713152,Antsalaka,Commune,MG71713,Antsiranana II
+MG71713170,Andranovondronina,Commune,MG71713,Antsiranana II
+MG71713191,Andranofanjava,Commune,MG71713,Antsiranana II
+MG71713192,Mahalina,Commune,MG71713,Antsiranana II
+MG71713210,Ankarongana,Commune,MG71713,Antsiranana II
+MG71713231,Anivorano Nord,Commune,MG71713,Antsiranana II
+MG71713232,Antsoha,Commune,MG71713,Antsiranana II
+MG71713251,Bobasakoa,Commune,MG71713,Antsiranana II
+MG71713252,Ambondrona,Commune,MG71713,Antsiranana II
+MG71713253,Bobakilandy,Commune,MG71713,Antsiranana II
+MG71713254,Mosorolava,Commune,MG71713,Antsiranana II
+MG71715009,Diego Suarez,Commune,MG71715,Antsiranana I
+MG71717010,Ambilobe,Commune,MG71717,Ambilobe
+MG71717030,Mantaly,Commune,MG71717,Ambilobe
+MG71717050,Ampondralava,Commune,MG71717,Ambilobe
+MG71717070,Tanambao Marivorahona,Commune,MG71717,Ambilobe
+MG71717090,Ambakirano,Commune,MG71717,Ambilobe
+MG71717110,Ambatoben'anjavy,Commune,MG71717,Ambilobe
+MG71717130,Antsaravibe,Commune,MG71717,Ambilobe
+MG71717150,Antsohimbondrona,Commune,MG71717,Ambilobe
+MG71717171,Anjiabe Ambony,Commune,MG71717,Ambilobe
+MG71717172,Ambodibonara,Commune,MG71717,Ambilobe
+MG71717190,Beramanja,Commune,MG71717,Ambilobe
+MG71717210,Betsiaka,Commune,MG71717,Ambilobe
+MG71717231,Ambarakaraka,Commune,MG71717,Ambilobe
+MG71717232,Anaborano Ifasy,Commune,MG71717,Ambilobe
+MG71717233,Manambato,Commune,MG71717,Ambilobe
+MG71718001,Hell-Ville,Commune,MG71718,Nosy-Be
+MG71718002,Ampangorina,Commune,MG71718,Nosy-Be
+MG71718003,Ambatozavavy,Commune,MG71718,Nosy-Be
+MG71718004,Bemanondrobe,Commune,MG71718,Nosy-Be
+MG71718005,Dzamandzar,Commune,MG71718,Nosy-Be
+MG71719010,Ambanja,Commune,MG71719,Ambanja
+MG71719030,Benavony,Commune,MG71719,Ambanja
+MG71719050,Ambohimena,Commune,MG71719,Ambanja
+MG71719070,Antsatsaka,Commune,MG71719,Ambanja
+MG71719091,Antranokarany,Commune,MG71719,Ambanja
+MG71719092,Djangoa,Commune,MG71719,Ambanja
+MG71719110,Antsakoamanondro,Commune,MG71719,Ambanja
+MG71719130,Ambalahonko,Commune,MG71719,Ambanja
+MG71719150,Ankingameloka,Commune,MG71719,Ambanja
+MG71719171,Bemaneviky Haut Sambirano,Commune,MG71719,Ambanja
+MG71719172,Ambodimanga Ramena,Commune,MG71719,Ambanja
+MG71719173,Maevatanana,Commune,MG71719,Ambanja
+MG71719190,Antafiambotry,Commune,MG71719,Ambanja
+MG71719210,Maherivaratra,Commune,MG71719,Ambanja
+MG71719231,Marovato,Commune,MG71719,Ambanja
+MG71719232,Ambohitrandriana,Commune,MG71719,Ambanja
+MG71719233,Ambohimarina,Commune,MG71719,Ambanja
+MG71719250,Ambaliha,Commune,MG71719,Ambanja
+MG71719270,Marotolana,Commune,MG71719,Ambanja
+MG71719290,Bemaneviky Ouest,Commune,MG71719,Ambanja
+MG71719310,Anorontsangana,Commune,MG71719,Ambanja
+MG71719330,Antsirabe,Commune,MG71719,Ambanja
+MG71719350,Ankatafa,Commune,MG71719,Ambanja
+MG72710010,Antalaha Ambonivohitra,Commune,MG72710,Antalaha
+MG72710030,Ampahana,Commune,MG72710,Antalaha
+MG72710050,Ampohibe,Commune,MG72710,Antalaha
+MG72710070,Antombana,Commune,MG72710,Antalaha
+MG72710090,Antsahanoro,Commune,MG72710,Antalaha
+MG72710110,Antananambo,Commune,MG72710,Antalaha
+MG72710130,Marofinaritra,Commune,MG72710,Antalaha
+MG72710151,Sarahandrano,Commune,MG72710,Antalaha
+MG72710152,Andampy,Commune,MG72710,Antalaha
+MG72710170,Ambalabe,Commune,MG72710,Antalaha
+MG72710190,Ambinanifaho,Commune,MG72710,Antalaha
+MG72710210,Ambohitralanana,Commune,MG72710,Antalaha
+MG72710230,Lanjarivo,Commune,MG72710,Antalaha
+MG72710250,Antsambalahy,Commune,MG72710,Antalaha
+MG72710271,Vinanivao,Commune,MG72710,Antalaha
+MG72710272,Ampanavoana,Commune,MG72710,Antalaha
+MG72711010,Sambava Cu,Commune,MG72711,Sambava
+MG72711059,Ambohimalaza,Commune,MG72711,Sambava
+MG72711079,Farahalana,Commune,MG72711,Sambava
+MG72711090,Nosiarina,Commune,MG72711,Sambava
+MG72711130,Ambodivoara,Commune,MG72711,Sambava
+MG72711150,Anjinjaomby,Commune,MG72711,Sambava
+MG72711170,Morafeno,Commune,MG72711,Sambava
+MG72711190,Analamaho,Commune,MG72711,Sambava
+MG72711210,Ambohimitsinjo,Commune,MG72711,Sambava
+MG72711230,Anjangoveratra,Commune,MG72711,Sambava
+MG72711250,Andratamarina,Commune,MG72711,Sambava
+MG72711270,Marogaona,Commune,MG72711,Sambava
+MG72711290,Marojala,Commune,MG72711,Sambava
+MG72711310,Antsambaharo,Commune,MG72711,Sambava
+MG72711330,Andrahanjo,Commune,MG72711,Sambava
+MG72711350,Bemanevika,Commune,MG72711,Sambava
+MG72711371,Amboangibe,Commune,MG72711,Sambava
+MG72711372,Andrembona,Commune,MG72711,Sambava
+MG72711390,Antindra,Commune,MG72711,Sambava
+MG72711410,Ambodiampana,Commune,MG72711,Sambava
+MG72711430,Maroambihy,Commune,MG72711,Sambava
+MG72711450,Ambatoafo,Commune,MG72711,Sambava
+MG72711470,Anjialava,Commune,MG72711,Sambava
+MG72711490,Tanambao Daoud,Commune,MG72711,Sambava
+MG72711510,Antsahavaribe,Commune,MG72711,Sambava
+MG72711530,Bevonotra,Commune,MG72711,Sambava
+MG72712010,Andapa,Commune,MG72712,Andapa
+MG72712030,Tanandava,Commune,MG72712,Andapa
+MG72712050,Ankiakabe Nord,Commune,MG72712,Andapa
+MG72712070,Belaoka Marovato,Commune,MG72712,Andapa
+MG72712090,Ambodimanga I,Commune,MG72712,Andapa
+MG72712110,Marovato,Commune,MG72712,Andapa
+MG72712130,Andrakata,Commune,MG72712,Andapa
+MG72712150,Bealampona,Commune,MG72712,Andapa
+MG72712170,Matsohely,Commune,MG72712,Andapa
+MG72712190,Andranomena,Commune,MG72712,Andapa
+MG72712210,Ambalamanasy II,Commune,MG72712,Andapa
+MG72712230,Ambodiangezoka,Commune,MG72712,Andapa
+MG72712250,Betsakotsako Andranotsara,Commune,MG72712,Andapa
+MG72712270,Belaoka Lokoho,Commune,MG72712,Andapa
+MG72712290,Anoviara,Commune,MG72712,Andapa
+MG72712310,Doany,Commune,MG72712,Andapa
+MG72712330,Anjialavabe,Commune,MG72712,Andapa
+MG72712350,Antsahamena,Commune,MG72712,Andapa
+MG72716010,Vohemar,Commune,MG72716,Vohemar
+MG72716030,Ampondra,Commune,MG72716,Vohemar
+MG72716050,Fanambana,Commune,MG72716,Vohemar
+MG72716070,Milanoa,Commune,MG72716,Vohemar
+MG72716090,Bobakindro,Commune,MG72716,Vohemar
+MG72716110,Daraina,Commune,MG72716,Vohemar
+MG72716130,Ambalasatrana,Commune,MG72716,Vohemar
+MG72716150,Tsarabaria,Commune,MG72716,Vohemar
+MG72716170,Nosibe,Commune,MG72716,Vohemar
+MG72716190,Andravory,Commune,MG72716,Vohemar
+MG72716210,Andrafainkona,Commune,MG72716,Vohemar
+MG72716231,Ampanefena,Commune,MG72716,Vohemar
+MG72716232,Ambodisambalahy,Commune,MG72716,Vohemar
+MG72716250,Ambinanin'andravory,Commune,MG72716,Vohemar
+MG72716270,Amboriala,Commune,MG72716,Vohemar
+MG72716290,Maromokotra Loky,Commune,MG72716,Vohemar
+MG72716310,Antsirabe Nord,Commune,MG72716,Vohemar
+MG72716330,Ampisikinana,Commune,MG72716,Vohemar
+MG72716350,Belambo,Commune,MG72716,Vohemar
