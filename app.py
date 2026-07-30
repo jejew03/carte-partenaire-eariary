@@ -7,16 +7,32 @@ Superpose les pré-souscripteurs eAriary (fichier Excel local), agrégés par
 localité : le fichier ne contient que des adresses textuelles, géocodées une
 fois pour toutes par `tools/geocode_souscripteurs.py`.
 
+Ces inscrits sont restitués en choroplèthe de zones administratives (région,
+district ou commune) via `geo_aggregate`, les établissements partenaires
+restant des marqueurs ponctuels par-dessus les polygones. Sans les contours
+`data/geo/mdg_adm*.geojson`, l'application retombe sur des cercles
+proportionnels par localité.
+
 Lancement :  streamlit run app.py
 """
 
+import html
 import io
 import re
 import unicodedata
 from pathlib import Path
 
+import numpy as np
 import pandas as pd
 import streamlit as st
+
+# Agrégation géographique : produite par `tools/fetch_boundaries.py` +
+# `geo_aggregate.py`. Absente d'un dépôt fraîchement cloné, d'où l'import
+# tolérant — l'application doit rester utilisable sans choroplèthe.
+try:
+    import geo_aggregate
+except Exception:  # ImportError, mais aussi geopandas absent ou cassé
+    geo_aggregate = None
 
 # --------------------------------------------------------------------------- #
 # Configuration
@@ -50,6 +66,51 @@ SUBSCRIBERS_AGGREGATE = BASE_DIR / "data" / "pre_souscripteurs_agreges.csv"
 SUBSCRIBER_COLOR = "#4F46E5"
 ACCOUNT_ORDER = ["Particulier", "Marchand", "Épicerie", "Grande Entreprise"]
 
+# ------------------------- Choroplèthe par zone ---------------------------- #
+# Rampe séquentielle bleue, alignée sur la couleur primaire du thème. Une
+# entrée par nombre de classes réellement obtenu : les quantiles se
+# dédoublonnent souvent (beaucoup de zones à faible effectif), et une rampe de
+# 5 tons ramenée à 2 classes donnerait deux bleus indiscernables.
+ZONE_RAMPS = {
+    1: ["#5B90E0"],
+    2: ["#A8C6EF", "#1E4FA8"],
+    3: ["#C7DBF7", "#5B90E0", "#173A80"],
+    4: ["#C7DBF7", "#8FB8EE", "#3468C4", "#173A80"],
+    5: ["#C7DBF7", "#8FB8EE", "#5B90E0", "#2E63C0", "#173A80"],
+}
+ZONE_CLASSES = 5
+
+# Le zéro n'est pas « la plus petite valeur » : il reçoit son propre gris, un
+# contour tireté et un remplissage plus transparent, pour rester lisible même
+# pour un œil qui ne distingue pas les bleus clairs.
+ZONE_ZERO_FILL = "#F1F4F8"
+ZONE_ZERO_STROKE = "#94A3B8"
+# Densité non calculable : des inscrits mais aucun établissement de référence.
+ZONE_NA_FILL = "#DCE2EA"
+
+# Métrique de coloriage : libellé -> (colonne, décimales, unité, aide).
+ZONE_METRICS = {
+    "Valeur absolue — inscrits": (
+        "inscrits",
+        0,
+        "inscrit(s)",
+        "Nombre de pré-souscripteurs rattachés à la zone.",
+    ),
+    "Densité — inscrits par établissement": (
+        "ratio_inscrits_etab",
+        2,
+        "inscrit(s) / établissement",
+        "Inscrits divisés par le nombre d'établissements partenaires de la zone. "
+        "Non calculable sans établissement.",
+    ),
+    "Part du total (%)": (
+        "part_pct",
+        2,
+        "% du total",
+        "Poids de la zone dans le total des inscrits localisés.",
+    ),
+}
+
 # Le champ « Adresse » du fichier d'inscription contient parfois une adresse
 # e-mail. Même règle que `tools/geocode_souscripteurs.py` : sans valeur
 # géographique, et affichée telle quelle elle identifierait une personne.
@@ -65,6 +126,27 @@ UNKNOWN_ADDRESS = "Adresse non renseignée"
 MAP_ICON_FIX = """
 <style>
   .awesome-marker i.fa { font-family: "Font Awesome 6 Free"; font-weight: 900; }
+</style>
+"""
+
+# Styles des popups de zone, injectés une seule fois dans l'en-tête de la carte.
+# Le niveau Commune compte ~1600 polygones : répéter des attributs `style` dans
+# chaque popup alourdirait le GeoJSON de plus d'un mégaoctet.
+MAP_ZONE_CSS = """
+<style>
+  .zpop { font-family: Inter, system-ui, sans-serif; min-width: 210px; color: #0F172A; }
+  .zpop b { font-weight: 600; }
+  .zpop-h { font-size: 14px; font-weight: 600; line-height: 1.35; }
+  .zpop-s { font-size: 12px; color: #475569; margin-top: 2px; }
+  .zpop-n { display: inline-flex; align-items: center; gap: 6px; margin: 8px 0 6px;
+            padding: 2px 8px; border-radius: 999px; background: #EEF2FF;
+            font-size: 11px; color: #3730A3; font-weight: 500; }
+  .zpop-n::before { content: ""; width: 7px; height: 7px; border-radius: 50%;
+                    background: #4F46E5; }
+  .zpop-r { font-size: 12px; color: #334155; margin-top: 4px; }
+  .zpop-d { font-size: 12px; color: #475569; margin-top: 4px; }
+  .zpop-a { font-size: 11px; color: #92400E; background: #FEF3C7;
+            border-radius: 6px; padding: 4px 8px; margin-top: 6px; }
 </style>
 """
 
@@ -327,6 +409,192 @@ def aggregate_subscribers(df):
 
 
 # --------------------------------------------------------------------------- #
+# Choroplèthe : classes, palette, légende, popups
+# --------------------------------------------------------------------------- #
+
+def zones_disponibles() -> bool:
+    """Vrai si le module d'agrégation et les contours administratifs sont là."""
+    if geo_aggregate is None:
+        return False
+    try:
+        return bool(geo_aggregate.zones_disponibles())
+    except Exception:
+        return False
+
+
+def fr_number(value, decimals=0):
+    """Formate un nombre à la française : séparateur décimal virgule."""
+    if value is None or pd.isna(value):
+        return "—"
+    text = f"{float(value):,.{decimals}f}"
+    # Passage en une fois par un séparateur neutre, sinon les remplacements
+    # successifs se marchent dessus (« 1,234.5 » -> « 1.234,5 »).
+    return text.replace(",", " ").replace(".", ",")
+
+
+def quantile_bounds(values, n_classes=ZONE_CLASSES, integer=True):
+    """Bornes de classes en quantiles, dédoublonnées.
+
+    Les intervalles égaux sont inutilisables ici : Antananarivo concentre près
+    d'un tiers des inscrits et écraserait toutes les autres zones dans la
+    classe basse. Les zéros sont exclus du calcul — ils ont leur propre teinte
+    et fausseraient les quantiles, la majorité des zones étant à 0.
+
+    Beaucoup de valeurs identiques produisent des quantiles identiques : sans
+    dédoublonnage, `StepColormap` reçoit un index non strictement croissant et
+    renvoie n'importe quelle couleur.
+    """
+    serie = pd.to_numeric(pd.Series(list(values), dtype="object"), errors="coerce")
+    serie = serie.dropna()
+    serie = serie[serie > 0]
+    if serie.empty:
+        return []
+
+    quantiles = np.quantile(
+        serie.to_numpy(dtype=float), np.linspace(0.0, 1.0, n_classes + 1)
+    )
+    if integer:
+        brutes = [float(round(float(q))) for q in quantiles]
+    else:
+        brutes = [round(float(q), 2) for q in quantiles]
+
+    bounds = sorted(set(brutes))
+    if len(bounds) == 1:
+        # Une seule valeur distincte : on fabrique un intervalle d'un pas pour
+        # que la classe unique reste colorable.
+        pas = 1.0 if integer else 0.01
+        bounds = [bounds[0], bounds[0] + pas]
+    return bounds
+
+
+def class_labels(bounds, integer=True, decimals=0):
+    """Libellés lisibles des classes : « 1–3 », « 4–9 », « 10–27 »…
+
+    Une échelle continue serait illisible : ce sont les bornes réellement
+    utilisées qui sont affichées, et les classes entières sont exprimées en
+    intervalles inclusifs (la borne basse suit la borne haute précédente).
+    """
+    labels = []
+    for i in range(len(bounds) - 1):
+        bas, haut = bounds[i], bounds[i + 1]
+        if integer:
+            bas_i = int(round(bas)) if i == 0 else int(round(bas)) + 1
+            haut_i = int(round(haut))
+            bas_i = min(bas_i, haut_i)
+            labels.append(
+                fr_number(bas_i)
+                if bas_i == haut_i
+                else f"{fr_number(bas_i)}–{fr_number(haut_i)}"
+            )
+        else:
+            labels.append(
+                f"{fr_number(bas, decimals)}–{fr_number(haut, decimals)}"
+            )
+    return labels
+
+
+def zone_popup_html(zones, niveau, metric_col, metric_label, decimals, unite):
+    """Pré-calcule le bloc HTML du popup de chaque zone.
+
+    `GeoJsonPopup` ne sait qu'insérer des propriétés du GeoJSON dans un
+    tableau : on lui passe donc un unique champ déjà mis en forme, cohérent
+    avec les popups des marqueurs d'établissement. La mise en forme passe par
+    les classes de `MAP_ZONE_CSS` — au niveau Commune, des attributs `style`
+    répétés 1600 fois pèseraient plus lourd que les géométries elles-mêmes.
+    """
+    blocs = []
+    for z in zones.itertuples(index=False):
+        nom = html.escape(str(getattr(z, "nom_zone", "") or "—"))
+        parent = str(getattr(z, "nom_parent", "") or "").strip()
+        situe = f"{niveau} · {html.escape(parent)}" if parent else niveau
+        inscrits = int(getattr(z, "inscrits", 0) or 0)
+        etabs = int(getattr(z, "etablissements", 0) or 0)
+        localites = int(getattr(z, "localites", 0) or 0)
+        part = getattr(z, "part_pct", None)
+        ratio = getattr(z, "ratio_inscrits_etab", None)
+        approx = int(getattr(z, "rattachement_approx_n", 0) or 0)
+
+        # Chaînes déjà échappées par `geo_aggregate` : ne pas ré-échapper.
+        det_loc = str(getattr(z, "localites_detail", "") or "").strip()
+        det_etab = str(getattr(z, "etablissements_detail", "") or "").strip()
+
+        lignes = [f'<div class="zpop-h">{nom}</div>', f'<div class="zpop-s">{situe}</div>']
+
+        if inscrits:
+            lignes.append(
+                f'<div class="zpop-n">{fr_number(inscrits)} '
+                f"pré-souscripteur{'s' if inscrits > 1 else ''}</div>"
+            )
+            if det_loc:
+                lignes.append(
+                    f'<div class="zpop-r"><b>{fr_number(localites)} localité(s)</b> :'
+                    f" {det_loc}</div>"
+                )
+        else:
+            lignes.append('<div class="zpop-r">Aucun pré-souscripteur rattaché.</div>')
+
+        lignes.append(
+            f'<div class="zpop-r"><b>{fr_number(etabs)} établissement(s)</b>'
+            + (f" : {det_etab}" if det_etab else "")
+            + "</div>"
+        )
+        if inscrits:
+            ratio_txt = (
+                "non calculable (aucun établissement)"
+                if ratio is None or pd.isna(ratio)
+                else f"{fr_number(ratio, 2)} inscrit(s) par établissement"
+            )
+            lignes.append(f'<div class="zpop-d">Densité : {ratio_txt}</div>')
+            if part is not None and not pd.isna(part):
+                lignes.append(
+                    f'<div class="zpop-d">Part du total : {fr_number(part, 2)} %</div>'
+                )
+            # Métrique hors des trois toujours affichées : on l'ajoute pour que
+            # le popup explique toujours la couleur de la zone.
+            if metric_col not in ("inscrits", "part_pct", "ratio_inscrits_etab"):
+                lignes.append(
+                    f'<div class="zpop-d">{html.escape(metric_label)} : '
+                    f"{fr_number(getattr(z, metric_col, None), decimals)} "
+                    f"{html.escape(unite)}</div>"
+                )
+            if approx:
+                lignes.append(
+                    f'<div class="zpop-a">{fr_number(approx)} inscrit(s) '
+                    "rattaché(s) de façon approximative.</div>"
+                )
+
+        bloc = '<div class="zpop">' + "".join(lignes) + "</div>"
+        # Folium injecte la propriété dans un littéral de gabarit JavaScript :
+        # un accent grave ou un « ${ } » dans un nom de zone casserait le script.
+        blocs.append(bloc.replace("`", "'").replace("${", "$ {"))
+    return blocs
+
+
+def zone_legend_html(labels, couleurs, titre, extras=()):
+    """Légende de la choroplèthe, avec le même vocabulaire visuel que le reste.
+
+    Chaque pastille porte son intervalle : la couleur n'est jamais la seule
+    information portée par la carte.
+    """
+    items = "".join(
+        '<span class="legend-item">'
+        f'<span class="swatch zone" style="background:{couleur}"></span>{label}</span>'
+        for label, couleur in zip(labels, couleurs)
+    )
+    for libelle, couleur, tirete in extras:
+        bordure = f"border:1px dashed {ZONE_ZERO_STROKE}" if tirete else "border:none"
+        items += (
+            '<span class="legend-item">'
+            f'<span class="swatch zone" style="background:{couleur};{bordure}"></span>'
+            f"{libelle}</span>"
+        )
+    return (
+        f'<div class="legend-title">{titre}</div>'
+        f'<div class="legend">{items}</div>'
+    )
+
+
+# --------------------------------------------------------------------------- #
 # Interface
 # --------------------------------------------------------------------------- #
 
@@ -395,6 +663,15 @@ st.html(
       .legend-item .swatch {
         width: .6rem; height: .6rem; border-radius: 50%; flex: none;
       }
+      /* Pastille carrée pour les surfaces : un aplat de zone n'est pas un point */
+      .legend-item .swatch.zone {
+        width: .85rem; height: .85rem; border-radius: .15rem;
+      }
+      .legend-title {
+        margin: .85rem 0 0; font-size: .8rem; font-weight: 600; color: #475569;
+        text-transform: uppercase; letter-spacing: .04em;
+      }
+      .legend-title + .legend { margin-top: .4rem; }
 
       /* Titres de section plus calmes que le titre de page */
       .section-title {
@@ -487,7 +764,11 @@ with st.sidebar:
         show_subs = st.toggle(
             "Afficher sur la carte",
             value=True,
-            help="Cercles proportionnels au nombre d'inscrits par localité.",
+            help=(
+                "Choroplèthe des inscrits par zone administrative."
+                if zones_disponibles()
+                else "Cercles proportionnels au nombre d'inscrits par localité."
+            ),
         )
 
         sub_regions = sort_fr(subscribers["Région"].unique())
@@ -568,15 +849,161 @@ c2.metric("Géolocalisés", len(filtered_located), border=True)
 c3.metric("Sans coordonnées", len(filtered) - len(filtered_located), border=True)
 c4.metric("Villes couvertes", filtered["Province"].nunique(), border=True)
 
+if sub_warning:
+    st.warning(sub_warning, icon=":material/warning:")
+
+# ------------------ Contrôles de la choroplèthe (haut de page) -------------- #
+# Ces réglages pilotent la carte : ils restent dans le flux principal, à côté
+# du résultat qu'ils modifient, et non dans le panneau latéral des filtres.
+CHORO_LEVELS = ["Région", "District", "Commune"]
+if geo_aggregate is not None:
+    CHORO_LEVELS = list(geo_aggregate.NIVEAUX) or CHORO_LEVELS
+
+CHORO_READY = has_subscribers and zones_disponibles()
+
+niveau = CHORO_LEVELS[0]
+metric_label = next(iter(ZONE_METRICS))
+metric_col, metric_decimals, metric_unit, _ = ZONE_METRICS[metric_label]
+show_etabs = True
+sel_cat_zone = []
+zones = None
+zones_detail = None
+
 if has_subscribers:
+    st.html(
+        '<div class="section-title">Couverture des pré-souscripteurs</div>'
+        '<div class="section-sub">Les inscrits sont agrégés par zone '
+        "administrative ; les établissements partenaires restent des marqueurs "
+        "posés au-dessus des zones.</div>"
+    )
+
+    if geo_aggregate is None:
+        st.warning(
+            "Module `geo_aggregate` introuvable : la carte retombe sur les "
+            "cercles proportionnels par localité.",
+            icon=":material/warning:",
+        )
+    elif not CHORO_READY:
+        st.warning(
+            "Contours administratifs absents : lancez "
+            "`python tools/fetch_boundaries.py` pour générer "
+            "`data/geo/mdg_adm*.geojson`. En attendant, la carte retombe sur "
+            "les cercles proportionnels par localité.",
+            icon=":material/warning:",
+        )
+
+    ctl1, ctl2, ctl3, ctl4 = st.columns([1.4, 1.3, 1.3, 0.9], gap="medium")
+    with ctl1:
+        niveau = st.radio(
+            "Découpage",
+            CHORO_LEVELS,
+            index=0,
+            horizontal=True,
+            disabled=not CHORO_READY,
+            help="Finesse des zones coloriées. La commune est le niveau le "
+                 "plus lourd à dessiner.",
+        )
+    with ctl2:
+        metric_label = st.selectbox(
+            "Métrique de coloriage",
+            list(ZONE_METRICS),
+            index=0,
+            disabled=not CHORO_READY,
+            help="Détermine à la fois la couleur des zones et la légende.",
+        )
+        metric_col, metric_decimals, metric_unit, metric_help = ZONE_METRICS[metric_label]
+        st.caption(metric_help)
+    with ctl3:
+        cats_zone = [c for c in (
+            geo_aggregate.CATEGORIES if geo_aggregate is not None else []
+        ) if c in set(data["Catégorie"])] or sort_fr(data["Catégorie"].unique())
+        sel_cat_zone = st.multiselect(
+            "Catégorie d'établissement",
+            cats_zone,
+            default=[],
+            placeholder="Toutes les catégories",
+            help="Restreint les établissements comptés dans la densité et "
+                 "dessinés sur la carte. Aucune sélection équivaut à toutes "
+                 "les catégories. Se combine au filtre du panneau latéral.",
+        )
+    with ctl4:
+        show_etabs = st.toggle(
+            "Afficher les établissements",
+            value=True,
+            help="Masque les marqueurs pour lire les zones sans obstruction.",
+        )
+
+# Établissements retenus pour l'agrégation et pour les marqueurs : filtre
+# latéral d'abord, puis restriction de catégorie propre à la choroplèthe.
+etabs_zone = filtered_located
+if sel_cat_zone:
+    etabs_zone = etabs_zone[etabs_zone["Catégorie"].isin(sel_cat_zone)]
+
+if CHORO_READY:
+    try:
+        zones, zones_detail = geo_aggregate.aggregate(subs_filtered, etabs_zone, niveau)
+    except Exception as exc:
+        st.warning(
+            f"Agrégation par {niveau.lower()} impossible ({exc}) : repli sur "
+            "les cercles proportionnels par localité.",
+            icon=":material/warning:",
+        )
+        zones, zones_detail = None, None
+        CHORO_READY = False
+
+# ------------------------ Indicateurs par zone ----------------------------- #
+draw_zones = CHORO_READY and zones is not None and not zones.empty
+
+if draw_zones:
+    zone_inscrits = pd.to_numeric(zones["inscrits"], errors="coerce").fillna(0)
+    total_inscrits = int(zone_inscrits.sum())
+    n_zones = len(zones)
+    n_couvertes = int((zone_inscrits > 0).sum())
+    taux = (n_couvertes / n_zones * 100) if n_zones else 0.0
+    top_idx = zone_inscrits.idxmax() if n_couvertes else None
+    top_nom = str(zones.loc[top_idx, "nom_zone"]) if top_idx is not None else "—"
+    top_val = int(zone_inscrits.loc[top_idx]) if top_idx is not None else 0
+    # 150 noms de communes sont des homonymes et les arrondissements
+    # d'Antananarivo s'appellent « 1er Arrondissement » : le parent est
+    # indispensable pour que l'indicateur désigne une zone sans ambiguïté.
+    top_parent = (
+        str(zones.loc[top_idx, "nom_parent"] or "").strip()
+        if top_idx is not None
+        else ""
+    )
+    top_complet = f"{top_nom} ({top_parent})" if top_parent else top_nom
+
+    z1, z2, z3, z4 = st.columns(4, gap="medium")
+    z1.metric("Inscrits localisés", fr_number(total_inscrits), border=True)
+    z2.metric(
+        "Zones couvertes",
+        fr_number(n_couvertes),
+        border=True,
+        help=f"{niveau}s comptant au moins un inscrit, sur "
+             f"{fr_number(n_zones)} au total.",
+    )
+    z3.metric(
+        f"{niveau} n°1",
+        top_nom if len(top_nom) <= 22 else top_nom[:21] + "…",
+        delta=f"{fr_number(top_val)} inscrits",
+        delta_color="off",
+        border=True,
+        help=top_complet,
+    )
+    z4.metric(
+        "Taux de couverture",
+        f"{fr_number(taux, 1)} %",
+        border=True,
+        help=f"{fr_number(n_couvertes)} zone(s) couverte(s) sur "
+             f"{fr_number(n_zones)} au niveau {niveau.lower()}.",
+    )
+elif has_subscribers:
+    # Repli : les indicateurs par localité, comme avant la choroplèthe.
     s1, s2, s3, s4 = st.columns(4, gap="medium")
     s1.metric("Pré-souscripteurs", len(subs_filtered), border=True)
     s2.metric("Positionnés", int(subs_points["Inscrits"].sum()), border=True)
     s3.metric("Localités", len(subs_points), border=True)
     s4.metric("Régions couvertes", subs_filtered["Région"].nunique(), border=True)
-
-if sub_warning:
-    st.warning(sub_warning, icon=":material/warning:")
 
 # --------------------------------- Carte ----------------------------------- #
 try:
@@ -588,36 +1015,95 @@ try:
 except ImportError:
     HAS_FOLIUM = False
 
-draw_subs = bool(show_subs) and not subs_points.empty
-map_empty = filtered_located.empty and not draw_subs
+# Choroplèthe si les contours sont là, cercles proportionnels sinon.
+draw_choro = bool(show_subs) and draw_zones
+draw_subs = bool(show_subs) and not draw_zones and not subs_points.empty
+draw_etabs = bool(show_etabs) and not etabs_zone.empty
+map_empty = not draw_etabs and not draw_subs and not draw_choro
 
 if map_empty:
     st.html('<div class="section-title">Carte</div>')
     st.info(
-        "Aucun point à afficher avec les filtres actuels. "
-        "Élargissez la sélection dans le panneau latéral pour afficher la carte.",
+        "Rien à afficher : aucune couche n'est activée, ou les filtres actuels "
+        "ne laissent aucun point. Réactivez une couche ci-dessus ou élargissez "
+        "la sélection dans le panneau latéral.",
         icon=":material/filter_alt_off:",
     )
 elif HAS_FOLIUM:
-    counts = [f"{len(filtered_located)} établissement(s) positionné(s)"]
+    counts = []
+    if draw_etabs:
+        counts.append(f"{len(etabs_zone)} établissement(s) positionné(s)")
+    if draw_choro:
+        counts.append(
+            f"{fr_number(int(zone_inscrits.sum()))} inscrit(s) "
+            f"sur {fr_number(n_couvertes)} {niveau.lower()}(s)"
+        )
     if draw_subs:
         counts.append(
             f"{int(subs_points['Inscrits'].sum())} pré-souscripteur(s) "
             f"sur {len(subs_points)} localité(s)"
         )
+    clic = (
+        f"Cliquez une zone pour son détail sous la carte, un marqueur pour la "
+        "fiche de l'établissement."
+        if draw_choro
+        else "Cliquez un marqueur ou un cercle pour le détail."
+    )
     st.html(
         '<div class="section-title">Carte</div>'
-        f'<div class="section-sub">{" — ".join(counts)}. Cliquez un marqueur '
-        "ou un cercle pour le détail.</div>"
+        f'<div class="section-sub">{" — ".join(counts)}. {clic}</div>'
     )
 
-    # Légende avant la carte : lisible sans faire défiler, et chaque catégorie
+    # ------------------- Classes, palette et légende des zones -------------- #
+    zone_bounds, zone_colors, zone_scale = [], [], None
+    if draw_choro:
+        zone_values = pd.to_numeric(zones[metric_col], errors="coerce")
+        zone_bounds = quantile_bounds(
+            zone_values, ZONE_CLASSES, integer=(metric_decimals == 0)
+        )
+        zone_colors = ZONE_RAMPS.get(
+            max(len(zone_bounds) - 1, 1), ZONE_RAMPS[ZONE_CLASSES]
+        )[: max(len(zone_bounds) - 1, 1)]
+        if len(zone_bounds) >= 2:
+            from branca.colormap import StepColormap
+
+            zone_scale = StepColormap(
+                zone_colors,
+                index=zone_bounds,
+                vmin=zone_bounds[0],
+                vmax=zone_bounds[-1],
+            )
+
+    # Légende avant la carte : lisible sans faire défiler, et chaque pastille
     # porte son libellé — la couleur n'est jamais la seule information.
+    if draw_choro:
+        extras = [("Aucun inscrit", ZONE_ZERO_FILL, True)]
+        if metric_col == "ratio_inscrits_etab":
+            n_na = int(
+                ((zone_inscrits > 0) & zone_values.isna()).sum()
+            )
+            if n_na:
+                extras.append(
+                    (f"Non calculable ({fr_number(n_na)})", ZONE_NA_FILL, True)
+                )
+        st.html(
+            zone_legend_html(
+                class_labels(
+                    zone_bounds,
+                    integer=(metric_decimals == 0),
+                    decimals=metric_decimals,
+                ),
+                zone_colors,
+                f"{metric_unit[:1].upper()}{metric_unit[1:]} par {niveau.lower()}",
+                extras,
+            )
+        )
+
     legend_items = "".join(
         f'<span class="legend-item">'
         f'<span class="swatch" style="background:{CATEGORY_STYLE.get(c, DEFAULT_STYLE)[2]}"></span>'
         f"{c}</span>"
-        for c in sort_fr(filtered_located["Catégorie"].unique())
+        for c in (sort_fr(etabs_zone["Catégorie"].unique()) if draw_etabs else [])
     )
     if draw_subs:
         legend_items += (
@@ -626,15 +1112,27 @@ elif HAS_FOLIUM:
             'opacity:.55;border:1px solid ' + SUBSCRIBER_COLOR + '"></span>'
             "Pré-souscripteurs (taille = nombre d'inscrits)</span>"
         )
-    st.html(f'<div class="legend">{legend_items}</div>')
+    if legend_items:
+        st.html(
+            '<div class="legend-title">Établissements partenaires</div>'
+            f'<div class="legend">{legend_items}</div>'
+            if draw_choro
+            else f'<div class="legend">{legend_items}</div>'
+        )
 
     all_points = pd.concat(
-        [filtered_located[["lat", "lon"]]]
+        ([etabs_zone[["lat", "lon"]]] if draw_etabs else [])
         + ([subs_points[["lat", "lon"]]] if draw_subs else [])
-    )
-    center = [all_points["lat"].mean(), all_points["lon"].mean()]
+    ) if (draw_etabs or draw_subs) else pd.DataFrame(columns=["lat", "lon"])
+    if len(all_points):
+        center = [all_points["lat"].mean(), all_points["lon"].mean()]
+    else:
+        minx, miny, maxx, maxy = zones.total_bounds
+        center = [(miny + maxy) / 2, (minx + maxx) / 2]
     fmap = folium.Map(location=center, zoom_start=6, tiles=None, control_scale=True)
     fmap.get_root().header.add_child(folium.Element(MAP_ICON_FIX))
+    if draw_choro:
+        fmap.get_root().header.add_child(folium.Element(MAP_ZONE_CSS))
 
     # Fond clair par défaut : les marqueurs colorés priment sur le décor.
     # show=False sur les autres, sinon le dernier fond ajouté s'affiche par-dessus.
@@ -647,9 +1145,109 @@ elif HAS_FOLIUM:
         show=False,
     ).add_to(fmap)
 
+    # --------------------- Couche choroplèthe des zones -------------------- #
+    # Ajoutée avant les marqueurs : Leaflet empile dans l'ordre d'ajout, les
+    # établissements doivent rester cliquables au-dessus des polygones.
+    if draw_choro:
+        zones_light = zones.copy()
+        zones_light["popup_zone"] = zone_popup_html(
+            zones, niveau, metric_col, metric_label, metric_decimals, metric_unit
+        )
+        zones_light["valeur_zone"] = pd.to_numeric(
+            zones_light[metric_col], errors="coerce"
+        )
+        zones_light["inscrits_zone"] = zone_inscrits.astype(int).to_numpy()
+        # Le nom seul ne suffit pas à désigner une zone : 150 communes sont
+        # homonymes et Antananarivo compte six « n-e Arrondissement ». Le parent
+        # accompagne donc le nom dès qu'il en existe un (tous les niveaux sauf
+        # Région).
+        zones_light["parent_zone"] = (
+            zones["nom_parent"].fillna("").astype(str).str.strip().to_numpy()
+        )
+        # Seules les propriétés utiles à l'infobulle, au popup et au style sont
+        # sérialisées : la géométrie communale est déjà lourde à transporter.
+        colonnes_light = [
+            "code_zone",
+            "nom_zone",
+            "inscrits_zone",
+            "valeur_zone",
+            "popup_zone",
+            "geometry",
+        ]
+        montre_parent = bool(zones_light["parent_zone"].str.len().gt(0).any())
+        if montre_parent:
+            colonnes_light.insert(2, "parent_zone")
+        zones_light = zones_light[colonnes_light].reset_index(
+            drop=True
+        )  # folium identifie les entités par leur index
+
+        def style_zone(feature):
+            """Remplissage de la zone selon la métrique choisie."""
+            props = feature["properties"]
+            valeur = props.get("valeur_zone")
+            inscrits = props.get("inscrits_zone") or 0
+            if (
+                zone_scale is None
+                or valeur is None
+                or pd.isna(valeur)
+                or float(valeur) <= 0
+            ):
+                # Contour tireté et remplissage plus clair : le « rien » se lit
+                # aussi sans percevoir la nuance de couleur. Le second gris est
+                # réservé à la densité — seule métrique dont la légende annonce
+                # une classe « non calculable ».
+                return {
+                    "fillColor": ZONE_NA_FILL
+                    if (inscrits and metric_col == "ratio_inscrits_etab")
+                    else ZONE_ZERO_FILL,
+                    "color": ZONE_ZERO_STROKE,
+                    "weight": 0.6,
+                    "dashArray": "3,3",
+                    "fillOpacity": 0.45,
+                }
+            return {
+                # `rgb_hex_str` plutôt que l'appel direct : celui-ci renvoie un
+                # hexadécimal sur 8 chiffres que Leaflet interprète mal.
+                "fillColor": zone_scale.rgb_hex_str(float(valeur)),
+                "color": "#FFFFFF",
+                "weight": 0.7,
+                "fillOpacity": 0.78,
+            }
+
+        def highlight_zone(_feature):
+            """Survol : bordure épaissie, sans changer le remplissage."""
+            return {"weight": 3, "color": "#0F172A", "dashArray": ""}
+
+        folium.GeoJson(
+            zones_light,
+            name=f"Inscrits par {niveau.lower()}",
+            style_function=style_zone,
+            highlight_function=highlight_zone,
+            smooth_factor=1.0,
+            tooltip=folium.GeoJsonTooltip(
+                fields=(
+                    ["nom_zone", "parent_zone", "inscrits_zone"]
+                    if montre_parent
+                    else ["nom_zone", "inscrits_zone"]
+                ),
+                aliases=(
+                    [f"{niveau} :", "Dans :", "Inscrits :"]
+                    if montre_parent
+                    else [f"{niveau} :", "Inscrits :"]
+                ),
+                localize=True,
+                sticky=True,
+            ),
+            popup=folium.GeoJsonPopup(
+                fields=["popup_zone"],
+                labels=False,
+                max_width=340,
+            ),
+        ).add_to(fmap)
+
     cluster = MarkerCluster(name="Établissements").add_to(fmap)
 
-    for _, row in filtered_located.iterrows():
+    for _, row in (etabs_zone.iterrows() if draw_etabs else iter(())):
         color, icon, hexcolor = CATEGORY_STYLE.get(row["Catégorie"], DEFAULT_STYLE)
         popup_html = f"""
             <div style="font-family:Inter,system-ui,sans-serif;min-width:224px;color:#0F172A">
@@ -726,19 +1324,106 @@ elif HAS_FOLIUM:
 
     if len(all_points) > 1:
         fmap.fit_bounds(all_points.values.tolist(), padding=(30, 30))
+    elif draw_choro:
+        minx, miny, maxx, maxy = zones.total_bounds
+        fmap.fit_bounds([[miny, minx], [maxy, maxx]], padding=(20, 20))
 
     folium.LayerControl(collapsed=True).add_to(fmap)
-    st_folium(fmap, use_container_width=True, height=580, returned_objects=[])
+    # `last_active_drawing` seul : tout autre objet retourné (bornes, zoom)
+    # déclencherait un rerun à chaque déplacement de la carte.
+    map_state = st_folium(
+        fmap,
+        use_container_width=True,
+        height=580,
+        returned_objects=["last_active_drawing"] if draw_choro else [],
+    )
+
+    # ------------------- Panneau de détail de la zone cliquée --------------- #
+    if draw_choro:
+        drawing = (map_state or {}).get("last_active_drawing") or {}
+        # On identifie la zone par son code, jamais par un index de ligne :
+        # `last_active_drawing` ne renvoie qu'un objet GeoJSON isolé.
+        code_clique = (drawing.get("properties") or {}).get("code_zone")
+        zone_row = (
+            zones[zones["code_zone"] == code_clique]
+            if code_clique is not None
+            else zones.iloc[0:0]
+        )
+
+        if zone_row.empty:
+            st.info(
+                f"Cliquez une {niveau.lower()} sur la carte pour afficher le "
+                "détail de ses localités et l'exporter.",
+                icon=":material/ads_click:",
+            )
+        else:
+            nom_clique = str(zone_row.iloc[0]["nom_zone"])
+            nb_clique = int(pd.to_numeric(zone_row.iloc[0]["inscrits"], errors="coerce") or 0)
+            lignes = (
+                zones_detail[zones_detail["code_zone"] == code_clique]
+                if zones_detail is not None and not zones_detail.empty
+                else pd.DataFrame()
+            )
+            st.html(
+                f'<div class="section-title">{html.escape(nom_clique)}</div>'
+                f'<div class="section-sub">{fr_number(nb_clique)} inscrit(s) '
+                f"répartis sur {fr_number(len(lignes))} localité(s) — cliquez un "
+                "en-tête pour trier.</div>"
+            )
+            if lignes.empty:
+                st.info(
+                    "Aucune localité rattachée à cette zone avec les filtres "
+                    "actuels.",
+                    icon=":material/search_off:",
+                )
+            else:
+                cols = [
+                    c
+                    for c in ["Localité", "Ville", "Région", "inscrits",
+                              "rattachement_approx"]
+                    if c in lignes.columns
+                ]
+                table = lignes[cols].sort_values("inscrits", ascending=False)
+                st.dataframe(
+                    table,
+                    width="stretch",
+                    hide_index=True,
+                    column_config={
+                        "Localité": st.column_config.TextColumn(
+                            "Localité", width="medium"
+                        ),
+                        "Ville": st.column_config.TextColumn("Ville", width="medium"),
+                        "Région": st.column_config.TextColumn("Région", width="medium"),
+                        "inscrits": st.column_config.NumberColumn(
+                            "Inscrits", format="%d"
+                        ),
+                        "rattachement_approx": st.column_config.CheckboxColumn(
+                            "Rattachement approximatif",
+                            help="Zone déduite du nom de la localité, faute de "
+                                 "coordonnées fiables.",
+                        ),
+                    },
+                )
+                safe_code = re.sub(r"[^A-Za-z0-9_-]+", "_", str(code_clique))
+                st.download_button(
+                    f"Exporter {nom_clique} (CSV)",
+                    table.to_csv(index=False).encode("utf-8-sig"),
+                    file_name=f"inscrits_{niveau.lower()}_{safe_code}.csv",
+                    mime="text/csv",
+                    icon=":material/download:",
+                    key="export_zone",
+                )
 else:
     st.info(
         "Installez `folium` et `streamlit-folium` pour la carte détaillée.",
         icon=":material/info:",
     )
     fallback_points = pd.concat(
-        [filtered_located[["lat", "lon"]]]
+        ([etabs_zone[["lat", "lon"]]] if draw_etabs else [])
         + ([subs_points[["lat", "lon"]]] if draw_subs else [])
-    )
-    st.map(fallback_points, size=200)
+    ) if (draw_etabs or draw_subs) else pd.DataFrame(columns=["lat", "lon"])
+    if len(fallback_points):
+        st.map(fallback_points, size=200)
 
 # --------------------------------- Tableau --------------------------------- #
 st.html(
