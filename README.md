@@ -48,19 +48,89 @@ variantes de plus en plus larges : `Anosibe, Antananarivo, Analamanga` devient
 au besoin `Antananarivo, Analamanga` puis `Analamanga`. La colonne `precision`
 distingue « exacte » d'« approchée ».
 
+### Limites administratives (choroplèthe)
+
+Les inscrits sont rendus par zone administrative colorée. Les géométries sont
+**embarquées dans le dépôt** — l'application ne fait aucun appel réseau au
+runtime — et régénérées uniquement par
+
+```bash
+python tools/fetch_boundaries.py            # ne retélécharge pas si data/geo/ est déjà rempli
+python tools/fetch_boundaries.py --force    # régénère tout
+```
+
+| Fichier | Niveau | Zones | Taille |
+|---|---|---|---|
+| `data/geo/mdg_adm1.geojson` | Région | 22 | 0,49 Mo |
+| `data/geo/mdg_adm2.geojson` | District | 119 | 0,91 Mo |
+| `data/geo/mdg_adm3.geojson` | Commune | 1 579 | 1,44 Mo |
+| `data/geo/zones.csv` | les trois réunis | 1 720 | 0,09 Mo |
+
+Chaque entité porte `code_zone`, `nom_zone`, `niveau`, `code_parent`,
+`nom_parent`, en EPSG:4326. **`code_zone` (pcode) est le seul identifiant
+fiable** : 150 noms de communes sont des homonymes (`Morafeno` apparaît 7 fois),
+d'où l'affichage systématique du parent dans l'interface.
+
+**Source : BNGRC / OCHA, « Madagascar – Subnational Administrative Boundaries »
+(COD-AB, millésime 2018-10-31), via HDX — licence CC BY 3.0 IGO**, qui autorise
+la redistribution et l'usage commercial sous réserve d'attribution. Détail
+complet de la provenance dans [`data/geo/SOURCE.md`](data/geo/SOURCE.md).
+
+geoBoundaries a été écarté malgré une licence compatible : ses entités ne
+portent aucun code de parent, et son ADM1 (OSM 2017, ODbL) ne s'emboîte pas
+dans ses ADM2/ADM3 (qui sont ce même COD-AB) — deux millésimes et deux licences
+mélangés. Passer par HDX remonte à l'amont avec les pcodes intacts.
+
+Deux limites connues, assumées : le COD-AB 2018 précède le découpage de 2021 et
+compte donc **22 régions et non 23** (Vatovavy Fitovinany n'est pas scindée) ;
+et la simplification à ~880 m suffit à un choroplèthe national mais reste
+grossière sur les petites communes de l'agglomération d'Antananarivo.
+
 ## Fonctionnalités
 
 - Carte Folium avec clustering, marqueurs colorés par catégorie, fonds
   interchangeables (plan clair par défaut, plan détaillé, satellite)
 - Popup par établissement + lien direct vers Google Maps
-- Couche « Pré-souscripteurs eAriary » : un cercle par localité, d'aire
-  proportionnelle au nombre d'inscrits, avec la répartition par type de compte
-  (aucune donnée nominative n'atteint la carte)
+- Choroplèthe des pré-souscripteurs par zone administrative, au choix Région /
+  District / Commune : remplissage en **quantiles** (des intervalles égaux
+  laisseraient Antananarivo, 796 inscrits sur 1 072, écraser toute l'échelle),
+  zones sans inscrit en gris distinct, infobulle au survol et popup détaillé au
+  clic — aucune donnée nominative n'atteint la carte
+- Trois métriques de coloriage : valeur absolue, densité (inscrits par
+  établissement), part du total en %
+- Panneau de détail sous la carte : cliquez une zone pour obtenir ses localités
+  triables et l'export CSV de cette seule zone
+- Bandeau d'indicateurs : inscrits localisés, zones couvertes, zone n°1, taux de
+  couverture du niveau choisi
 - Filtres : province/ville, catégorie, recherche par nom ; région et type de
   compte pour les pré-souscripteurs
 - Tableau détaillé + export CSV de la sélection, récapitulatif par localité
   des pré-souscripteurs + export
 - Sections dédiées aux lignes dont les coordonnées ne sont pas exploitables
+
+Si `data/geo/` est absent, l'application n'échoue pas : elle le signale et
+retombe sur l'ancien rendu en cercles proportionnels.
+
+## Architecture
+
+| Fichier | Rôle |
+|---|---|
+| `app.py` | interface Streamlit, rendu Folium, filtres |
+| `geo_aggregate.py` | jointure spatiale points → polygones et agrégation par zone |
+| `tools/geocode_souscripteurs.py` | géocodage des adresses d'inscription (réseau) |
+| `tools/fetch_boundaries.py` | récupération et simplification des limites (réseau) |
+| `tests/test_geo_aggregate.py` | tests du moteur d'agrégation |
+
+Les deux scripts de `tools/` sont les seuls points du projet qui accèdent au
+réseau, et ils ne tournent qu'à la main. L'agrégation rattache chaque point au
+polygone qui le contient (`sjoin` / `within`) ; un point qui ne tombe dans aucun
+polygone — imprécision GPS, trait de côte — est rattaché au polygone le plus
+proche, distance calculée en projection métrique (UTM 38S) et non en degrés, et
+signalé comme rattachement approximatif.
+
+```bash
+python -m pytest tests/ -q
+```
 
 ## Design
 
