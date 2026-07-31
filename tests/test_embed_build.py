@@ -1,8 +1,8 @@
 """
-Tests de la lecture du Sheet utilisée par l'iframe (`embed/build.py`).
+Tests de la lecture du Sheet utilisée par l'iframe (`static/embed/build.py`).
 
 Aucun accès réseau : les CSV sont écrits à la main. Ces règles sont dupliquées
-en JavaScript dans `embed/assets/data.js` pour la relecture en direct — toute
+en JavaScript dans `static/embed/assets/data.js` pour la relecture en direct — toute
 correction ici doit y être reportée.
 """
 
@@ -12,7 +12,7 @@ from pathlib import Path
 import pytest
 
 RACINE = Path(__file__).resolve().parent.parent
-sys.path.insert(0, str(RACINE / "embed"))
+sys.path.insert(0, str(RACINE / "static" / "embed"))
 
 import build as embed_build  # noqa: E402
 
@@ -165,7 +165,7 @@ def test_instantane_est_du_javascript_lisible():
 
 def test_instantane_du_depot_est_coherent():
     """L'instantané versionné doit être lisible et non vide."""
-    fichier = RACINE / "embed" / "assets" / "etablissements.js"
+    fichier = RACINE / "static" / "embed" / "assets" / "etablissements.js"
     contenu = fichier.read_text(encoding="utf-8")
     assert "window.EARIARY_SNAPSHOT" in contenu
     assert '"etablissements"' in contenu

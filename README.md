@@ -119,7 +119,9 @@ retombe sur l'ancien rendu en cercles proportionnels.
 | `geo_aggregate.py` | jointure spatiale points → polygones et agrégation par zone |
 | `tools/geocode_souscripteurs.py` | géocodage des adresses d'inscription (réseau) |
 | `tools/fetch_boundaries.py` | récupération et simplification des limites (réseau) |
+| `static/embed/` | page publique à intégrer par iframe ([documentation](static/embed/README.md)) |
 | `tests/test_geo_aggregate.py` | tests du moteur d'agrégation |
+| `tests/test_embed_build.py` | tests de la lecture du Sheet par la page publique |
 
 Les deux scripts de `tools/` sont les seuls points du projet qui accèdent au
 réseau, et ils ne tournent qu'à la main. L'agrégation rattache chaque point au
@@ -131,6 +133,25 @@ signalé comme rattachement approximatif.
 ```bash
 python -m pytest tests/ -q
 ```
+
+## Page publique
+
+`static/embed/` contient une page autonome — carte et liste des partenaires —
+destinée au public et à l'intégration par `<iframe>` dans une autre
+application. Elle ne montre ni les pré-souscripteurs ni les indicateurs
+internes.
+
+Streamlit la sert lui-même (`enableStaticServing` dans `.streamlit/config.toml`),
+donc elle se déploie avec l'application, à la même adresse :
+
+```
+https://<url-de-l-application>/app/static/embed/index.html
+```
+
+L'application affiche ce lien, le code à copier et un aperçu dans sa section
+« Page publique à intégrer ». Voir [`static/embed/README.md`](static/embed/README.md)
+pour les paramètres d'URL, les messages `postMessage` et l'identité visuelle,
+qui est **délibérément distincte** de celle de l'application interne.
 
 ## Design
 

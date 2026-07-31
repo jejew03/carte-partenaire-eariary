@@ -31,10 +31,26 @@ python -m http.server 8000    # depuis la racine du dépôt
 
 ## Déploiement
 
-Copiez le dossier `embed/` tel quel sur n'importe quel hébergement statique
-(Nginx, Apache, S3, Netlify, `public/embed/` d'une application Laravel ou
-Symfony, `static/` d'un projet Django…). Les chemins internes sont **relatifs** :
-le dossier fonctionne à la racine comme dans un sous-répertoire.
+### Servie par l'application Streamlit (par défaut)
+
+Le dossier vit sous `static/`, que Streamlit sert lui-même dès que
+`enableStaticServing = true` dans `.streamlit/config.toml`. La page est donc
+publiée **avec l'application, à la même adresse**, sans hébergement séparé :
+
+```
+https://<url-de-l-application>/app/static/embed/index.html
+```
+
+L'application affiche ce lien et le code à copier dans sa section « Page
+publique à intégrer », en bas de page.
+
+### Ailleurs
+
+Copiez le dossier `static/embed/` tel quel sur n'importe quel hébergement
+statique (Nginx, Apache, S3, Netlify, `public/embed/` d'une application Laravel
+ou Symfony, `static/` d'un projet Django…). Les chemins internes sont
+**relatifs** : le dossier fonctionne à la racine comme dans un
+sous-répertoire.
 
 Contenu :
 
@@ -91,8 +107,8 @@ interdit `docs.google.com`) est silencieux : la liste reste celle de
 l'instantané. Pour régénérer celui-ci :
 
 ```bash
-python embed/build.py            # relit le Sheet et réécrit l'instantané
-python embed/build.py --check    # code de sortie 1 si l'instantané a vieilli
+python static/embed/build.py            # relit le Sheet et réécrit l'instantané
+python static/embed/build.py --check    # code de sortie 1 si l'instantané a vieilli
 ```
 
 Le script n'utilise que la bibliothèque standard — pas besoin du virtualenv du
