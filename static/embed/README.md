@@ -31,18 +31,33 @@ python -m http.server 8000    # depuis la racine du dépôt
 
 ## Déploiement
 
-### Servie par l'application Streamlit (par défaut)
+### En ligne (GitHub Pages)
+
+La page est publiée à partir de la branche `main` du dépôt :
+
+```
+https://jejew03.github.io/carte-partenaire-eariary/static/embed/index.html
+```
+
+C'est **l'URL à donner aux intégrateurs** : elle ne demande aucune
+authentification, contrairement à l'application Streamlit, qui est privée.
+Chaque `git push` sur `main` republie la page. Le fichier `.nojekyll` à la
+racine désactive Jekyll, qui filtrerait et réécrirait les fichiers.
+
+### Servie par l'application Streamlit
 
 Le dossier vit sous `static/`, que Streamlit sert lui-même dès que
 `enableStaticServing = true` dans `.streamlit/config.toml`. La page est donc
-publiée **avec l'application, à la même adresse**, sans hébergement séparé :
+aussi disponible **à l'adresse de l'application** :
 
 ```
 https://<url-de-l-application>/app/static/embed/index.html
 ```
 
 L'application affiche ce lien et le code à copier dans sa section « Page
-publique à intégrer », en bas de page.
+publique à intégrer », en bas de page. Tant que l'application reste privée,
+cette adresse-là exige une connexion : c'est un aperçu pour l'équipe, pas le
+lien à diffuser.
 
 ### Ailleurs
 
