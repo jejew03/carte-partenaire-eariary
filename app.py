@@ -1541,4 +1541,45 @@ if has_subscribers:
                     "precision": st.column_config.TextColumn("Motif", width="small"),
                 },
             )
-        
+
+# ----------------------- Page publique à intégrer -------------------------- #
+# `static/embed/` est servi par Streamlit lui-même (enableStaticServing dans
+# .streamlit/config.toml) : la page publique se déploie avec l'application, à la
+# même adresse, sans hébergement séparé à maintenir.
+EMBED_PATH = "app/static/embed/index.html"
+
+try:
+    _origine = st.context.url.split("?")[0].split("#")[0].rstrip("/")
+except Exception:  # contexte indisponible (exécution hors serveur, tests)
+    _origine = ""
+embed_url = f"{_origine}/{EMBED_PATH}" if _origine else EMBED_PATH
+
+st.html(
+    '<div class="section-title">Page publique à intégrer</div>'
+    '<div class="section-sub">Carte et liste des établissements partenaires, '
+    "destinées au public et à l'intégration dans une autre application. Cette "
+    "page ne montre ni les pré-souscripteurs ni les indicateurs internes.</div>"
+)
+
+st.link_button(
+    "Ouvrir la page publique",
+    embed_url,
+    icon=":material/open_in_new:",
+)
+
+st.caption(
+    "À intégrer sans bordure ni coin arrondi, pour que la page se lise comme "
+    "une section de l'application hôte et non comme un encart rapporté. "
+    "Ajoutez `?header=0` si l'hôte affiche déjà son propre titre."
+)
+st.code(
+    f'<iframe\n'
+    f'  src="{embed_url}"\n'
+    f'  title="Établissements partenaires eAriary"\n'
+    f'  width="100%" height="620" style="display:block;border:0"\n'
+    f'  loading="lazy"></iframe>',
+    language="html",
+)
+
+with st.expander("Aperçu", icon=":material/preview:"):
+    st.iframe(EMBED_PATH, height=620)
