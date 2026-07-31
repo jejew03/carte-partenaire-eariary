@@ -21,6 +21,7 @@ import io
 import re
 import unicodedata
 from pathlib import Path
+from urllib.parse import urlsplit
 
 import numpy as np
 import pandas as pd
@@ -1546,13 +1547,20 @@ if has_subscribers:
 # `static/embed/` est servi par Streamlit lui-même (enableStaticServing dans
 # .streamlit/config.toml) : la page publique se déploie avec l'application, à la
 # même adresse, sans hébergement séparé à maintenir.
-EMBED_PATH = "app/static/embed/index.html"
+_base = (st.get_option("server.baseUrlPath") or "").strip("/")
+# Chemin absolu depuis la racine du site : `st.iframe` ne reconnaît un chemin
+# relatif que s'il commence par « / » — sans cette barre, il prend la chaîne
+# pour du HTML brut et affiche le chemin en toutes lettres.
+EMBED_PATH = f"/{_base}/app/static/embed/index.html" if _base else "/app/static/embed/index.html"
 
 try:
-    _origine = st.context.url.split("?")[0].split("#")[0].rstrip("/")
+    # Seule l'origine nous intéresse : `st.context.url` porte déjà le chemin de
+    # base, que EMBED_PATH répète.
+    _parts = urlsplit(st.context.url)
+    _origine = f"{_parts.scheme}://{_parts.netloc}" if _parts.netloc else ""
 except Exception:  # contexte indisponible (exécution hors serveur, tests)
     _origine = ""
-embed_url = f"{_origine}/{EMBED_PATH}" if _origine else EMBED_PATH
+embed_url = f"{_origine}{EMBED_PATH}"
 
 st.html(
     '<div class="section-title">Page publique à intégrer</div>'
@@ -1582,4 +1590,4 @@ st.code(
 )
 
 with st.expander("Aperçu", icon=":material/preview:"):
-    st.iframe(EMBED_PATH, height=620)
+    st.iframe(embed_url, height=620)
