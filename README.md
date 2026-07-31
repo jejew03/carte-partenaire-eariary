@@ -141,15 +141,18 @@ destinée au public et à l'intégration par `<iframe>` dans une autre
 application. Elle ne montre ni les pré-souscripteurs ni les indicateurs
 internes.
 
-Streamlit la sert lui-même (`enableStaticServing` dans `.streamlit/config.toml`),
-donc elle se déploie avec l'application, à la même adresse :
+Elle est publiée par GitHub Pages depuis `main` — **c'est l'adresse à
+diffuser**, elle ne demande aucune connexion :
 
 ```
-https://<url-de-l-application>/app/static/embed/index.html
+https://jejew03.github.io/carte-partenaire-eariary/static/embed/index.html
 ```
 
-L'application affiche ce lien, le code à copier et un aperçu dans sa section
-« Page publique à intégrer ». Voir [`static/embed/README.md`](static/embed/README.md)
+Streamlit la sert aussi lui-même (`enableStaticServing` dans
+`.streamlit/config.toml`), sous `/app/static/embed/index.html` ; l'application
+affiche ce lien, le code à copier et un aperçu dans sa section « Page publique
+à intégrer ». Tant que l'application reste privée, cette seconde adresse exige
+une connexion. Voir [`static/embed/README.md`](static/embed/README.md)
 pour les paramètres d'URL, les messages `postMessage` et l'identité visuelle,
 qui est **délibérément distincte** de celle de l'application interne.
 
