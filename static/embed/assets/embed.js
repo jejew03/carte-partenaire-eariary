@@ -84,9 +84,12 @@
       ? param("view", "split")
       : "split",
     entete: param("header", "1") !== "0",
-    theme: ["auto", "clair", "sombre"].indexOf(param("theme", "auto")) !== -1
-      ? param("theme", "auto")
-      : "auto",
+    // Clair par défaut : la page est un document public, elle doit avoir la
+    // même apparence pour tout le monde plutôt que de suivre le réglage
+    // système du visiteur. `?theme=auto` rétablit ce suivi.
+    theme: ["auto", "clair", "sombre"].indexOf(param("theme", "clair")) !== -1
+      ? param("theme", "clair")
+      : "clair",
     direct: param("live", "1") !== "0",
     titre: param("titre", ""),
     recherche: param("q", ""),

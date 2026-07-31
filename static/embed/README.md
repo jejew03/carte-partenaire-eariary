@@ -93,7 +93,7 @@ Ils se passent dans l'URL de l'iframe : `index.html?view=carte&header=0`.
 | `view` | `split`, `carte`, `liste` | `split` | carte + liste, carte seule, liste seule |
 | `header` | `1`, `0` | `1` | affiche ou masque la titraille et la note de source |
 | `titre` | texte libre | — | remplace le titre par défaut |
-| `theme` | `auto`, `clair`, `sombre` | `auto` | `auto` suit le thème du système |
+| `theme` | `clair`, `sombre`, `auto` | `clair` | `auto` suit le thème du système du visiteur |
 | `categorie` | catégories séparées par des virgules | — | présélectionne les puces (`Restaurant,Hôtel`) |
 | `province` | une ville | — | présélectionne le filtre de ville |
 | `q` | texte | — | remplit la recherche au chargement |
