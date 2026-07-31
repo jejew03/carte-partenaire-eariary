@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Établissements partenaires eAriary</title>
+  <meta name="description" content="Carte et liste des établissements qui acceptent le paiement eAriary à Madagascar.">
+  <meta name="robots" content="noindex">
+
+  <!-- Leaflet embarqué dans le dossier : pas de CDN, donc pas de politique de
+       sécurité à assouplir dans l'application hôte. Seules les tuiles et la
+       relecture du Google Sheet sortent sur le réseau. -->
+  <link rel="stylesheet" href="vendor/leaflet/leaflet.css">
+  <link rel="stylesheet" href="assets/embed.css">
+</head>
+<body>
+  <div class="app" id="app" data-view="split" data-header="1" data-onglet="carte">
+
+    <header class="head">
+      <h1 id="titre">Établissements partenaires eAriary</h1>
+      <p id="sous-titre">Commerces acceptant le paiement eAriary à Madagascar.</p>
+    </header>
+
+    <div class="bar">
+      <div class="controls">
+        <label class="field">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M15.5 14h-.79l-.28-.27a6.5 6.5 0 1 0-.7.7l.27.28v.79l5 4.99L20.49 19l-5-5Zm-6 0A4.5 4.5 0 1 1 14 9.5 4.5 4.5 0 0 1 9.5 14Z"/>
+          </svg>
+          <input type="search" id="recherche" placeholder="Rechercher un établissement"
+                 aria-label="Rechercher un établissement" autocomplete="off">
+        </label>
+
+        <select id="province" aria-label="Filtrer par ville">
+          <option value="">Toutes les villes</option>
+        </select>
+
+        <span class="spacer"></span>
+        <span class="count" id="compte" aria-live="polite"></span>
+        <button type="button" class="reset" id="reset" hidden>Réinitialiser</button>
+      </div>
+
+      <div class="chips" id="chips" role="group" aria-label="Filtrer par catégorie"></div>
+    </div>
+
+    <div class="tabs" id="onglets" role="tablist" aria-label="Affichage">
+      <button type="button" role="tab" data-onglet="carte" aria-selected="true">Carte</button>
+      <button type="button" role="tab" data-onglet="liste" aria-selected="false">Liste</button>
+    </div>
+
+    <div class="body">
+      <div class="map" id="carte" role="application" aria-label="Carte des établissements partenaires"></div>
+      <div class="list">
+        <div id="liste"></div>
+        <p class="empty" id="vide" hidden>Aucun établissement ne correspond aux filtres.</p>
+      </div>
+    </div>
+
+    <p class="source" id="source"></p>
+
+  </div>
+
+  <script src="vendor/leaflet/leaflet.js"></script>
+  <script src="assets/etablissements.js"></script>
+  <script src="assets/data.js"></script>
+  <script src="assets/embed.js"></script>
+</body>
+</html>
