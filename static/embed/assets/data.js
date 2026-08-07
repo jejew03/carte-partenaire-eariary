@@ -40,6 +40,18 @@
   };
   var VIDE = "Non renseignée";
 
+  /* Région administrative. Le Sheet ne la porte pas — sa colonne « Province »
+     mélange villes et anciennes provinces — et le navigateur n'a pas les
+     polygones ADM1 pour la déduire des coordonnées. `build.py` le fait au
+     moment de l'instantané et y dépose la table ville → région, que les lignes
+     relues en direct réutilisent. Une ville absente de la table (ajoutée au
+     Sheet depuis le dernier `build.py`) laisse la région vide : la fiche reste
+     dans le tableau, sous « Région à préciser ». */
+  function regionDe(province) {
+    var table = (global.EARIARY_SNAPSHOT || {}).regions_par_ville || {};
+    return table[province] || "";
+  }
+
   /* Analyseur CSV minimal mais correct sur les guillemets : les noms
      d'établissement contiennent des virgules et des guillemets français. */
   function parseCSV(text) {
@@ -155,6 +167,7 @@
         nom: nom,
         categorie: categorie,
         province: province,
+        region: regionDe(province),
         lat: coords[0],
         lon: coords[1],
         coordonnees_brutes: brut,
@@ -207,5 +220,6 @@
     enDirect: enDirect,
     parseCSV: parseCSV,
     normaliser: normaliser,
+    regionDe: regionDe,
   };
 })(window);
