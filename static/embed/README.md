@@ -1,8 +1,16 @@
-# Page intégrable « Établissements partenaires eAriary »
+# Pages intégrables « Établissements partenaires eAriary »
 
-Page autonome — carte **et** liste des établissements qui acceptent eAriary —
-destinée à être intégrée dans une autre application par une simple balise
-`<iframe>`. Aucune dépendance à Streamlit, à Python au runtime, ni à un CDN.
+Pages autonomes présentant les établissements qui acceptent eAriary, destinées
+à être intégrées dans une autre application par une simple balise `<iframe>`.
+Aucune dépendance à Streamlit, à Python au runtime, ni à un CDN.
+
+Deux pages, mêmes données, même identité — à intégrer au choix, ou l'une sous
+l'autre :
+
+| Page | Contenu | Poids réseau |
+|---|---|---|
+| `index.html` | carte et liste, filtres ville et catégorie | Leaflet + tuiles |
+| `tableau.html` | registre trié et filtrable par **région** et **type de marchand**, lien Google Maps par ligne | aucun (pas de carte) |
 
 ```html
 <iframe
@@ -11,7 +19,19 @@ destinée à être intégrée dans une autre application par une simple balise
   width="100%" height="620"
   style="display:block;border:0"
   loading="lazy"></iframe>
+
+<iframe
+  src="/embed/tableau.html"
+  title="Établissements partenaires eAriary"
+  width="100%" height="520"
+  style="display:block;border:0"
+  loading="lazy"></iframe>
 ```
+
+`tableau.html` ne charge ni Leaflet ni la moindre tuile : c'est la page à
+préférer quand l'application hôte n'a pas besoin d'une carte, quand la
+connexion est lente, ou quand la liste doit rester lisible au clavier et aux
+lecteurs d'écran.
 
 **Ni bordure ni coin arrondi autour du cadre.** L'intégration doit se lire
 comme une section de l'application hôte, pas comme un encart rapporté : c'est
@@ -33,25 +53,27 @@ python -m http.server 8000    # depuis la racine du dépôt
 
 ### En ligne (GitHub Pages)
 
-La page est publiée à partir de la branche `main` du dépôt :
+Les pages sont publiées à partir de la branche `main` du dépôt :
 
 ```
 https://jejew03.github.io/carte-partenaire-eariary/static/embed/index.html
+https://jejew03.github.io/carte-partenaire-eariary/static/embed/tableau.html
 ```
 
-C'est **l'URL à donner aux intégrateurs** : elle ne demande aucune
+Ce sont **les URL à donner aux intégrateurs** : elles ne demandent aucune
 authentification, contrairement à l'application Streamlit, qui est privée.
-Chaque `git push` sur `main` republie la page. Le fichier `.nojekyll` à la
+Chaque `git push` sur `main` republie les pages. Le fichier `.nojekyll` à la
 racine désactive Jekyll, qui filtrerait et réécrirait les fichiers.
 
 ### Servie par l'application Streamlit
 
 Le dossier vit sous `static/`, que Streamlit sert lui-même dès que
-`enableStaticServing = true` dans `.streamlit/config.toml`. La page est donc
-aussi disponible **à l'adresse de l'application** :
+`enableStaticServing = true` dans `.streamlit/config.toml`. Les pages sont donc
+aussi disponibles **à l'adresse de l'application** :
 
 ```
 https://<url-de-l-application>/app/static/embed/index.html
+https://<url-de-l-application>/app/static/embed/tableau.html
 ```
 
 L'application affiche ce lien et le code à copier dans sa section « Page
@@ -71,18 +93,23 @@ Contenu :
 
 | Fichier | Rôle |
 |---|---|
-| `index.html` | la page à mettre dans l'iframe |
-| `assets/embed.css` | thème, mise en page, styles de la carte |
+| `index.html` | la page carte à mettre dans l'iframe |
+| `tableau.html` | la page tableau à mettre dans l'iframe |
+| `assets/embed.css` | thème, mise en page, styles de la carte — commun aux deux pages |
+| `assets/tableau.css` | le registre : colonnes, tri, repli en blocs |
 | `assets/embed.js` | carte, liste, filtres, sélection, messages |
+| `assets/tableau.js` | tableau, tri, filtres région et type, messages |
+| `assets/categories.js` | couleurs et glyphes des types de marchand, communs aux deux pages |
 | `assets/data.js` | lecture du Sheet et nettoyage des lignes |
 | `assets/etablissements.js` | instantané des données (généré) |
-| `vendor/leaflet/` | Leaflet 1.9.4 embarqué (BSD-2-Clause, `LICENSE` inclus) |
+| `vendor/leaflet/` | Leaflet 1.9.4 embarqué (BSD-2-Clause, `LICENSE` inclus) — carte seule |
 | `build.py` | régénère l'instantané depuis le Google Sheet |
-| `demo.html` | page d'exemple d'intégration |
+| `demo.html` | page d'exemple d'intégration, pour les deux pages |
 
 Hauteur conseillée : **620 px** minimum en vue mixte, 420 px suffisent pour
-`view=carte`. La page occupe 100 % de la hauteur de l'iframe ; c'est donc
-l'attribut `height` de l'iframe qui commande, pas la page.
+`view=carte`, **520 px** pour le tableau. La page occupe 100 % de la hauteur de
+l'iframe ; c'est donc l'attribut `height` de l'iframe qui commande, pas la
+page. Le tableau défile à l'intérieur du cadre, en-têtes de colonnes figés.
 
 ## Paramètres
 
@@ -105,6 +132,30 @@ Les valeurs contenant des accents ou des espaces doivent être encodées :
 
 Sous 860 px de large, la vue `split` se replie automatiquement en deux onglets
 « Carte » / « Liste » — inutile de détecter le mobile côté hôte.
+
+### Propres au tableau
+
+`header`, `titre`, `theme`, `q`, `live` et `origin` s'y comportent à
+l'identique ; `view` n'a pas de sens ici. S'y ajoutent :
+
+| Paramètre | Valeurs | Défaut | Effet |
+|---|---|---|---|
+| `region` | une région | — | présélectionne le filtre de région (`Anosy`) |
+| `categorie` | un type | — | présélectionne le filtre de type (`Restaurant`) |
+| `ville` | une ville | — | restreint le tableau à cette ville, sans commande visible |
+| `tri` | `nom`, `categorie`, `region`, `province` | `region` | colonne de tri au chargement |
+| `sens` | `asc`, `desc` | `asc` | sens de ce tri |
+
+`region` et `categorie` n'acceptent **qu'une valeur** — le tableau se lit comme
+un registre, deux listes déroulantes y sont plus lisibles qu'une rangée de
+puces. Une liste séparée par des virgules, le format de la page carte, est
+acceptée sans erreur : seule la première valeur est retenue. `ville` n'a pas de
+commande dans l'interface : c'est un cadrage posé par l'hôte, que le visiteur
+ne peut pas défaire.
+
+Sous 680 px de large, le tableau se replie en blocs — une fiche par
+établissement, chaque champ précédé de son étiquette — plutôt que de se faire
+pousser de gauche à droite.
 
 ## Données
 
@@ -158,10 +209,43 @@ Un établissement dont la cellule de coordonnées n'est pas exploitable
 (« Introuvable, quartier Amparihy ») **reste dans la liste**, avec la mention
 « Coordonnées indisponibles » et la valeur brute ; il n'apparaît simplement pas
 sur la carte. Le compteur distingue alors « n établissements — m sur la carte ».
+Le tableau applique la même règle : la ligne est là, sa colonne
+« Localisation » indique « Non localisé » et donne la valeur brute du Sheet en
+infobulle, et le compteur dit « n établissements — m non localisés ».
+
+### Région administrative
+
+Le Sheet ne porte pas la région : sa colonne « Province » mélange des villes
+(Tolagnaro, Sambava) et d'anciennes provinces (Mahajanga, Toamasina). Le
+tableau la déduit donc des coordonnées, par appartenance au polygone **ADM1**
+de `data/geo/mdg_adm1.geojson` — les mêmes limites que la choroplèthe de
+l'application interne (BNGRC / OCHA, voir `data/geo/SOURCE.md`).
+
+Le calcul est fait **par `build.py`**, au moment de l'instantané : le
+navigateur n'a ni les polygones ni de quoi les parcourir. `build.py` dépose
+donc aussi dans l'instantané une table `regions_par_ville`, dont les lignes
+relues en direct du Sheet se servent pour se rattacher par le libellé de leur
+ville. Conséquences à connaître :
+
+- une **ville ajoutée au Sheet** depuis le dernier `build.py` s'affiche sous
+  « Région à préciser » jusqu'à la régénération de l'instantané ; sa ligne
+  reste dans le tableau et le filtre la retrouve sous ce libellé ;
+- un point qui ne tombe dans aucun polygone — trait de côte simplifié à
+  ~880 m, saisie GPS approximative — est rattaché à la **région la plus
+  proche** dans un rayon de 0,25° (~28 km), et laissé sans région au-delà ;
+- un établissement **sans coordonnée exploitable** hérite de la région de sa
+  ville ;
+- le millésime COD-AB 2018 compte **22 régions et non 23** : le découpage de
+  2021, qui scinde Vatovavy Fitovinany, n'y est pas.
+
+Si `data/geo/mdg_adm1.geojson` est absent, `build.py` le signale et génère
+l'instantané sans région ; le tableau affiche alors partout « Région à
+préciser » — il ne tombe pas en panne.
 
 ## Dialogue avec l'application hôte
 
-L'iframe envoie des `postMessage` au parent. Vérifiez toujours l'expéditeur :
+Les deux pages envoient des `postMessage` au parent, avec le même protocole.
+Vérifiez toujours l'expéditeur :
 
 ```js
 window.addEventListener("message", (event) => {
@@ -169,21 +253,36 @@ window.addEventListener("message", (event) => {
   if (!event.data || event.data.source !== "eariary-embed") return;
 
   switch (event.data.type) {
-    case "pret":      /* { total, visibles, source } */ break;
-    case "filtre":    /* { visibles, recherche, province, categories } */ break;
+    case "pret":      /* { total, visibles, provenance } */ break;
+    case "filtre":    /* voir ci-dessous — diffère d'une page à l'autre */ break;
     case "selection": /* { etablissement: { nom, categorie, province, lat, lon } } */ break;
   }
 });
 ```
 
-Seules des données publiques circulent (nom, catégorie, ville, coordonnées).
-La cible par défaut est `*` ; passez `?origin=https://votre-domaine.example`
-pour la restreindre à votre application.
+| Message | Carte | Tableau |
+|---|---|---|
+| `filtre` | `{ visibles, recherche, province, categories }` | `{ visibles, recherche, region, categorie, tri, sens }` |
+| `selection` | émis au clic sur une fiche ou un repère | émis au clic sur un **nom** ; le lien Google Maps, lui, ouvre un onglet |
+| `selection.etablissement` | `nom, categorie, province, lat, lon` | idem, plus `region` |
+
+`provenance` vaut `"instantane"` ou `"direct"` selon que la page affiche la
+copie embarquée ou le Sheet relu. **Ce champ s'appelait `source` jusqu'ici :
+il écrasait alors le `source: "eariary-embed"` de l'enveloppe, de sorte que le
+message `pret` n'arrivait jamais chez un hôte suivant le contrôle
+d'expéditeur ci-dessus.** Un hôte qui lisait `event.data.source` sur `pret`
+n'en tirait donc que `"eariary-embed"` ; il n'y a rien à migrer, seulement un
+champ à lire désormais.
+
+Seules des données publiques circulent (nom, catégorie, région, ville,
+coordonnées). La cible par défaut est `*` ; passez
+`?origin=https://votre-domaine.example` pour la restreindre à votre
+application.
 
 ## Identité visuelle
 
-Cette page s'adresse au public, là où l'application Streamlit sert en interne.
-Elle a donc sa propre identité — institutionnelle et minimale, dans l'esprit
+Ces pages s'adressent au public, là où l'application Streamlit sert en interne.
+Elles ont donc leur propre identité — institutionnelle et minimale, dans l'esprit
 d'un registre officiel — plutôt que l'apparence par défaut d'un composant web :
 
 - **encre sur papier chaud**, pas de gris bleuté ; un seul accent
@@ -203,12 +302,21 @@ d'un registre officiel — plutôt que l'apparence par défaut d'un composant we
 - **fond de carte accordé au thème** (CARTO clair ou sombre) ;
 - aucun emoji, aucune animation décorative.
 
-La palette de catégories reprend les teintes de `CATEGORY_STYLE` (`app.py`)
-mais les ramène à une clarté et une saturation communes : les couleurs
-d'origine sont celles des marqueurs par défaut de Leaflet, et elles se
-remarquent comme telles. **C'est la seule divergence assumée avec
-l'application interne** — pour la supprimer, il suffit de recopier les hex de
-`app.py` dans `CATEGORIES` (`assets/embed.js`).
+Le tableau suit les mêmes règles : filets d'un pixel et aucune alternance de
+fond — un registre officiel se tient par ses filets et son alignement, pas par
+des bandes colorées —, en-têtes de colonnes en petites capitales espacées et
+figés en haut du cadre, sens du tri marqué par un chevron **et** par l'encre du
+libellé, jamais par la couleur seule. Le lien Google Maps porte le nom du
+service plutôt qu'une icône seule, et s'ouvre dans un nouvel onglet
+(`rel="noopener"`) : il pointe sur les coordonnées, pas sur le nom, deux
+enseignes pouvant se ressembler.
+
+La palette de catégories (`assets/categories.js`, partagée par les deux pages)
+reprend les teintes de `CATEGORY_STYLE` (`app.py`) mais les ramène à une clarté
+et une saturation communes : les couleurs d'origine sont celles des marqueurs
+par défaut de Leaflet, et elles se remarquent comme telles. **C'est la seule
+divergence assumée avec l'application interne** — pour la supprimer, il suffit
+de recopier les hex de `app.py` dans `assets/categories.js`.
 
 Règles conservées :
 
@@ -218,11 +326,16 @@ Règles conservées :
 - les catégories servent de filtre **et** de légende, avec l'effectif de
   chacune ; le carré de couleur reste à pleine opacité même quand le filtre
   est inactif, la sélection se lisant au libellé et au filet qui le souligne.
+  Dans le tableau, les listes déroulantes portent le même effectif entre
+  parenthèses — filtrer et voir la répartition restent le même geste.
 
 Accessibilité : liste navigable au clavier (chaque fiche est un `<button>`,
 `aria-current` sur la fiche sélectionnée), libellés sur tous les champs,
 contrastes conformes AA, thème sombre pris en charge, animations supprimées si
-`prefers-reduced-motion` est actif.
+`prefers-reduced-motion` est actif. Le tableau est un vrai `<table>` —
+`<th scope="col">`, légende pour lecteurs d'écran, `aria-sort` sur la colonne
+de tri, en-têtes cliquables qui sont des `<button>` : il s'annonce et se
+parcourt comme un tableau, y compris hors de la souris.
 
 ## Attribution
 

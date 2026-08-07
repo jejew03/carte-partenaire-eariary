@@ -63,8 +63,11 @@
      les variantes de paramètres et les messages émis vers l'application. Aucune bordure
      ni coin arrondi autour du cadre — la page intégrée doit se lire comme une section
      de l'application hôte, pas comme un encart rapporté.</p>
+  <p class="lede">Deux pages sont disponibles, au choix ou côte à côte :
+     <code>index.html</code>, la carte et sa liste, et <code>tableau.html</code>,
+     le même registre en tableau filtrable par région et par type de marchand.</p>
 
-  <h2>Variantes</h2>
+  <h2>Variantes — carte</h2>
   <div class="variants" id="variants">
     <button type="button" data-src="index.html" aria-pressed="true">Par défaut</button>
     <button type="button" data-src="index.html?header=0">Sans titraille</button>
@@ -73,6 +76,17 @@
     <button type="button" data-src="index.html?theme=sombre">Thème sombre</button>
     <button type="button" data-src="index.html?categorie=Restaurant,H%C3%B4tel">Restaurants et hôtels</button>
     <button type="button" data-src="index.html?live=0">Sans relecture en direct</button>
+  </div>
+
+  <h2>Variantes — tableau</h2>
+  <div class="variants" id="variants-tableau">
+    <button type="button" data-src="tableau.html">Par défaut</button>
+    <button type="button" data-src="tableau.html?header=0">Sans titraille</button>
+    <button type="button" data-src="tableau.html?theme=sombre">Thème sombre</button>
+    <button type="button" data-src="tableau.html?region=Anosy">Région Anosy</button>
+    <button type="button" data-src="tableau.html?categorie=Restaurant">Restaurants</button>
+    <button type="button" data-src="tableau.html?tri=nom&amp;sens=desc">Trié par nom, décroissant</button>
+    <button type="button" data-src="tableau.html?live=0">Sans relecture en direct</button>
   </div>
 
   <div class="frame">
@@ -105,14 +119,21 @@
   }
   majExtrait("index.html");
 
-  document.getElementById("variants").addEventListener("click", function (event) {
-    var bouton = event.target.closest("button");
-    if (!bouton) return;
-    Array.prototype.forEach.call(this.querySelectorAll("button"), function (b) {
-      b.setAttribute("aria-pressed", b === bouton ? "true" : "false");
+  // Les deux séries de boutons — carte et tableau — pilotent le même cadre :
+  // une seule variante est active à la fois, quelle que soit la page.
+  var series = document.querySelectorAll(".variants");
+  Array.prototype.forEach.call(series, function (serie) {
+    serie.addEventListener("click", function (event) {
+      var bouton = event.target.closest("button");
+      if (!bouton) return;
+      Array.prototype.forEach.call(series, function (autre) {
+        Array.prototype.forEach.call(autre.querySelectorAll("button"), function (b) {
+          b.setAttribute("aria-pressed", b === bouton ? "true" : "false");
+        });
+      });
+      cadre.src = bouton.dataset.src;
+      majExtrait(bouton.dataset.src);
     });
-    cadre.src = bouton.dataset.src;
-    majExtrait(bouton.dataset.src);
   });
 
   var lignes = [];
