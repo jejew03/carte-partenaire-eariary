@@ -135,8 +135,9 @@ Sous 860 px de large, la vue `split` se replie automatiquement en deux onglets
 
 ### Propres au tableau
 
-`header`, `titre`, `theme`, `q`, `live` et `origin` s'y comportent à
-l'identique ; `view` n'a pas de sens ici. S'y ajoutent :
+`titre`, `theme`, `q`, `live` et `origin` s'y comportent à l'identique ;
+`view` n'a pas de sens ici, et `header` n'y masque que la titraille — le
+tableau ne porte pas de note de source en pied de page. S'y ajoutent :
 
 | Paramètre | Valeurs | Défaut | Effet |
 |---|---|---|---|
@@ -165,8 +166,13 @@ Deux sources, dans cet ordre :
    immédiatement ;
 2. **le Google Sheet**, relu dans le navigateur (endpoint `gviz`, qui répond
    avec les en-têtes CORS nécessaires) et qui remplace l'instantané dès qu'il
-   répond — la note de source en pied de page passe alors de « relevé du
-   *date* » à « consulté à l'instant ».
+   répond — sur la carte, la note de source en pied de page passe alors de
+   « relevé du *date* » à « consulté à l'instant ».
+
+Le tableau, lui, n'affiche aucune note de provenance : c'est un registre posé
+dans l'application hôte, à qui il revient de dire d'où viennent ses données.
+L'information reste disponible pour elle, dans le champ `provenance` du
+message `pret`.
 
 Un échec de l'étape 2 (Sheet repassé en privé, hors ligne, CSP de l'hôte qui
 interdit `docs.google.com`) est silencieux : la liste reste celle de

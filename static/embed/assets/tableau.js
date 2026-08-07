@@ -61,8 +61,10 @@
     tous: [],
     visibles: [],
     selection: null, // index dans `tous`
+    // Instantané ou Sheet relu : plus affiché dans la page — le tableau n'a
+    // pas de note de provenance — mais toujours transmis à l'application hôte
+    // dans le message « pret », qui peut en faire ce qu'elle veut.
     source: "instantane",
-    genereLe: "",
     tri: options.tri,
     sens: options.sens,
   };
@@ -70,7 +72,6 @@
   var el = {
     app: doc.getElementById("app"),
     titre: doc.getElementById("titre"),
-    source: doc.getElementById("source"),
     recherche: doc.getElementById("recherche"),
     region: doc.getElementById("region"),
     categorie: doc.getElementById("categorie"),
@@ -356,36 +357,6 @@
     });
   }
 
-  /* --------------------------- Note de provenance ------------------------- */
-
-  function dateLongue(iso) {
-    var date = new Date(iso);
-    if (isNaN(date.getTime())) return "";
-    try {
-      return new Intl.DateTimeFormat("fr-FR", {
-        day: "numeric",
-        month: "long",
-        year: "numeric",
-      }).format(date);
-    } catch (e) {
-      return iso.slice(0, 10);
-    }
-  }
-
-  function majSource() {
-    if (etat.source === "direct") {
-      el.source.textContent =
-        "Source : registre des partenaires eAriary, consulté à l’instant. " +
-        "Régions déduites des coordonnées (limites administratives BNGRC/OCHA).";
-      return;
-    }
-    var jour = etat.genereLe ? dateLongue(etat.genereLe) : "";
-    el.source.textContent =
-      "Source : registre des partenaires eAriary" +
-      (jour ? ", relevé du " + jour : "") +
-      ". Régions déduites des coordonnées (limites administratives BNGRC/OCHA).";
-  }
-
   /* ------------------------------ Démarrage ------------------------------- */
 
   function indexer(etablissements) {
@@ -408,9 +379,7 @@
   function charger(donnees) {
     etat.tous = indexer(donnees.etablissements);
     etat.source = donnees.source;
-    etat.genereLe = donnees.genereLe || "";
     etat.selection = null;
-    majSource();
     dessinerFiltres();
     appliquer();
   }
@@ -462,7 +431,8 @@
         charger(donnees);
       })
       .catch(function () {
-        // Silencieux : l'instantané reste affiché, la note de source le dit.
+        // Silencieux : l'instantané reste affiché. L'hôte, lui, apprend par le
+        // champ `provenance` du message « pret » que c'est une copie.
         if (!snap) {
           el.vide.textContent =
             "Données indisponibles — la source n'a pas répondu et aucune copie n'est embarquée.";
