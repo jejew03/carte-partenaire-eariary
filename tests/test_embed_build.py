@@ -6,6 +6,7 @@ en JavaScript dans `static/embed/assets/data.js` pour la relecture en direct —
 correction ici doit y être reportée.
 """
 
+import json
 import sys
 from pathlib import Path
 
@@ -150,6 +151,138 @@ def test_feuille_vide():
 
 
 # --------------------------------------------------------------------------- #
+# Région administrative
+# --------------------------------------------------------------------------- #
+# Le Sheet ne porte pas la région : elle est déduite des coordonnées, par
+# appartenance au polygone ADM1. Les cas généraux se testent sur des carrés
+# écrits à la main ; les vraies limites servent au test d'intégration final.
+
+
+def _geojson(chemin, entites):
+    chemin.write_text(
+        json.dumps({"type": "FeatureCollection", "features": entites}),
+        encoding="utf-8",
+    )
+    return chemin
+
+
+def _carre(nom, lon, lat, cote=1.0, trous=()):
+    """Entité GeoJSON carrée, coin inférieur gauche en (lon, lat)."""
+    anneau = [
+        [lon, lat],
+        [lon + cote, lat],
+        [lon + cote, lat + cote],
+        [lon, lat + cote],
+        [lon, lat],
+    ]
+    return {
+        "type": "Feature",
+        "properties": {"nom_zone": nom},
+        "geometry": {"type": "Polygon", "coordinates": [anneau] + [list(t) for t in trous]},
+    }
+
+
+@pytest.fixture
+def deux_carres(tmp_path):
+    """Deux régions jointives : Est sur [46,47], Ouest sur [45,46]."""
+    return embed_build.charger_regions(
+        _geojson(tmp_path / "adm1.geojson", [_carre("Est", 46, -19), _carre("Ouest", 45, -19)])
+    )
+
+
+def test_point_dans_le_polygone(deux_carres):
+    assert embed_build.region_de(-18.5, 46.5, deux_carres) == "Est"
+    assert embed_build.region_de(-18.5, 45.5, deux_carres) == "Ouest"
+
+
+def test_sans_coordonnees_pas_de_region(deux_carres):
+    assert embed_build.region_de(None, None, deux_carres) == ""
+    assert embed_build.region_de(-18.5, None, deux_carres) == ""
+
+
+def test_sans_limites_pas_de_region():
+    """L'absence de `data/geo/` n'est pas une erreur : l'instantané s'en passe."""
+    assert embed_build.charger_regions(Path("/introuvable/adm1.geojson")) == []
+    assert embed_build.region_de(-18.5, 46.5, []) == ""
+
+
+def test_point_juste_hors_du_polygone_est_rattache(deux_carres):
+    """Trait de côte simplifié, GPS approximatif : on rattache au plus proche."""
+    assert embed_build.region_de(-18.5, 47.05, deux_carres) == "Est"
+
+
+def test_point_trop_loin_reste_sans_region(deux_carres):
+    """Au-delà de la tolérance, la coordonnée est trop douteuse pour trancher."""
+    assert embed_build.region_de(-18.5, 49.0, deux_carres) == ""
+
+
+def test_multipolygone_et_trou(tmp_path):
+    ile = {
+        "type": "Feature",
+        "properties": {"nom_zone": "Archipel"},
+        "geometry": {
+            "type": "MultiPolygon",
+            "coordinates": [
+                _carre("", 46, -19)["geometry"]["coordinates"],
+                _carre("", 50, -13)["geometry"]["coordinates"],
+            ],
+        },
+    }
+    lagon = [[[40, -19], [43, -19], [43, -16], [40, -16], [40, -19]],
+             [[41, -18], [42, -18], [42, -17], [41, -17], [41, -18]]]
+    atoll = {
+        "type": "Feature",
+        "properties": {"nom_zone": "Atoll"},
+        "geometry": {"type": "Polygon", "coordinates": lagon},
+    }
+    regions = embed_build.charger_regions(_geojson(tmp_path / "adm1.geojson", [ile, atoll]))
+
+    assert embed_build.region_de(-18.5, 46.5, regions) == "Archipel"
+    assert embed_build.region_de(-12.5, 50.5, regions) == "Archipel"  # second polygone
+    assert embed_build.region_de(-18.5, 40.5, regions) == "Atoll"
+    # Le trou est bien exclu : au centre, la terre est trop loin pour trancher…
+    assert embed_build.region_de(-17.5, 41.5, regions) == ""
+    # … mais un point tout contre sa rive rejoint la région qui l'entoure.
+    assert embed_build.region_de(-17.02, 41.5, regions) == "Atoll"
+
+
+def test_table_ville_region_et_completion(deux_carres):
+    etablissements = [
+        {"nom": "A", "province": "Tolagnaro", "lat": -18.5, "lon": 46.5},
+        {"nom": "B", "province": "Tolagnaro", "lat": -18.6, "lon": 46.6},
+        {"nom": "C", "province": "Tolagnaro", "lat": None, "lon": None},
+        {"nom": "D", "province": "Inconnue", "lat": None, "lon": None},
+    ]
+    assert embed_build.ajouter_regions(etablissements, deux_carres) == 2
+
+    table = embed_build.regions_par_ville(etablissements)
+    assert table == {"Tolagnaro": "Est"}
+
+    # La fiche sans coordonnée exploitable hérite de la région de sa ville ;
+    # celle dont la ville est inconnue reste sans région.
+    assert embed_build.completer_par_ville(etablissements, table) == 1
+    assert [e["region"] for e in etablissements] == ["Est", "Est", "Est", ""]
+
+
+def test_limites_du_depot_situent_les_villes_du_sheet():
+    """Test d'intégration : vraies limites ADM1, vraies coordonnées du Sheet."""
+    regions = embed_build.charger_regions()
+    if not regions:
+        pytest.skip("data/geo/mdg_adm1.geojson absent")
+
+    attendu = {
+        (-25.025445, 46.990566): "Anosy",  # Tolagnaro
+        (-15.718495, 46.304429): "Boeny",  # Mahajanga
+        (-14.254504, 50.157256): "Sava",  # Sambava
+        (-12.289942, 49.291381): "Diana",  # Antsiranana
+        (-21.448425, 47.086873): "Haute Matsiatra",  # Fianarantsoa
+        (-18.158589, 49.412152): "Atsinanana",  # Toamasina
+    }
+    for (lat, lon), region in attendu.items():
+        assert embed_build.region_de(lat, lon, regions) == region
+
+
+# --------------------------------------------------------------------------- #
 # Instantané
 # --------------------------------------------------------------------------- #
 
@@ -161,6 +294,13 @@ def test_instantane_est_du_javascript_lisible():
     assert "window.EARIARY_SNAPSHOT = {" in rendu
     assert rendu.rstrip().endswith("};")
     assert "Chez X" in rendu  # accents et guillemets non échappés en \uXXXX
+
+
+def test_instantane_porte_la_table_ville_region():
+    """La page tableau s'en sert pour les lignes relues en direct du Sheet."""
+    rendu = embed_build.render([], "2026-01-01T00:00:00Z", {"Tolagnaro": "Anosy"})
+    assert '"regions_par_ville"' in rendu
+    assert '"Tolagnaro": "Anosy"' in rendu
 
 
 def test_instantane_du_depot_est_coherent():

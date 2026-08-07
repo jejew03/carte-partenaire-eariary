@@ -25,10 +25,12 @@ import argparse
 import csv
 import io
 import json
+import math
 import re
 import sys
 import urllib.error
 import urllib.request
+from collections import Counter
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -40,6 +42,8 @@ CSV_URL = (
 
 BASE_DIR = Path(__file__).resolve().parent
 OUTPUT = BASE_DIR / "assets" / "etablissements.js"
+# Limites administratives déjà versionnées pour la choroplèthe de l'application.
+ADM1 = BASE_DIR.parents[1] / "data" / "geo" / "mdg_adm1.geojson"
 
 # Même expression que `app.py` : « -12.289942, 49.291381 », antislashs et
 # virgules décimales tolérés. Une cellule qui ne correspond pas — « Introuvable,
@@ -149,10 +153,184 @@ def parse_rows(text: str) -> list[dict]:
     return etablissements
 
 
-def render(etablissements: list[dict], genere_le: str) -> str:
+# --------------------------------------------------------------------------- #
+# Région administrative
+# --------------------------------------------------------------------------- #
+# Le Sheet ne porte pas la région : sa colonne « Province » mélange villes
+# (Tolagnaro, Sambava) et anciennes provinces (Mahajanga, Toamasina). La région
+# est donc déduite des coordonnées, par appartenance au polygone ADM1 —
+# les mêmes limites que celles de la choroplèthe de l'application, déjà dans le
+# dépôt. Aucun accès réseau, stdlib uniquement : pas de geopandas ici.
+
+# Un point peut tomber hors de tout polygone — trait de côte simplifié à ~880 m,
+# saisie GPS approximative. Il est alors rattaché à la région la plus proche,
+# dans cette limite (en degrés, ~28 km) ; au-delà, la coordonnée est trop
+# douteuse pour qu'on lui attribue une région.
+RATTACHEMENT_MAX_DEG = 0.25
+
+
+def _polygones(geometrie: dict) -> list[list[list[list[float]]]]:
+    """Liste de polygones ; chacun est une liste d'anneaux (extérieur, trous)."""
+    coordonnees = geometrie.get("coordinates") or []
+    if geometrie.get("type") == "Polygon":
+        return [coordonnees]
+    if geometrie.get("type") == "MultiPolygon":
+        return list(coordonnees)
+    return []
+
+
+def charger_regions(chemin: Path = ADM1) -> list[tuple[str, tuple, list]]:
+    """`[(nom, rectangle englobant, polygones)]` — liste vide si le fichier manque.
+
+    Son absence n'est pas une erreur : l'instantané se génère alors sans région,
+    comme avant, et la page de tableau se rabat sur la ville.
+    """
+    if not chemin.exists():
+        return []
+
+    donnees = json.loads(chemin.read_text(encoding="utf-8"))
+    regions = []
+    for entite in donnees.get("features", []):
+        nom = (entite.get("properties") or {}).get("nom_zone")
+        polygones = _polygones(entite.get("geometry") or {})
+        if not nom or not polygones:
+            continue
+        sommets = [point for polygone in polygones for anneau in polygone for point in anneau]
+        lons = [point[0] for point in sommets]
+        lats = [point[1] for point in sommets]
+        regions.append((nom, (min(lons), min(lats), max(lons), max(lats)), polygones))
+    return regions
+
+
+def _dans_anneau(lon: float, lat: float, anneau: list) -> bool:
+    """Lancer de rayon : compte les intersections d'une demi-droite horizontale."""
+    dedans = False
+    precedent = len(anneau) - 1
+    for courant in range(len(anneau)):
+        x_i, y_i = anneau[courant][0], anneau[courant][1]
+        x_j, y_j = anneau[precedent][0], anneau[precedent][1]
+        # Le test d'encadrement garantit y_j != y_i : pas de division par zéro.
+        if (y_i > lat) != (y_j > lat):
+            if lon < x_i + (lat - y_i) * (x_j - x_i) / (y_j - y_i):
+                dedans = not dedans
+        precedent = courant
+    return dedans
+
+
+def _dans_polygone(lon: float, lat: float, polygone: list) -> bool:
+    if not polygone or not _dans_anneau(lon, lat, polygone[0]):
+        return False
+    return not any(_dans_anneau(lon, lat, trou) for trou in polygone[1:])
+
+
+def _distance_segment(lon: float, lat: float, a: list, b: list) -> float:
+    """Distance du point au segment [a, b], en degrés.
+
+    Les longitudes sont ramenées à l'échelle du parallèle : à Madagascar, un
+    degré de longitude vaut environ 0,95 degré de latitude, et le rapport
+    s'écarte encore aux latitudes hautes. Au segment et non au sommet le plus
+    proche : une côte simplifiée peut n'avoir qu'un sommet tous les 900 m, et
+    un point tombé juste au large serait sinon jugé lointain.
+    """
+    facteur = math.cos(math.radians(lat))
+    x, y = lon * facteur, lat
+    ax, ay = a[0] * facteur, a[1]
+    bx, by = b[0] * facteur, b[1]
+    dx, dy = bx - ax, by - ay
+    longueur = dx * dx + dy * dy
+    if longueur == 0:
+        return math.hypot(x - ax, y - ay)
+    t = max(0.0, min(1.0, ((x - ax) * dx + (y - ay) * dy) / longueur))
+    return math.hypot(x - (ax + t * dx), y - (ay + t * dy))
+
+
+def _distance_rectangle(lon: float, lat: float, rectangle: tuple) -> float:
+    """Distance au rectangle englobant — nulle à l'intérieur. Filtre bon marché."""
+    min_lon, min_lat, max_lon, max_lat = rectangle
+    dx = max(min_lon - lon, 0.0, lon - max_lon) * math.cos(math.radians(lat))
+    dy = max(min_lat - lat, 0.0, lat - max_lat)
+    return math.hypot(dx, dy)
+
+
+def region_de(lat: float | None, lon: float | None, regions: list) -> str:
+    """Nom de la région contenant le point, ou de la plus proche ; sinon `""`."""
+    if lat is None or lon is None or not regions:
+        return ""
+
+    for nom, rectangle, polygones in regions:
+        min_lon, min_lat, max_lon, max_lat = rectangle
+        if not (min_lon <= lon <= max_lon and min_lat <= lat <= max_lat):
+            continue
+        if any(_dans_polygone(lon, lat, polygone) for polygone in polygones):
+            return nom
+
+    # Aucune région ne le contient : au plus proche bord, tous anneaux
+    # confondus — un point tombé dans un lac rejoint la région qui l'entoure.
+    meilleure, distance_min = "", RATTACHEMENT_MAX_DEG
+    for nom, rectangle, polygones in regions:
+        if _distance_rectangle(lon, lat, rectangle) >= distance_min:
+            continue
+        for polygone in polygones:
+            for anneau in polygone:
+                for index in range(len(anneau) - 1):
+                    distance = _distance_segment(lon, lat, anneau[index], anneau[index + 1])
+                    if distance < distance_min:
+                        meilleure, distance_min = nom, distance
+    return meilleure
+
+
+def ajouter_regions(etablissements: list[dict], regions: list) -> int:
+    """Complète chaque fiche par sa région. Renvoie le nombre de rattachements."""
+    trouvees = 0
+    for etablissement in etablissements:
+        nom = region_de(etablissement["lat"], etablissement["lon"], regions)
+        etablissement["region"] = nom
+        trouvees += bool(nom)
+    return trouvees
+
+
+def regions_par_ville(etablissements: list[dict]) -> dict[str, str]:
+    """Table ville → région, pour les lignes relues en direct dans le navigateur.
+
+    Le navigateur n'a ni les polygones ni de quoi les parcourir : il rattache
+    donc par le libellé de la colonne « Province », que cette table traduit.
+    Une ville à cheval sur deux régions — cas non observé — prendrait la plus
+    fréquente ; les coordonnées, elles, restent la référence dans l'instantané.
+    """
+    comptes: dict[str, Counter] = {}
+    for etablissement in etablissements:
+        if etablissement.get("region"):
+            comptes.setdefault(etablissement["province"], Counter())[etablissement["region"]] += 1
+    return {
+        ville: compte.most_common(1)[0][0]
+        for ville, compte in sorted(comptes.items())
+    }
+
+
+def completer_par_ville(etablissements: list[dict], villes_regions: dict[str, str]) -> int:
+    """Rattache par la ville les fiches qu'aucune coordonnée ne situe.
+
+    Un établissement dont la cellule de coordonnées est inexploitable
+    (« Introuvable, quartier Amparihy ») reste dans la liste ; il hérite de la
+    région de sa ville plutôt que de tomber dans « Non renseignée ».
+    """
+    complets = 0
+    for etablissement in etablissements:
+        if not etablissement.get("region"):
+            etablissement["region"] = villes_regions.get(etablissement["province"], "")
+            complets += bool(etablissement["region"])
+    return complets
+
+
+def render(
+    etablissements: list[dict],
+    genere_le: str,
+    villes_regions: dict[str, str] | None = None,
+) -> str:
     payload = {
         "genere_le": genere_le,
         "source": "Google Sheet (instantané)",
+        "regions_par_ville": villes_regions or {},
         "etablissements": etablissements,
     }
     body = json.dumps(payload, ensure_ascii=False, indent=2)
@@ -195,8 +373,18 @@ def main() -> int:
         print("Aucun établissement lisible dans le Sheet.", file=sys.stderr)
         return 1
 
+    regions = charger_regions()
+    if not regions:
+        print(
+            f"{ADM1.name} introuvable : instantané généré sans région.",
+            file=sys.stderr,
+        )
+    situes = ajouter_regions(etablissements, regions)
+    villes_regions = regions_par_ville(etablissements)
+    situes += completer_par_ville(etablissements, villes_regions)
+
     genere_le = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
-    contenu = render(etablissements, genere_le)
+    contenu = render(etablissements, genere_le, villes_regions)
     localises = sum(1 for e in etablissements if e["lat"] is not None)
 
     if args.check:
@@ -211,7 +399,8 @@ def main() -> int:
     OUTPUT.write_text(contenu, encoding="utf-8")
     print(
         f"{OUTPUT.relative_to(BASE_DIR.parent)} : {len(etablissements)} "
-        f"établissements, {localises} localisés."
+        f"établissements, {localises} localisés, {situes} rattachés à une région "
+        f"({len(villes_regions)} villes)."
     )
     return 0
 
