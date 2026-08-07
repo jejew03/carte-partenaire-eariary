@@ -1543,36 +1543,43 @@ if has_subscribers:
                 },
             )
 
-# ----------------------- Page publique à intégrer -------------------------- #
+# ----------------------- Pages publiques à intégrer ------------------------ #
 # `static/embed/` est servi par Streamlit lui-même (enableStaticServing dans
-# .streamlit/config.toml) : la page publique se déploie avec l'application, à la
-# même adresse, sans hébergement séparé à maintenir.
+# .streamlit/config.toml) : les pages publiques se déploient avec l'application,
+# à la même adresse, sans hébergement séparé à maintenir.
 _base = (st.get_option("server.baseUrlPath") or "").strip("/")
 # Chemin absolu depuis la racine du site : `st.iframe` ne reconnaît un chemin
 # relatif que s'il commence par « / » — sans cette barre, il prend la chaîne
 # pour du HTML brut et affiche le chemin en toutes lettres.
-EMBED_PATH = f"/{_base}/app/static/embed/index.html" if _base else "/app/static/embed/index.html"
+_racine_embed = f"/{_base}/app/static/embed" if _base else "/app/static/embed"
 
 try:
     # Seule l'origine nous intéresse : `st.context.url` porte déjà le chemin de
-    # base, que EMBED_PATH répète.
+    # base, que `_racine_embed` répète.
     _parts = urlsplit(st.context.url)
     _origine = f"{_parts.scheme}://{_parts.netloc}" if _parts.netloc else ""
 except Exception:  # contexte indisponible (exécution hors serveur, tests)
     _origine = ""
-embed_url = f"{_origine}{EMBED_PATH}"
+
+# Deux pages, même dossier : la carte, et le tableau filtrable par région et
+# par type de marchand. Hauteurs conseillées différentes — le tableau n'a pas
+# de carte à laisser respirer.
+EMBED_PAGES = [
+    ("Carte", "index.html", 620, "Carte et liste des établissements, filtres ville et catégorie."),
+    (
+        "Tableau",
+        "tableau.html",
+        520,
+        "Registre triable, filtres région et type de marchand, lien Google Maps par ligne. "
+        "Ni carte ni tuiles : c'est la page à préférer quand l'hôte n'a pas besoin d'une carte.",
+    ),
+]
 
 st.html(
-    '<div class="section-title">Page publique à intégrer</div>'
-    '<div class="section-sub">Carte et liste des établissements partenaires, '
-    "destinées au public et à l'intégration dans une autre application. Cette "
-    "page ne montre ni les pré-souscripteurs ni les indicateurs internes.</div>"
-)
-
-st.link_button(
-    "Ouvrir la page publique",
-    embed_url,
-    icon=":material/open_in_new:",
+    '<div class="section-title">Pages publiques à intégrer</div>'
+    '<div class="section-sub">Établissements partenaires, destinés au public et '
+    "à l'intégration dans une autre application. Ces pages ne montrent ni les "
+    "pré-souscripteurs ni les indicateurs internes.</div>"
 )
 
 st.caption(
@@ -1580,14 +1587,22 @@ st.caption(
     "une section de l'application hôte et non comme un encart rapporté. "
     "Ajoutez `?header=0` si l'hôte affiche déjà son propre titre."
 )
-st.code(
-    f'<iframe\n'
-    f'  src="{embed_url}"\n'
-    f'  title="Établissements partenaires eAriary"\n'
-    f'  width="100%" height="620" style="display:block;border:0"\n'
-    f'  loading="lazy"></iframe>',
-    language="html",
-)
 
-with st.expander("Aperçu", icon=":material/preview:"):
-    st.iframe(embed_url, height=620)
+for _titre, _fichier, _hauteur, _sous_titre in EMBED_PAGES:
+    _url = f"{_origine}{_racine_embed}/{_fichier}"
+    st.markdown(f"**{_titre}** — {_sous_titre}")
+    st.link_button(
+        f"Ouvrir la page « {_titre} »",
+        _url,
+        icon=":material/open_in_new:",
+    )
+    st.code(
+        f'<iframe\n'
+        f'  src="{_url}"\n'
+        f'  title="Établissements partenaires eAriary"\n'
+        f'  width="100%" height="{_hauteur}" style="display:block;border:0"\n'
+        f'  loading="lazy"></iframe>',
+        language="html",
+    )
+    with st.expander(f"Aperçu — {_titre}", icon=":material/preview:"):
+        st.iframe(_url, height=_hauteur)

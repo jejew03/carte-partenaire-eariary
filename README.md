@@ -119,9 +119,9 @@ retombe sur l'ancien rendu en cercles proportionnels.
 | `geo_aggregate.py` | jointure spatiale points → polygones et agrégation par zone |
 | `tools/geocode_souscripteurs.py` | géocodage des adresses d'inscription (réseau) |
 | `tools/fetch_boundaries.py` | récupération et simplification des limites (réseau) |
-| `static/embed/` | page publique à intégrer par iframe ([documentation](static/embed/README.md)) |
+| `static/embed/` | pages publiques à intégrer par iframe — carte et tableau ([documentation](static/embed/README.md)) |
 | `tests/test_geo_aggregate.py` | tests du moteur d'agrégation |
-| `tests/test_embed_build.py` | tests de la lecture du Sheet par la page publique |
+| `tests/test_embed_build.py` | tests de la lecture du Sheet et du rattachement à la région |
 
 Les deux scripts de `tools/` sont les seuls points du projet qui accèdent au
 réseau, et ils ne tournent qu'à la main. L'agrégation rattache chaque point au
@@ -134,27 +134,37 @@ signalé comme rattachement approximatif.
 python -m pytest tests/ -q
 ```
 
-## Page publique
+## Pages publiques
 
-`static/embed/` contient une page autonome — carte et liste des partenaires —
-destinée au public et à l'intégration par `<iframe>` dans une autre
-application. Elle ne montre ni les pré-souscripteurs ni les indicateurs
-internes.
+`static/embed/` contient deux pages autonomes, destinées au public et à
+l'intégration par `<iframe>` dans une autre application. Elles ne montrent ni
+les pré-souscripteurs ni les indicateurs internes.
 
-Elle est publiée par GitHub Pages depuis `main` — **c'est l'adresse à
-diffuser**, elle ne demande aucune connexion :
+| Page | Contenu |
+|---|---|
+| `index.html` | carte et liste, filtres ville et catégorie |
+| `tableau.html` | registre trié, filtres **région** et **type de marchand**, lien Google Maps par ligne — ni Leaflet ni tuiles |
+
+Elles sont publiées par GitHub Pages depuis `main` — **ce sont les adresses à
+diffuser**, elles ne demandent aucune connexion :
 
 ```
 https://jejew03.github.io/carte-partenaire-eariary/static/embed/index.html
+https://jejew03.github.io/carte-partenaire-eariary/static/embed/tableau.html
 ```
 
-Streamlit la sert aussi lui-même (`enableStaticServing` dans
-`.streamlit/config.toml`), sous `/app/static/embed/index.html` ; l'application
-affiche ce lien, le code à copier et un aperçu dans sa section « Page publique
-à intégrer ». Tant que l'application reste privée, cette seconde adresse exige
+Streamlit les sert aussi lui-même (`enableStaticServing` dans
+`.streamlit/config.toml`), sous `/app/static/embed/` ; l'application affiche
+ces liens, le code à copier et un aperçu dans sa section « Pages publiques à
+intégrer ». Tant que l'application reste privée, ces secondes adresses exigent
 une connexion. Voir [`static/embed/README.md`](static/embed/README.md)
 pour les paramètres d'URL, les messages `postMessage` et l'identité visuelle,
 qui est **délibérément distincte** de celle de l'application interne.
+
+La colonne « Région » du tableau ne vient pas du Sheet, dont la colonne
+« Province » mélange villes et anciennes provinces : elle est déduite des
+coordonnées par appartenance au polygone ADM1 de `data/geo/mdg_adm1.geojson`,
+au moment où `static/embed/build.py` régénère l'instantané.
 
 ## Design
 
