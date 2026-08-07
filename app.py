@@ -27,6 +27,10 @@ import numpy as np
 import pandas as pd
 import streamlit as st
 
+# Import des pré-inscrits : lecture du fichier déposé, uniformisation des
+# adresses, agrégation et géocodage. Les règles ne vivent que là.
+import pre_inscrits
+
 # Agrégation géographique : produite par `tools/fetch_boundaries.py` +
 # `geo_aggregate.py`. Absente d'un dépôt fraîchement cloné, d'où l'import
 # tolérant — l'application doit rester utilisable sans choroplèthe.
@@ -65,7 +69,9 @@ SUBSCRIBERS_AGGREGATE = BASE_DIR / "data" / "pre_souscripteurs_agreges.csv"
 # Un seul ton pour la couche pré-souscripteurs : c'est la taille du cercle qui
 # porte l'information (nombre d'inscrits), pas la couleur.
 SUBSCRIBER_COLOR = "#4F46E5"
-ACCOUNT_ORDER = ["Particulier", "Marchand", "Épicerie", "Grande Entreprise"]
+# Référentiel unique, partagé avec l'import : deux listes de types de compte qui
+# divergeraient feraient apparaître des colonnes fantômes dans le récapitulatif.
+ACCOUNT_ORDER = pre_inscrits.COMPTES
 
 # ------------------------- Choroplèthe par zone ---------------------------- #
 # Rampe séquentielle bleue, alignée sur la couleur primaire du thème. Une
@@ -113,13 +119,10 @@ ZONE_METRICS = {
 }
 
 # Le champ « Adresse » du fichier d'inscription contient parfois une adresse
-# e-mail. Même règle que `tools/geocode_souscripteurs.py` : sans valeur
-# géographique, et affichée telle quelle elle identifierait une personne.
-EMAIL_LIKE = re.compile(
-    r"@|(?:gmail|yahoo|hotmail|outlook|orange|moov|telma|esemahay)\.?(?:com|fr|mg)",
-    re.IGNORECASE,
-)
-UNKNOWN_ADDRESS = "Adresse non renseignée"
+# e-mail : sans valeur géographique, et affichée telle quelle elle identifierait
+# une personne. Règle définie dans `pre_inscrits`, d'où vient aussi l'import.
+EMAIL_LIKE = pre_inscrits.EMAIL_LIKE
+UNKNOWN_ADDRESS = pre_inscrits.ADRESSE_INCONNUE
 
 # Font Awesome 6 ne rattache la police qu'aux classes .fas / .fa-solid, alors que
 # leaflet-awesome-markers n'émet que .fa : sans ce correctif les marqueurs
@@ -307,7 +310,16 @@ def load_subscribers():
     Retourne (DataFrame, message d'anomalie ou None). Le DataFrame est vide si
     le fichier est absent : l'application reste utilisable sans lui.
     """
-    if SUBSCRIBERS_XLSX.exists():
+    # L'agrégat l'emporte sur le classeur dès qu'il est le plus récent : c'est
+    # le cas après un import fait depuis l'interface, qui réécrit l'agrégat mais
+    # ne touche pas au classeur. Sans cette règle, l'application continuerait
+    # d'afficher l'ancienne liste sans rien en dire.
+    aggregate_plus_recent = (
+        SUBSCRIBERS_AGGREGATE.exists()
+        and SUBSCRIBERS_XLSX.exists()
+        and SUBSCRIBERS_AGGREGATE.stat().st_mtime > SUBSCRIBERS_XLSX.stat().st_mtime
+    )
+    if SUBSCRIBERS_XLSX.exists() and not aggregate_plus_recent:
         try:
             raw = pd.read_excel(SUBSCRIBERS_XLSX, dtype=str)
         except Exception as exc:
@@ -1542,6 +1554,221 @@ if has_subscribers:
                     "precision": st.column_config.TextColumn("Motif", width="small"),
                 },
             )
+
+# ------------------ Import de la liste des pré-inscrits -------------------- #
+# Le seul endroit de l'application qui écrit sur le disque, et le seul qui
+# accède au réseau au runtime — le géocodage était jusqu'ici réservé au script
+# de `tools/`. Les deux sont contenus dans le bouton d'import : rien ne part et
+# rien ne s'écrit tant qu'il n'a pas été pressé.
+st.html(
+    '<div class="section-title">Importer la liste des pré-inscrits</div>'
+    '<div class="section-sub">Déposez l\'export des inscriptions (CSV ou Excel) : '
+    "les adresses sont uniformisées, les nouvelles géocodées, et la carte se met "
+    "à jour. Seuls les effectifs par adresse et par type de compte sont "
+    "conservés — ni nom, ni téléphone, ni e-mail ne quitte cette page.</div>"
+)
+
+# Bilan du dernier import, déposé avant le rechargement de la page : le message
+# doit survivre au `st.rerun()` qui suit l'écriture des fichiers.
+if bilan := st.session_state.pop("import_bilan", None):
+    st.success(bilan, icon=":material/task_alt:")
+
+fichier_importe = st.file_uploader(
+    "Fichier des pré-inscrits",
+    type=["csv", "xlsx", "xls"],
+    help="Colonnes attendues : une adresse et un type de compte. Les autres "
+         "colonnes sont ignorées. Le séparateur et l'encodage sont détectés.",
+)
+
+
+@st.cache_data(show_spinner=False)
+def lire_import(contenu: bytes, nom: str):
+    """Lecture du fichier déposé, mise en cache sur son contenu.
+
+    Streamlit réexécute le script à chaque clic — sans ce cache, un fichier de
+    plusieurs milliers de lignes serait relu à chaque case cochée.
+    """
+    return pre_inscrits.lire_fichier(contenu, nom)
+
+
+if fichier_importe is not None:
+    try:
+        brut = lire_import(fichier_importe.getvalue(), fichier_importe.name)
+    except Exception as exc:
+        brut = None
+        st.error(f"Fichier illisible : {exc}", icon=":material/error:")
+
+    if brut is not None and brut.empty:
+        st.warning("Le fichier ne contient aucune ligne.", icon=":material/warning:")
+    elif brut is not None:
+        detectee_adresse, detectee_compte = pre_inscrits.colonnes_utiles(brut)
+        colonnes = list(brut.columns)
+
+        # Détection proposée, jamais imposée : un export dont les intitulés ont
+        # changé se rattrape ici, sans toucher au code.
+        choix_col = st.columns(2)
+        col_adresse = choix_col[0].selectbox(
+            "Colonne des adresses",
+            colonnes,
+            index=colonnes.index(detectee_adresse) if detectee_adresse in colonnes else 0,
+        )
+        col_compte = choix_col[1].selectbox(
+            "Colonne du type de compte",
+            ["— aucune —"] + colonnes,
+            index=(colonnes.index(detectee_compte) + 1) if detectee_compte in colonnes else 0,
+        )
+
+        prepare = pre_inscrits.preparer(
+            brut, col_adresse, None if col_compte == "— aucune —" else col_compte
+        )
+        correspondances = pre_inscrits.charger_correspondances()
+        prepare["Adresse"] = pre_inscrits.appliquer_correspondances(
+            prepare["Adresse"], correspondances
+        )
+
+        cache_geo = pre_inscrits.charger_cache_geo()
+        precisions = {a: v.get("precision", "") for a, v in cache_geo.items()}
+        effectifs = pre_inscrits.effectifs_par_adresse(prepare)
+        suggestions = pre_inscrits.suggerer_fusions(effectifs, precisions)
+
+        # Les fusions cochées sont appliquées à blanc dès maintenant : le nombre
+        # d'adresses à géocoder, donc la durée annoncée, doit refléter ce qui va
+        # réellement être fait.
+        retenues = {}
+        for index, suggestion in enumerate(suggestions):
+            if st.session_state.get(f"fusion_{index}"):
+                for variante in suggestion["variantes"]:
+                    retenues[pre_inscrits.cle(variante)] = suggestion["retenue"]
+        adresses_finales = pre_inscrits.appliquer_correspondances(
+            prepare["Adresse"], retenues
+        )
+        a_geocoder = pre_inscrits.adresses_a_geocoder(adresses_finales.unique(), cache_geo)
+
+        ancien = pre_inscrits.lire_agregat()
+        ancien_total = (
+            pd.to_numeric(ancien["Inscrits"], errors="coerce").fillna(0).sum()
+            if not ancien.empty
+            else 0
+        )
+
+        mesures = st.columns(4)
+        mesures[0].metric(
+            "Lignes lues",
+            f"{len(prepare):,}".replace(",", " "),
+            delta=f"{len(prepare) - int(ancien_total):+d} vs liste actuelle" if ancien_total else None,
+            delta_color="off",
+        )
+        mesures[1].metric("Adresses distinctes", f"{adresses_finales.nunique()}")
+        mesures[2].metric(
+            "Libellés uniformisés",
+            f"{int((prepare['Adresse importée'].str.strip() != prepare['Adresse']).sum())}",
+            help="Lignes dont l'adresse a été réécrite : espaces, casse, alias de "
+                 "ville, pays ajouté, e-mail neutralisé.",
+        )
+        mesures[3].metric(
+            "Adresses à géocoder",
+            f"{len(a_geocoder)}",
+            help="Adresses absentes du cache. Nominatim impose une requête par "
+                 "seconde : comptez environ autant de secondes.",
+        )
+
+        resume = pre_inscrits.resume_uniformisation(prepare)
+        if not resume.empty:
+            with st.expander(
+                f"{len(resume)} libellé(s) réécrit(s) par les règles",
+                icon=":material/rule:",
+            ):
+                st.caption(
+                    "Uniformisation automatique : espaces et virgules, casse des "
+                    "saisies tout en capitales, noms de villes usuels ramenés au "
+                    "nom officiel, « Madagascar » ajouté aux adresses qui portent "
+                    "déjà une ville ou une région, adresses e-mail neutralisées."
+                )
+                st.dataframe(resume, width="stretch", hide_index=True)
+
+        if suggestions:
+            with st.expander(
+                f"{len(suggestions)} rapprochement(s) proposé(s) — à confirmer",
+                icon=":material/merge:",
+            ):
+                st.caption(
+                    "Ces libellés se ressemblent, mais rien ne dit qu'ils désignent "
+                    "le même lieu : « Itaosy » et « Itasy » se ressemblent et sont "
+                    "deux endroits différents. Rien n'est fusionné sans votre "
+                    "accord ; une case cochée vaut pour tous les imports suivants."
+                )
+                for index, suggestion in enumerate(suggestions):
+                    st.checkbox(
+                        f"**{suggestion['retenue']}** ← "
+                        + ", ".join(suggestion["variantes"])
+                        + f"  ·  {suggestion['inscrits']} inscrit(s)  ·  "
+                        + suggestion["motif"],
+                        key=f"fusion_{index}",
+                    )
+
+        if a_geocoder:
+            st.caption(
+                f"{len(a_geocoder)} adresse(s) seront géocodées auprès de "
+                f"Nominatim, à une requête par seconde — environ "
+                f"{max(1, round(len(a_geocoder) * pre_inscrits.PAUSE / 60))} minute(s). "
+                "C'est le seul accès réseau de l'application."
+            )
+
+        st.warning(
+            "L'import **remplace** la liste actuelle "
+            f"({int(ancien_total)} inscrit(s)) par celle du fichier déposé. "
+            "Le cache de géocodage, lui, s'enrichit sans rien perdre.",
+            icon=":material/warning:",
+        )
+
+        if st.button(
+            "Importer et mettre à jour",
+            icon=":material/publish:",
+            type="primary",
+        ):
+            table = dict(correspondances)
+            table.update(retenues)
+            adresses = pre_inscrits.appliquer_correspondances(prepare["Adresse"], table)
+            resultat = prepare.assign(Adresse=adresses)
+            restants = pre_inscrits.adresses_a_geocoder(adresses.unique(), cache_geo)
+
+            with st.status("Import en cours…", expanded=True) as etat:
+                if retenues:
+                    st.write(f"Enregistrement de {len(retenues)} rapprochement(s).")
+                pre_inscrits.enregistrer_correspondances(table)
+
+                echecs = 0
+                if restants:
+                    st.write(f"Géocodage de {len(restants)} nouvelle(s) adresse(s)…")
+                    avancement = st.progress(0.0)
+                    ligne = st.empty()
+                    for rang, adresse in enumerate(restants, 1):
+                        trouve = pre_inscrits.geocoder(adresse)
+                        cache_geo[adresse] = {"Adresse": adresse, **trouve}
+                        echecs += trouve["precision"] in ("introuvable", "erreur réseau")
+                        # Écriture à chaque tour : une fermeture d'onglet en
+                        # cours de route ne perd aucune résolution déjà payée.
+                        pre_inscrits.enregistrer_cache_geo(cache_geo)
+                        avancement.progress(rang / len(restants))
+                        ligne.caption(f"[{rang}/{len(restants)}] {adresse} → {trouve['precision']}")
+                    ligne.empty()
+
+                agregat = pre_inscrits.agreger(resultat)
+                pre_inscrits.enregistrer_agregat(agregat)
+                st.write(f"Agrégat écrit : {len(agregat)} ligne(s).")
+                etat.update(label="Import terminé", state="complete", expanded=False)
+
+            st.session_state["import_bilan"] = (
+                f"{len(resultat)} inscription(s) importée(s), "
+                f"{adresses.nunique()} adresse(s) distincte(s), "
+                f"{len(restants)} géocodée(s)"
+                + (f", dont {echecs} sans résultat" if echecs else "")
+                + "."
+            )
+            # Le cache de `load_subscribers` porte sur 5 minutes : sans purge,
+            # la carte afficherait encore l'ancienne liste.
+            st.cache_data.clear()
+            st.rerun()
 
 # ----------------------- Pages publiques à intégrer ------------------------ #
 # `static/embed/` est servi par Streamlit lui-même (enableStaticServing dans
