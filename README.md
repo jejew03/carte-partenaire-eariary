@@ -23,25 +23,69 @@ Le cache est de 5 minutes ; le bouton « Recharger les données » force la rele
 
 ### Pré-souscripteurs eAriary
 
-Le classeur `Stat_Inscription_eAr_<date>_final.xlsx` (colonnes `Adresse` et
-`Account`) alimente une seconde couche de la carte. Il ne contient aucune
-coordonnée : les adresses sont géocodées une fois par
+La liste des inscriptions (colonnes `Adresse` et `Account`) alimente une
+seconde couche de la carte. Elle ne contient aucune coordonnée : les adresses
+sont uniformisées puis géocodées, une fois, et le résultat est mis en cache.
+
+**Depuis l'application** — section « Importer la liste des pré-inscrits », en
+bas de page : déposez l'export (CSV ou Excel), l'app uniformise les adresses,
+propose les rapprochements douteux, géocode les nouvelles et réécrit les
+fichiers de `data/`. C'est la voie normale, et le seul endroit de
+l'application qui écrive sur le disque ou accède au réseau.
+
+**En ligne de commande**, à partir du classeur
+`Stat_Inscription_eAr_<date>_final.xlsx` — même résultat, sans interface :
 
 ```bash
 python tools/geocode_souscripteurs.py           # nouvelles adresses seulement
 python tools/geocode_souscripteurs.py --retry   # reprend tout ce qui n'est pas « exacte »
 ```
 
-qui écrit dans `data/` :
+Les deux voies écrivent dans `data/` :
 
 | Fichier | Contenu | Versionné |
 |---|---|---|
 | `adresses_geocodees.csv` | adresse → latitude/longitude + précision | oui |
 | `pre_souscripteurs_agreges.csv` | effectifs par adresse et type de compte | oui |
+| `adresses_normalisees.csv` | libellé importé → libellé retenu (fusions confirmées) | oui |
 
-Le classeur Excel, lui, **n'est pas versionné** (`.gitignore`) : il contient des
-noms, téléphones et e-mails. En son absence — sur un déploiement, par exemple —
-l'app repart de l'agrégat anonyme et affiche exactement la même carte.
+Le fichier importé, lui, **n'est jamais écrit sur le disque**, et le classeur
+Excel **n'est pas versionné** (`.gitignore`) : tous deux contiennent des noms,
+téléphones et e-mails, dont rien ne sort de la mémoire de la session. En
+l'absence du classeur — sur un déploiement, par exemple — l'app repart de
+l'agrégat anonyme et affiche exactement la même carte.
+
+Quand les deux existent, **c'est le plus récent qui gagne** : un import fait
+depuis l'interface réécrit l'agrégat sans toucher au classeur, et doit
+l'emporter sur lui.
+
+#### Uniformisation des adresses
+
+Le géocodeur ne rapproche pas « TAMATAVE » de « Toamasina » : deux graphies
+d'un même lieu donnent deux points sur la carte. `pre_inscrits.py` applique
+donc, à chaque import, des règles **volontairement conservatrices** — elles ne
+rapprochent que ce qui est certain :
+
+- espaces et virgules resserrés, ponctuation de fin retirée ;
+- casse rétablie sur les saisies tout en capitales ou tout en bas
+  (« ANTANANARIVO » → « Antananarivo ») ; une casse composée est un choix de
+  saisie, on n'y touche pas ;
+- noms usuels et coloniaux ramenés au nom officiel (« Tamatave » → « Toamasina »,
+  « Fort Dauphin » → « Tolagnaro », « Tana » → « Antananarivo ») ;
+- « Madagascar » ajouté aux adresses qui portent déjà une ville ou une région,
+  et à elles seules — une localité isolée qui en hériterait passerait pour une
+  adresse structurée, que le géocodeur tiendrait alors pour sûre ;
+- adresses e-mail neutralisées en « Adresse non renseignée ».
+
+Ces règles ne réécrivent **aucune** des adresses déjà géocodées (un test le
+vérifie sur le corpus complet) : le cache reste valide d'un import à l'autre.
+
+Ce qu'elles ne peuvent pas trancher — « Ambatatolampy » et « Ambatolampy »,
+« Mahitsy, Analamanga » et « Mahitsy, Antananarivo, Analamanga » — est
+**proposé, jamais appliqué d'office** : « Itaosy » et « Itasy » se ressemblent
+autant et désignent deux endroits différents. Chaque fusion confirmée est
+inscrite dans `adresses_normalisees.csv` et vaut pour tous les imports
+suivants.
 
 Le géocodeur (Nominatim, 1 requête/seconde) essaie l'adresse complète puis des
 variantes de plus en plus larges : `Anosibe, Antananarivo, Analamanga` devient
@@ -107,6 +151,10 @@ grossière sur les petites communes de l'agglomération d'Antananarivo.
 - Tableau détaillé + export CSV de la sélection, récapitulatif par localité
   des pré-souscripteurs + export
 - Sections dédiées aux lignes dont les coordonnées ne sont pas exploitables
+- **Import de la liste des pré-inscrits** depuis l'interface : dépôt d'un CSV
+  ou d'un Excel, uniformisation des adresses, rapprochements proposés à
+  confirmer, géocodage des nouvelles adresses avec barre de progression, puis
+  mise à jour de la carte — rien n'est écrit ni envoyé avant le clic final
 
 Si `data/geo/` est absent, l'application n'échoue pas : elle le signale et
 retombe sur l'ancien rendu en cercles proportionnels.
@@ -115,16 +163,21 @@ retombe sur l'ancien rendu en cercles proportionnels.
 
 | Fichier | Rôle |
 |---|---|
-| `app.py` | interface Streamlit, rendu Folium, filtres |
+| `app.py` | interface Streamlit, rendu Folium, filtres, import |
+| `pre_inscrits.py` | lecture du fichier importé, uniformisation des adresses, fusions, agrégat, géocodage |
 | `geo_aggregate.py` | jointure spatiale points → polygones et agrégation par zone |
-| `tools/geocode_souscripteurs.py` | géocodage des adresses d'inscription (réseau) |
+| `tools/geocode_souscripteurs.py` | même chaîne, hors ligne, à partir du classeur Excel |
 | `tools/fetch_boundaries.py` | récupération et simplification des limites (réseau) |
 | `static/embed/` | pages publiques à intégrer par iframe — carte et tableau ([documentation](static/embed/README.md)) |
 | `tests/test_geo_aggregate.py` | tests du moteur d'agrégation |
 | `tests/test_embed_build.py` | tests de la lecture du Sheet et du rattachement à la région |
+| `tests/test_pre_inscrits.py` | tests des règles d'import (sans réseau) |
+| `tests/test_import_ui.py` | test de bout en bout de la section d'import, via `AppTest` |
 
-Les deux scripts de `tools/` sont les seuls points du projet qui accèdent au
-réseau, et ils ne tournent qu'à la main. L'agrégation rattache chaque point au
+Les règles de l'import ne vivent qu'une fois, dans `pre_inscrits.py` :
+l'interface et le script hors ligne y puisent tous les deux. Le géocodage est
+le seul accès réseau au runtime, et il est contenu dans le bouton d'import ;
+`tools/fetch_boundaries.py` ne tourne qu'à la main. L'agrégation rattache chaque point au
 polygone qui le contient (`sjoin` / `within`) ; un point qui ne tombe dans aucun
 polygone — imprécision GPS, trait de côte — est rattaché au polygone le plus
 proche, distance calculée en projection métrique (UTM 38S) et non en degrés, et
