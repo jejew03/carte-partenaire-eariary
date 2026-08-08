@@ -63,9 +63,20 @@ def app(tmp_path, monkeypatch):
 
 
 def _deposer(at, contenu=FICHIER):
+    """Dépose un fichier dans la vue « Pré-inscrits », la seule qui la porte.
+
+    Seule la vue demandée est construite : sans ce réglage, l'application
+    afficherait la carte et il n'y aurait aucun champ de dépôt.
+    """
+    at.session_state["vue"] = "Pré-inscrits"
     at.run()
     at.file_uploader[0].set_value(("inscrits.csv", contenu.encode("utf-8"), "text/csv"))
     return at.run()
+
+
+def _bouton(at, libelle):
+    """Bouton désigné par son libellé — un index se déplacerait au moindre ajout."""
+    return next(b for b in at.button if b.label == libelle)
 
 
 def test_le_fichier_depose_est_analyse_avant_toute_ecriture(app, tmp_path):
@@ -98,7 +109,7 @@ def test_les_fusions_sont_proposees_et_jamais_cochees_d_office(app):
 
 def test_import_ecrit_les_trois_fichiers_et_geocode_les_nouvelles(app, tmp_path):
     at = _deposer(app)
-    at.button[0].click().run()
+    _bouton(at, "Importer et mettre à jour").click().run()
     assert not at.exception
 
     agregat = pd.read_csv(tmp_path / "agregat.csv", dtype=str)
@@ -123,7 +134,7 @@ def test_fusion_confirmee_regroupe_et_se_conserve(app, tmp_path):
     at = _deposer(app)
     case = next(c for c in at.checkbox if "Ambatolampy" in c.label)
     case.check().run()
-    at.button[0].click().run()
+    _bouton(at, "Importer et mettre à jour").click().run()
     assert not at.exception
 
     agregat = pd.read_csv(tmp_path / "agregat.csv", dtype=str)
@@ -138,13 +149,13 @@ def test_fusion_confirmee_regroupe_et_se_conserve(app, tmp_path):
 
 def test_second_import_ne_regeocode_rien(app, tmp_path):
     at = _deposer(app)
-    at.button[0].click().run()
+    _bouton(at, "Importer et mettre à jour").click().run()
     premier = list(app.geocodes)
     assert premier
 
     app.geocodes.clear()
     at = _deposer(app)
-    at.button[0].click().run()
+    _bouton(at, "Importer et mettre à jour").click().run()
     assert not at.exception
     # Toutes les adresses sont déjà dans le cache : aucune requête réseau.
     assert app.geocodes == []

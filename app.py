@@ -694,6 +694,12 @@ st.html(
       .section-title + .section-sub {
         margin: 0 0 .75rem; color: #64748B; font-size: .875rem;
       }
+      /* Le premier titre d'une vue n'a rien au-dessus de lui : la marge haute
+         des sections y creuserait un vide sous le sélecteur de vue. */
+      [data-testid="stMainBlockContainer"] [data-testid="stVerticalBlock"]
+        > [data-testid="stElementContainer"]:nth-child(2) .section-title {
+        margin-top: 1rem;
+      }
 
       /* La carte Folium adopte le rayon et la bordure du reste de l'UI */
       iframe[title="streamlit_folium.st_folium"] {
@@ -816,6 +822,7 @@ with st.sidebar:
         include_uncertain = False
 
     st.divider()
+    st.subheader("Données")
     st.caption(f"Source des données : {source}")
     if st.button(
         "Recharger les données",
@@ -855,981 +862,1002 @@ else:
     subs_filtered = subscribers
 subs_points = aggregate_subscribers(subs_filtered)
 
-# ------------------------------- Indicateurs ------------------------------- #
-c1, c2, c3, c4 = st.columns(4, gap="medium")
-c1.metric("Établissements", len(filtered), border=True)
-c2.metric("Géolocalisés", len(filtered_located), border=True)
-c3.metric("Sans coordonnées", len(filtered) - len(filtered_located), border=True)
-c4.metric("Villes couvertes", filtered["Province"].nunique(), border=True)
+# ------------------------------- Onglets ----------------------------------- #
+# Quatre entrées plutôt qu'une page unique de deux mille lignes : la carte et
+# ses indicateurs, le détail des établissements, les pré-inscrits (bilan et
+# import), et le code d'intégration. Les filtres restent dans la barre
+# latérale, communs aux vues — c'est le même jeu de données qu'on regarde sous
+# quatre angles, pas quatre pages.
+#
+# Un sélecteur plutôt que `st.tabs` : celui-ci rend les quatre panneaux d'un
+# coup, y compris masqués. Un tableau mesuré alors que son onglet est caché
+# s'installe à 49 px de large et n'en bouge plus, et la carte se reconstruit à
+# chaque clic même quand personne ne la regarde. Ici, seule la vue demandée est
+# construite ; changer de vue relance le script, sur des données déjà en cache.
+VUES = ["Carte", "Établissements", "Pré-inscrits", "Intégration"]
+vue = st.segmented_control(
+    "Vue", VUES, default=VUES[0], key="vue", label_visibility="collapsed"
+) or VUES[0]
 
-if sub_warning:
-    st.warning(sub_warning, icon=":material/warning:")
+if vue == "Carte":
+    # ------------------------------- Indicateurs ------------------------------- #
+    c1, c2, c3, c4 = st.columns(4, gap="medium")
+    c1.metric("Établissements", len(filtered), border=True)
+    c2.metric("Géolocalisés", len(filtered_located), border=True)
+    c3.metric("Sans coordonnées", len(filtered) - len(filtered_located), border=True)
+    c4.metric("Villes couvertes", filtered["Province"].nunique(), border=True)
 
-# ------------------ Contrôles de la choroplèthe (haut de page) -------------- #
-# Ces réglages pilotent la carte : ils restent dans le flux principal, à côté
-# du résultat qu'ils modifient, et non dans le panneau latéral des filtres.
-CHORO_LEVELS = ["Région", "District", "Commune"]
-if geo_aggregate is not None:
-    CHORO_LEVELS = list(geo_aggregate.NIVEAUX) or CHORO_LEVELS
+    if sub_warning:
+        st.warning(sub_warning, icon=":material/warning:")
 
-CHORO_READY = has_subscribers and zones_disponibles()
+    # ------------------ Contrôles de la choroplèthe (haut de page) -------------- #
+    # Ces réglages pilotent la carte : ils restent dans le flux principal, à côté
+    # du résultat qu'ils modifient, et non dans le panneau latéral des filtres.
+    CHORO_LEVELS = ["Région", "District", "Commune"]
+    if geo_aggregate is not None:
+        CHORO_LEVELS = list(geo_aggregate.NIVEAUX) or CHORO_LEVELS
 
-niveau = CHORO_LEVELS[0]
-metric_label = next(iter(ZONE_METRICS))
-metric_col, metric_decimals, metric_unit, _ = ZONE_METRICS[metric_label]
-show_etabs = True
-sel_cat_zone = []
-zones = None
-zones_detail = None
+    CHORO_READY = has_subscribers and zones_disponibles()
 
-if has_subscribers:
-    st.html(
-        '<div class="section-title">Couverture des pré-souscripteurs</div>'
-        '<div class="section-sub">Les inscrits sont agrégés par zone '
-        "administrative ; les établissements partenaires restent des marqueurs "
-        "posés au-dessus des zones.</div>"
-    )
+    niveau = CHORO_LEVELS[0]
+    metric_label = next(iter(ZONE_METRICS))
+    metric_col, metric_decimals, metric_unit, _ = ZONE_METRICS[metric_label]
+    show_etabs = True
+    sel_cat_zone = []
+    zones = None
+    zones_detail = None
 
-    if geo_aggregate is None:
-        st.warning(
-            "Module `geo_aggregate` introuvable : la carte retombe sur les "
-            "cercles proportionnels par localité.",
-            icon=":material/warning:",
-        )
-    elif not CHORO_READY:
-        st.warning(
-            "Contours administratifs absents : lancez "
-            "`python tools/fetch_boundaries.py` pour générer "
-            "`data/geo/mdg_adm*.geojson`. En attendant, la carte retombe sur "
-            "les cercles proportionnels par localité.",
-            icon=":material/warning:",
-        )
-
-    ctl1, ctl2, ctl3, ctl4 = st.columns([1.4, 1.3, 1.3, 0.9], gap="medium")
-    with ctl1:
-        niveau = st.radio(
-            "Découpage",
-            CHORO_LEVELS,
-            index=0,
-            horizontal=True,
-            disabled=not CHORO_READY,
-            help="Finesse des zones coloriées. La commune est le niveau le "
-                 "plus lourd à dessiner.",
-        )
-    with ctl2:
-        metric_label = st.selectbox(
-            "Métrique de coloriage",
-            list(ZONE_METRICS),
-            index=0,
-            disabled=not CHORO_READY,
-            help="Détermine à la fois la couleur des zones et la légende.",
-        )
-        metric_col, metric_decimals, metric_unit, metric_help = ZONE_METRICS[metric_label]
-        st.caption(metric_help)
-    with ctl3:
-        cats_zone = [c for c in (
-            geo_aggregate.CATEGORIES if geo_aggregate is not None else []
-        ) if c in set(data["Catégorie"])] or sort_fr(data["Catégorie"].unique())
-        sel_cat_zone = st.multiselect(
-            "Catégorie d'établissement",
-            cats_zone,
-            default=[],
-            placeholder="Toutes les catégories",
-            help="Restreint les établissements comptés dans la densité et "
-                 "dessinés sur la carte. Aucune sélection équivaut à toutes "
-                 "les catégories. Se combine au filtre du panneau latéral.",
-        )
-    with ctl4:
-        show_etabs = st.toggle(
-            "Afficher les établissements",
-            value=True,
-            help="Masque les marqueurs pour lire les zones sans obstruction.",
+    if has_subscribers:
+        st.html(
+            '<div class="section-title">Couverture des pré-souscripteurs</div>'
+            '<div class="section-sub">Les inscrits sont agrégés par zone '
+            "administrative ; les établissements partenaires restent des marqueurs "
+            "posés au-dessus des zones.</div>"
         )
 
-# Établissements retenus pour l'agrégation et pour les marqueurs : filtre
-# latéral d'abord, puis restriction de catégorie propre à la choroplèthe.
-etabs_zone = filtered_located
-if sel_cat_zone:
-    etabs_zone = etabs_zone[etabs_zone["Catégorie"].isin(sel_cat_zone)]
+        if geo_aggregate is None:
+            st.warning(
+                "Module `geo_aggregate` introuvable : la carte retombe sur les "
+                "cercles proportionnels par localité.",
+                icon=":material/warning:",
+            )
+        elif not CHORO_READY:
+            st.warning(
+                "Contours administratifs absents : lancez "
+                "`python tools/fetch_boundaries.py` pour générer "
+                "`data/geo/mdg_adm*.geojson`. En attendant, la carte retombe sur "
+                "les cercles proportionnels par localité.",
+                icon=":material/warning:",
+            )
 
-if CHORO_READY:
+        ctl1, ctl2, ctl3, ctl4 = st.columns([1.4, 1.3, 1.3, 0.9], gap="medium")
+        with ctl1:
+            niveau = st.radio(
+                "Découpage",
+                CHORO_LEVELS,
+                index=0,
+                horizontal=True,
+                disabled=not CHORO_READY,
+                help="Finesse des zones coloriées. La commune est le niveau le "
+                     "plus lourd à dessiner.",
+            )
+        with ctl2:
+            metric_label = st.selectbox(
+                "Métrique de coloriage",
+                list(ZONE_METRICS),
+                index=0,
+                disabled=not CHORO_READY,
+                help="Détermine à la fois la couleur des zones et la légende.",
+            )
+            metric_col, metric_decimals, metric_unit, metric_help = ZONE_METRICS[metric_label]
+            st.caption(metric_help)
+        with ctl3:
+            cats_zone = [c for c in (
+                geo_aggregate.CATEGORIES if geo_aggregate is not None else []
+            ) if c in set(data["Catégorie"])] or sort_fr(data["Catégorie"].unique())
+            sel_cat_zone = st.multiselect(
+                "Catégorie d'établissement",
+                cats_zone,
+                default=[],
+                placeholder="Toutes les catégories",
+                help="Restreint les établissements comptés dans la densité et "
+                     "dessinés sur la carte. Aucune sélection équivaut à toutes "
+                     "les catégories. Se combine au filtre du panneau latéral.",
+            )
+        with ctl4:
+            show_etabs = st.toggle(
+                "Afficher les établissements",
+                value=True,
+                help="Masque les marqueurs pour lire les zones sans obstruction.",
+            )
+
+    # Établissements retenus pour l'agrégation et pour les marqueurs : filtre
+    # latéral d'abord, puis restriction de catégorie propre à la choroplèthe.
+    etabs_zone = filtered_located
+    if sel_cat_zone:
+        etabs_zone = etabs_zone[etabs_zone["Catégorie"].isin(sel_cat_zone)]
+
+    if CHORO_READY:
+        try:
+            zones, zones_detail = geo_aggregate.aggregate(subs_filtered, etabs_zone, niveau)
+        except Exception as exc:
+            st.warning(
+                f"Agrégation par {niveau.lower()} impossible ({exc}) : repli sur "
+                "les cercles proportionnels par localité.",
+                icon=":material/warning:",
+            )
+            zones, zones_detail = None, None
+            CHORO_READY = False
+
+    # ------------------------ Indicateurs par zone ----------------------------- #
+    draw_zones = CHORO_READY and zones is not None and not zones.empty
+
+    if draw_zones:
+        zone_inscrits = pd.to_numeric(zones["inscrits"], errors="coerce").fillna(0)
+        total_inscrits = int(zone_inscrits.sum())
+        n_zones = len(zones)
+        n_couvertes = int((zone_inscrits > 0).sum())
+        taux = (n_couvertes / n_zones * 100) if n_zones else 0.0
+        top_idx = zone_inscrits.idxmax() if n_couvertes else None
+        top_nom = str(zones.loc[top_idx, "nom_zone"]) if top_idx is not None else "—"
+        top_val = int(zone_inscrits.loc[top_idx]) if top_idx is not None else 0
+        # 150 noms de communes sont des homonymes et les arrondissements
+        # d'Antananarivo s'appellent « 1er Arrondissement » : le parent est
+        # indispensable pour que l'indicateur désigne une zone sans ambiguïté.
+        top_parent = (
+            str(zones.loc[top_idx, "nom_parent"] or "").strip()
+            if top_idx is not None
+            else ""
+        )
+        top_complet = f"{top_nom} ({top_parent})" if top_parent else top_nom
+
+        z1, z2, z3, z4 = st.columns(4, gap="medium")
+        z1.metric("Inscrits localisés", fr_number(total_inscrits), border=True)
+        z2.metric(
+            "Zones couvertes",
+            fr_number(n_couvertes),
+            border=True,
+            help=f"{niveau}s comptant au moins un inscrit, sur "
+                 f"{fr_number(n_zones)} au total.",
+        )
+        z3.metric(
+            f"{niveau} n°1",
+            top_nom if len(top_nom) <= 22 else top_nom[:21] + "…",
+            delta=f"{fr_number(top_val)} inscrits",
+            delta_color="off",
+            border=True,
+            help=top_complet,
+        )
+        z4.metric(
+            "Taux de couverture",
+            f"{fr_number(taux, 1)} %",
+            border=True,
+            help=f"{fr_number(n_couvertes)} zone(s) couverte(s) sur "
+                 f"{fr_number(n_zones)} au niveau {niveau.lower()}.",
+        )
+    elif has_subscribers:
+        # Repli : les indicateurs par localité, comme avant la choroplèthe.
+        s1, s2, s3, s4 = st.columns(4, gap="medium")
+        s1.metric("Pré-souscripteurs", len(subs_filtered), border=True)
+        s2.metric("Positionnés", int(subs_points["Inscrits"].sum()), border=True)
+        s3.metric("Localités", len(subs_points), border=True)
+        s4.metric("Régions couvertes", subs_filtered["Région"].nunique(), border=True)
+
+    # --------------------------------- Carte ----------------------------------- #
     try:
-        zones, zones_detail = geo_aggregate.aggregate(subs_filtered, etabs_zone, niveau)
-    except Exception as exc:
-        st.warning(
-            f"Agrégation par {niveau.lower()} impossible ({exc}) : repli sur "
-            "les cercles proportionnels par localité.",
-            icon=":material/warning:",
+        import folium
+        from folium.plugins import MarkerCluster
+        from streamlit_folium import st_folium
+
+        HAS_FOLIUM = True
+    except ImportError:
+        HAS_FOLIUM = False
+
+    # Choroplèthe si les contours sont là, cercles proportionnels sinon.
+    draw_choro = bool(show_subs) and draw_zones
+    draw_subs = bool(show_subs) and not draw_zones and not subs_points.empty
+    draw_etabs = bool(show_etabs) and not etabs_zone.empty
+    map_empty = not draw_etabs and not draw_subs and not draw_choro
+
+    if map_empty:
+        st.html('<div class="section-title">Carte</div>')
+        st.info(
+            "Rien à afficher : aucune couche n'est activée, ou les filtres actuels "
+            "ne laissent aucun point. Réactivez une couche ci-dessus ou élargissez "
+            "la sélection dans le panneau latéral.",
+            icon=":material/filter_alt_off:",
         )
-        zones, zones_detail = None, None
-        CHORO_READY = False
-
-# ------------------------ Indicateurs par zone ----------------------------- #
-draw_zones = CHORO_READY and zones is not None and not zones.empty
-
-if draw_zones:
-    zone_inscrits = pd.to_numeric(zones["inscrits"], errors="coerce").fillna(0)
-    total_inscrits = int(zone_inscrits.sum())
-    n_zones = len(zones)
-    n_couvertes = int((zone_inscrits > 0).sum())
-    taux = (n_couvertes / n_zones * 100) if n_zones else 0.0
-    top_idx = zone_inscrits.idxmax() if n_couvertes else None
-    top_nom = str(zones.loc[top_idx, "nom_zone"]) if top_idx is not None else "—"
-    top_val = int(zone_inscrits.loc[top_idx]) if top_idx is not None else 0
-    # 150 noms de communes sont des homonymes et les arrondissements
-    # d'Antananarivo s'appellent « 1er Arrondissement » : le parent est
-    # indispensable pour que l'indicateur désigne une zone sans ambiguïté.
-    top_parent = (
-        str(zones.loc[top_idx, "nom_parent"] or "").strip()
-        if top_idx is not None
-        else ""
-    )
-    top_complet = f"{top_nom} ({top_parent})" if top_parent else top_nom
-
-    z1, z2, z3, z4 = st.columns(4, gap="medium")
-    z1.metric("Inscrits localisés", fr_number(total_inscrits), border=True)
-    z2.metric(
-        "Zones couvertes",
-        fr_number(n_couvertes),
-        border=True,
-        help=f"{niveau}s comptant au moins un inscrit, sur "
-             f"{fr_number(n_zones)} au total.",
-    )
-    z3.metric(
-        f"{niveau} n°1",
-        top_nom if len(top_nom) <= 22 else top_nom[:21] + "…",
-        delta=f"{fr_number(top_val)} inscrits",
-        delta_color="off",
-        border=True,
-        help=top_complet,
-    )
-    z4.metric(
-        "Taux de couverture",
-        f"{fr_number(taux, 1)} %",
-        border=True,
-        help=f"{fr_number(n_couvertes)} zone(s) couverte(s) sur "
-             f"{fr_number(n_zones)} au niveau {niveau.lower()}.",
-    )
-elif has_subscribers:
-    # Repli : les indicateurs par localité, comme avant la choroplèthe.
-    s1, s2, s3, s4 = st.columns(4, gap="medium")
-    s1.metric("Pré-souscripteurs", len(subs_filtered), border=True)
-    s2.metric("Positionnés", int(subs_points["Inscrits"].sum()), border=True)
-    s3.metric("Localités", len(subs_points), border=True)
-    s4.metric("Régions couvertes", subs_filtered["Région"].nunique(), border=True)
-
-# --------------------------------- Carte ----------------------------------- #
-try:
-    import folium
-    from folium.plugins import MarkerCluster
-    from streamlit_folium import st_folium
-
-    HAS_FOLIUM = True
-except ImportError:
-    HAS_FOLIUM = False
-
-# Choroplèthe si les contours sont là, cercles proportionnels sinon.
-draw_choro = bool(show_subs) and draw_zones
-draw_subs = bool(show_subs) and not draw_zones and not subs_points.empty
-draw_etabs = bool(show_etabs) and not etabs_zone.empty
-map_empty = not draw_etabs and not draw_subs and not draw_choro
-
-if map_empty:
-    st.html('<div class="section-title">Carte</div>')
-    st.info(
-        "Rien à afficher : aucune couche n'est activée, ou les filtres actuels "
-        "ne laissent aucun point. Réactivez une couche ci-dessus ou élargissez "
-        "la sélection dans le panneau latéral.",
-        icon=":material/filter_alt_off:",
-    )
-elif HAS_FOLIUM:
-    counts = []
-    if draw_etabs:
-        counts.append(f"{len(etabs_zone)} établissement(s) positionné(s)")
-    if draw_choro:
-        counts.append(
-            f"{fr_number(int(zone_inscrits.sum()))} inscrit(s) "
-            f"sur {fr_number(n_couvertes)} {niveau.lower()}(s)"
-        )
-    if draw_subs:
-        counts.append(
-            f"{int(subs_points['Inscrits'].sum())} pré-souscripteur(s) "
-            f"sur {len(subs_points)} localité(s)"
-        )
-    clic = (
-        f"Cliquez une zone pour son détail sous la carte, un marqueur pour la "
-        "fiche de l'établissement."
-        if draw_choro
-        else "Cliquez un marqueur ou un cercle pour le détail."
-    )
-    st.html(
-        '<div class="section-title">Carte</div>'
-        f'<div class="section-sub">{" — ".join(counts)}. {clic}</div>'
-    )
-
-    # ------------------- Classes, palette et légende des zones -------------- #
-    zone_bounds, zone_colors, zone_scale = [], [], None
-    if draw_choro:
-        zone_values = pd.to_numeric(zones[metric_col], errors="coerce")
-        zone_bounds = quantile_bounds(
-            zone_values, ZONE_CLASSES, integer=(metric_decimals == 0)
-        )
-        zone_colors = ZONE_RAMPS.get(
-            max(len(zone_bounds) - 1, 1), ZONE_RAMPS[ZONE_CLASSES]
-        )[: max(len(zone_bounds) - 1, 1)]
-        if len(zone_bounds) >= 2:
-            from branca.colormap import StepColormap
-
-            zone_scale = StepColormap(
-                zone_colors,
-                index=zone_bounds,
-                vmin=zone_bounds[0],
-                vmax=zone_bounds[-1],
+    elif HAS_FOLIUM:
+        counts = []
+        if draw_etabs:
+            counts.append(f"{len(etabs_zone)} établissement(s) positionné(s)")
+        if draw_choro:
+            counts.append(
+                f"{fr_number(int(zone_inscrits.sum()))} inscrit(s) "
+                f"sur {fr_number(n_couvertes)} {niveau.lower()}(s)"
             )
-
-    # Légende avant la carte : lisible sans faire défiler, et chaque pastille
-    # porte son libellé — la couleur n'est jamais la seule information.
-    if draw_choro:
-        extras = [("Aucun inscrit", ZONE_ZERO_FILL, True)]
-        if metric_col == "ratio_inscrits_etab":
-            n_na = int(
-                ((zone_inscrits > 0) & zone_values.isna()).sum()
+        if draw_subs:
+            counts.append(
+                f"{int(subs_points['Inscrits'].sum())} pré-souscripteur(s) "
+                f"sur {len(subs_points)} localité(s)"
             )
-            if n_na:
-                extras.append(
-                    (f"Non calculable ({fr_number(n_na)})", ZONE_NA_FILL, True)
-                )
-        st.html(
-            zone_legend_html(
-                class_labels(
-                    zone_bounds,
-                    integer=(metric_decimals == 0),
-                    decimals=metric_decimals,
-                ),
-                zone_colors,
-                f"{metric_unit[:1].upper()}{metric_unit[1:]} par {niveau.lower()}",
-                extras,
-            )
-        )
-
-    legend_items = "".join(
-        f'<span class="legend-item">'
-        f'<span class="swatch" style="background:{CATEGORY_STYLE.get(c, DEFAULT_STYLE)[2]}"></span>'
-        f"{c}</span>"
-        for c in (sort_fr(etabs_zone["Catégorie"].unique()) if draw_etabs else [])
-    )
-    if draw_subs:
-        legend_items += (
-            f'<span class="legend-item">'
-            f'<span class="swatch" style="background:{SUBSCRIBER_COLOR};'
-            'opacity:.55;border:1px solid ' + SUBSCRIBER_COLOR + '"></span>'
-            "Pré-souscripteurs (taille = nombre d'inscrits)</span>"
-        )
-    if legend_items:
-        st.html(
-            '<div class="legend-title">Établissements partenaires</div>'
-            f'<div class="legend">{legend_items}</div>'
+        clic = (
+            f"Cliquez une zone pour son détail sous la carte, un marqueur pour la "
+            "fiche de l'établissement."
             if draw_choro
-            else f'<div class="legend">{legend_items}</div>'
+            else "Cliquez un marqueur ou un cercle pour le détail."
+        )
+        st.html(
+            '<div class="section-title">Carte</div>'
+            f'<div class="section-sub">{" — ".join(counts)}. {clic}</div>'
         )
 
-    all_points = pd.concat(
-        ([etabs_zone[["lat", "lon"]]] if draw_etabs else [])
-        + ([subs_points[["lat", "lon"]]] if draw_subs else [])
-    ) if (draw_etabs or draw_subs) else pd.DataFrame(columns=["lat", "lon"])
-    if len(all_points):
-        center = [all_points["lat"].mean(), all_points["lon"].mean()]
-    else:
-        minx, miny, maxx, maxy = zones.total_bounds
-        center = [(miny + maxy) / 2, (minx + maxx) / 2]
-    fmap = folium.Map(location=center, zoom_start=6, tiles=None, control_scale=True)
-    fmap.get_root().header.add_child(folium.Element(MAP_ICON_FIX))
-    if draw_choro:
-        fmap.get_root().header.add_child(folium.Element(MAP_ZONE_CSS))
+        # ------------------- Classes, palette et légende des zones -------------- #
+        zone_bounds, zone_colors, zone_scale = [], [], None
+        if draw_choro:
+            zone_values = pd.to_numeric(zones[metric_col], errors="coerce")
+            zone_bounds = quantile_bounds(
+                zone_values, ZONE_CLASSES, integer=(metric_decimals == 0)
+            )
+            zone_colors = ZONE_RAMPS.get(
+                max(len(zone_bounds) - 1, 1), ZONE_RAMPS[ZONE_CLASSES]
+            )[: max(len(zone_bounds) - 1, 1)]
+            if len(zone_bounds) >= 2:
+                from branca.colormap import StepColormap
 
-    # Fond clair par défaut : les marqueurs colorés priment sur le décor.
-    # show=False sur les autres, sinon le dernier fond ajouté s'affiche par-dessus.
-    folium.TileLayer("CartoDB positron", name="Plan clair").add_to(fmap)
-    folium.TileLayer("OpenStreetMap", name="Plan détaillé", show=False).add_to(fmap)
-    folium.TileLayer(
-        tiles="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
-        attr="Esri",
-        name="Satellite",
-        show=False,
-    ).add_to(fmap)
+                zone_scale = StepColormap(
+                    zone_colors,
+                    index=zone_bounds,
+                    vmin=zone_bounds[0],
+                    vmax=zone_bounds[-1],
+                )
 
-    # --------------------- Couche choroplèthe des zones -------------------- #
-    # Ajoutée avant les marqueurs : Leaflet empile dans l'ordre d'ajout, les
-    # établissements doivent rester cliquables au-dessus des polygones.
-    if draw_choro:
-        zones_light = zones.copy()
-        zones_light["popup_zone"] = zone_popup_html(
-            zones, niveau, metric_col, metric_label, metric_decimals, metric_unit
+        # Légende avant la carte : lisible sans faire défiler, et chaque pastille
+        # porte son libellé — la couleur n'est jamais la seule information.
+        if draw_choro:
+            extras = [("Aucun inscrit", ZONE_ZERO_FILL, True)]
+            if metric_col == "ratio_inscrits_etab":
+                n_na = int(
+                    ((zone_inscrits > 0) & zone_values.isna()).sum()
+                )
+                if n_na:
+                    extras.append(
+                        (f"Non calculable ({fr_number(n_na)})", ZONE_NA_FILL, True)
+                    )
+            st.html(
+                zone_legend_html(
+                    class_labels(
+                        zone_bounds,
+                        integer=(metric_decimals == 0),
+                        decimals=metric_decimals,
+                    ),
+                    zone_colors,
+                    f"{metric_unit[:1].upper()}{metric_unit[1:]} par {niveau.lower()}",
+                    extras,
+                )
+            )
+
+        legend_items = "".join(
+            f'<span class="legend-item">'
+            f'<span class="swatch" style="background:{CATEGORY_STYLE.get(c, DEFAULT_STYLE)[2]}"></span>'
+            f"{c}</span>"
+            for c in (sort_fr(etabs_zone["Catégorie"].unique()) if draw_etabs else [])
         )
-        zones_light["valeur_zone"] = pd.to_numeric(
-            zones_light[metric_col], errors="coerce"
-        )
-        zones_light["inscrits_zone"] = zone_inscrits.astype(int).to_numpy()
-        # Le nom seul ne suffit pas à désigner une zone : 150 communes sont
-        # homonymes et Antananarivo compte six « n-e Arrondissement ». Le parent
-        # accompagne donc le nom dès qu'il en existe un (tous les niveaux sauf
-        # Région).
-        zones_light["parent_zone"] = (
-            zones["nom_parent"].fillna("").astype(str).str.strip().to_numpy()
-        )
-        # Seules les propriétés utiles à l'infobulle, au popup et au style sont
-        # sérialisées : la géométrie communale est déjà lourde à transporter.
-        colonnes_light = [
-            "code_zone",
-            "nom_zone",
-            "inscrits_zone",
-            "valeur_zone",
-            "popup_zone",
-            "geometry",
-        ]
-        montre_parent = bool(zones_light["parent_zone"].str.len().gt(0).any())
-        if montre_parent:
-            colonnes_light.insert(2, "parent_zone")
-        zones_light = zones_light[colonnes_light].reset_index(
-            drop=True
-        )  # folium identifie les entités par leur index
+        if draw_subs:
+            legend_items += (
+                f'<span class="legend-item">'
+                f'<span class="swatch" style="background:{SUBSCRIBER_COLOR};'
+                'opacity:.55;border:1px solid ' + SUBSCRIBER_COLOR + '"></span>'
+                "Pré-souscripteurs (taille = nombre d'inscrits)</span>"
+            )
+        if legend_items:
+            st.html(
+                '<div class="legend-title">Établissements partenaires</div>'
+                f'<div class="legend">{legend_items}</div>'
+                if draw_choro
+                else f'<div class="legend">{legend_items}</div>'
+            )
 
-        def style_zone(feature):
-            """Remplissage de la zone selon la métrique choisie."""
-            props = feature["properties"]
-            valeur = props.get("valeur_zone")
-            inscrits = props.get("inscrits_zone") or 0
-            if (
-                zone_scale is None
-                or valeur is None
-                or pd.isna(valeur)
-                or float(valeur) <= 0
-            ):
-                # Contour tireté et remplissage plus clair : le « rien » se lit
-                # aussi sans percevoir la nuance de couleur. Le second gris est
-                # réservé à la densité — seule métrique dont la légende annonce
-                # une classe « non calculable ».
-                return {
-                    "fillColor": ZONE_NA_FILL
-                    if (inscrits and metric_col == "ratio_inscrits_etab")
-                    else ZONE_ZERO_FILL,
-                    "color": ZONE_ZERO_STROKE,
-                    "weight": 0.6,
-                    "dashArray": "3,3",
-                    "fillOpacity": 0.45,
-                }
-            return {
-                # `rgb_hex_str` plutôt que l'appel direct : celui-ci renvoie un
-                # hexadécimal sur 8 chiffres que Leaflet interprète mal.
-                "fillColor": zone_scale.rgb_hex_str(float(valeur)),
-                "color": "#FFFFFF",
-                "weight": 0.7,
-                "fillOpacity": 0.78,
-            }
+        all_points = pd.concat(
+            ([etabs_zone[["lat", "lon"]]] if draw_etabs else [])
+            + ([subs_points[["lat", "lon"]]] if draw_subs else [])
+        ) if (draw_etabs or draw_subs) else pd.DataFrame(columns=["lat", "lon"])
+        if len(all_points):
+            center = [all_points["lat"].mean(), all_points["lon"].mean()]
+        else:
+            minx, miny, maxx, maxy = zones.total_bounds
+            center = [(miny + maxy) / 2, (minx + maxx) / 2]
+        fmap = folium.Map(location=center, zoom_start=6, tiles=None, control_scale=True)
+        fmap.get_root().header.add_child(folium.Element(MAP_ICON_FIX))
+        if draw_choro:
+            fmap.get_root().header.add_child(folium.Element(MAP_ZONE_CSS))
 
-        def highlight_zone(_feature):
-            """Survol : bordure épaissie, sans changer le remplissage."""
-            return {"weight": 3, "color": "#0F172A", "dashArray": ""}
-
-        folium.GeoJson(
-            zones_light,
-            name=f"Inscrits par {niveau.lower()}",
-            style_function=style_zone,
-            highlight_function=highlight_zone,
-            smooth_factor=1.0,
-            tooltip=folium.GeoJsonTooltip(
-                fields=(
-                    ["nom_zone", "parent_zone", "inscrits_zone"]
-                    if montre_parent
-                    else ["nom_zone", "inscrits_zone"]
-                ),
-                aliases=(
-                    [f"{niveau} :", "Dans :", "Inscrits :"]
-                    if montre_parent
-                    else [f"{niveau} :", "Inscrits :"]
-                ),
-                localize=True,
-                sticky=True,
-            ),
-            popup=folium.GeoJsonPopup(
-                fields=["popup_zone"],
-                labels=False,
-                max_width=340,
-            ),
+        # Fond clair par défaut : les marqueurs colorés priment sur le décor.
+        # show=False sur les autres, sinon le dernier fond ajouté s'affiche par-dessus.
+        folium.TileLayer("CartoDB positron", name="Plan clair").add_to(fmap)
+        folium.TileLayer("OpenStreetMap", name="Plan détaillé", show=False).add_to(fmap)
+        folium.TileLayer(
+            tiles="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
+            attr="Esri",
+            name="Satellite",
+            show=False,
         ).add_to(fmap)
 
-    cluster = MarkerCluster(name="Établissements").add_to(fmap)
+        # --------------------- Couche choroplèthe des zones -------------------- #
+        # Ajoutée avant les marqueurs : Leaflet empile dans l'ordre d'ajout, les
+        # établissements doivent rester cliquables au-dessus des polygones.
+        if draw_choro:
+            zones_light = zones.copy()
+            zones_light["popup_zone"] = zone_popup_html(
+                zones, niveau, metric_col, metric_label, metric_decimals, metric_unit
+            )
+            zones_light["valeur_zone"] = pd.to_numeric(
+                zones_light[metric_col], errors="coerce"
+            )
+            zones_light["inscrits_zone"] = zone_inscrits.astype(int).to_numpy()
+            # Le nom seul ne suffit pas à désigner une zone : 150 communes sont
+            # homonymes et Antananarivo compte six « n-e Arrondissement ». Le parent
+            # accompagne donc le nom dès qu'il en existe un (tous les niveaux sauf
+            # Région).
+            zones_light["parent_zone"] = (
+                zones["nom_parent"].fillna("").astype(str).str.strip().to_numpy()
+            )
+            # Seules les propriétés utiles à l'infobulle, au popup et au style sont
+            # sérialisées : la géométrie communale est déjà lourde à transporter.
+            colonnes_light = [
+                "code_zone",
+                "nom_zone",
+                "inscrits_zone",
+                "valeur_zone",
+                "popup_zone",
+                "geometry",
+            ]
+            montre_parent = bool(zones_light["parent_zone"].str.len().gt(0).any())
+            if montre_parent:
+                colonnes_light.insert(2, "parent_zone")
+            zones_light = zones_light[colonnes_light].reset_index(
+                drop=True
+            )  # folium identifie les entités par leur index
 
-    for _, row in (etabs_zone.iterrows() if draw_etabs else iter(())):
-        color, icon, hexcolor = CATEGORY_STYLE.get(row["Catégorie"], DEFAULT_STYLE)
-        popup_html = f"""
-            <div style="font-family:Inter,system-ui,sans-serif;min-width:224px;color:#0F172A">
-              <div style="font-size:14px;font-weight:600;line-height:1.35">
-                {row['Établissement']}
-              </div>
-              <div style="display:inline-flex;align-items:center;gap:6px;margin:6px 0 8px;
-                          padding:2px 8px;border-radius:999px;background:#F1F5F9;
-                          font-size:11px;color:#334155">
-                <span style="width:7px;height:7px;border-radius:50%;background:{hexcolor}"></span>
-                {row['Catégorie']}
-              </div>
-              <div style="font-size:12px;color:#475569">{row['Province']}</div>
-              <div style="font-family:'Source Code Pro',monospace;font-size:11px;
-                          color:#64748B;margin-top:2px">
-                {row['lat']:.6f}, {row['lon']:.6f}
-              </div>
-              <a href="https://www.google.com/maps?q={row['lat']},{row['lon']}"
-                 target="_blank" rel="noopener"
-                 style="display:inline-block;margin-top:10px;padding:6px 12px;
-                        background:#1E40AF;color:#FFFFFF;border-radius:6px;
-                        font-size:12px;font-weight:500;text-decoration:none">
-                Ouvrir dans Google Maps
-              </a>
-            </div>
-        """
-        folium.Marker(
-            location=[row["lat"], row["lon"]],
-            popup=folium.Popup(popup_html, max_width=300),
-            tooltip=row["Établissement"],
-            icon=folium.Icon(color=color, icon=icon, prefix="fa"),
-        ).add_to(cluster)
+            def style_zone(feature):
+                """Remplissage de la zone selon la métrique choisie."""
+                props = feature["properties"]
+                valeur = props.get("valeur_zone")
+                inscrits = props.get("inscrits_zone") or 0
+                if (
+                    zone_scale is None
+                    or valeur is None
+                    or pd.isna(valeur)
+                    or float(valeur) <= 0
+                ):
+                    # Contour tireté et remplissage plus clair : le « rien » se lit
+                    # aussi sans percevoir la nuance de couleur. Le second gris est
+                    # réservé à la densité — seule métrique dont la légende annonce
+                    # une classe « non calculable ».
+                    return {
+                        "fillColor": ZONE_NA_FILL
+                        if (inscrits and metric_col == "ratio_inscrits_etab")
+                        else ZONE_ZERO_FILL,
+                        "color": ZONE_ZERO_STROKE,
+                        "weight": 0.6,
+                        "dashArray": "3,3",
+                        "fillOpacity": 0.45,
+                    }
+                return {
+                    # `rgb_hex_str` plutôt que l'appel direct : celui-ci renvoie un
+                    # hexadécimal sur 8 chiffres que Leaflet interprète mal.
+                    "fillColor": zone_scale.rgb_hex_str(float(valeur)),
+                    "color": "#FFFFFF",
+                    "weight": 0.7,
+                    "fillOpacity": 0.78,
+                }
 
-    # ----------------------- Couche pré-souscripteurs ---------------------- #
-    if draw_subs:
-        subs_layer = folium.FeatureGroup(name="Pré-souscripteurs eAriary")
-        biggest = int(subs_points["Inscrits"].max())
+            def highlight_zone(_feature):
+                """Survol : bordure épaissie, sans changer le remplissage."""
+                return {"weight": 3, "color": "#0F172A", "dashArray": ""}
 
-        for _, row in subs_points.iterrows():
-            count = int(row["Inscrits"])
-            # Rayon en racine carrée : c'est l'aire du disque, et non son rayon,
-            # qui reste proportionnelle au nombre d'inscrits.
-            radius = 7 + 21 * (count / biggest) ** 0.5
-            place = row["Localité"]
-            if row["Ville"] and row["Ville"] != row["Localité"]:
-                place = f"{place}, {row['Ville']}"
+            folium.GeoJson(
+                zones_light,
+                name=f"Inscrits par {niveau.lower()}",
+                style_function=style_zone,
+                highlight_function=highlight_zone,
+                smooth_factor=1.0,
+                tooltip=folium.GeoJsonTooltip(
+                    fields=(
+                        ["nom_zone", "parent_zone", "inscrits_zone"]
+                        if montre_parent
+                        else ["nom_zone", "inscrits_zone"]
+                    ),
+                    aliases=(
+                        [f"{niveau} :", "Dans :", "Inscrits :"]
+                        if montre_parent
+                        else [f"{niveau} :", "Inscrits :"]
+                    ),
+                    localize=True,
+                    sticky=True,
+                ),
+                popup=folium.GeoJsonPopup(
+                    fields=["popup_zone"],
+                    labels=False,
+                    max_width=340,
+                ),
+            ).add_to(fmap)
 
+        cluster = MarkerCluster(name="Établissements").add_to(fmap)
+
+        for _, row in (etabs_zone.iterrows() if draw_etabs else iter(())):
+            color, icon, hexcolor = CATEGORY_STYLE.get(row["Catégorie"], DEFAULT_STYLE)
             popup_html = f"""
-                <div style="font-family:Inter,system-ui,sans-serif;min-width:210px;color:#0F172A">
-                  <div style="font-size:14px;font-weight:600;line-height:1.35">{place}</div>
-                  <div style="font-size:12px;color:#475569;margin-top:2px">{row['Région']}</div>
-                  <div style="display:inline-flex;align-items:center;gap:6px;margin:8px 0 6px;
-                              padding:2px 8px;border-radius:999px;background:#EEF2FF;
-                              font-size:11px;color:#3730A3;font-weight:500">
-                    <span style="width:7px;height:7px;border-radius:50%;background:{SUBSCRIBER_COLOR}"></span>
-                    {count} pré-souscripteur{'s' if count > 1 else ''}
+                <div style="font-family:Inter,system-ui,sans-serif;min-width:224px;color:#0F172A">
+                  <div style="font-size:14px;font-weight:600;line-height:1.35">
+                    {row['Établissement']}
                   </div>
-                  <div style="font-size:12px;color:#334155">{row['Détail']}</div>
+                  <div style="display:inline-flex;align-items:center;gap:6px;margin:6px 0 8px;
+                              padding:2px 8px;border-radius:999px;background:#F1F5F9;
+                              font-size:11px;color:#334155">
+                    <span style="width:7px;height:7px;border-radius:50%;background:{hexcolor}"></span>
+                    {row['Catégorie']}
+                  </div>
+                  <div style="font-size:12px;color:#475569">{row['Province']}</div>
+                  <div style="font-family:'Source Code Pro',monospace;font-size:11px;
+                              color:#64748B;margin-top:2px">
+                    {row['lat']:.6f}, {row['lon']:.6f}
+                  </div>
+                  <a href="https://www.google.com/maps?q={row['lat']},{row['lon']}"
+                     target="_blank" rel="noopener"
+                     style="display:inline-block;margin-top:10px;padding:6px 12px;
+                            background:#1E40AF;color:#FFFFFF;border-radius:6px;
+                            font-size:12px;font-weight:500;text-decoration:none">
+                    Ouvrir dans Google Maps
+                  </a>
                 </div>
             """
-            folium.CircleMarker(
+            folium.Marker(
                 location=[row["lat"], row["lon"]],
-                radius=radius,
                 popup=folium.Popup(popup_html, max_width=300),
-                tooltip=f"{place} — {count} inscrit(s)",
-                color=SUBSCRIBER_COLOR,
-                weight=1.5,
-                fill=True,
-                fill_color=SUBSCRIBER_COLOR,
-                fill_opacity=0.35,
-            ).add_to(subs_layer)
+                tooltip=row["Établissement"],
+                icon=folium.Icon(color=color, icon=icon, prefix="fa"),
+            ).add_to(cluster)
 
-        subs_layer.add_to(fmap)
+        # ----------------------- Couche pré-souscripteurs ---------------------- #
+        if draw_subs:
+            subs_layer = folium.FeatureGroup(name="Pré-souscripteurs eAriary")
+            biggest = int(subs_points["Inscrits"].max())
 
-    if len(all_points) > 1:
-        fmap.fit_bounds(all_points.values.tolist(), padding=(30, 30))
-    elif draw_choro:
-        minx, miny, maxx, maxy = zones.total_bounds
-        fmap.fit_bounds([[miny, minx], [maxy, maxx]], padding=(20, 20))
+            for _, row in subs_points.iterrows():
+                count = int(row["Inscrits"])
+                # Rayon en racine carrée : c'est l'aire du disque, et non son rayon,
+                # qui reste proportionnelle au nombre d'inscrits.
+                radius = 7 + 21 * (count / biggest) ** 0.5
+                place = row["Localité"]
+                if row["Ville"] and row["Ville"] != row["Localité"]:
+                    place = f"{place}, {row['Ville']}"
 
-    folium.LayerControl(collapsed=True).add_to(fmap)
-    # `last_active_drawing` seul : tout autre objet retourné (bornes, zoom)
-    # déclencherait un rerun à chaque déplacement de la carte.
-    map_state = st_folium(
-        fmap,
-        use_container_width=True,
-        height=580,
-        returned_objects=["last_active_drawing"] if draw_choro else [],
-    )
+                popup_html = f"""
+                    <div style="font-family:Inter,system-ui,sans-serif;min-width:210px;color:#0F172A">
+                      <div style="font-size:14px;font-weight:600;line-height:1.35">{place}</div>
+                      <div style="font-size:12px;color:#475569;margin-top:2px">{row['Région']}</div>
+                      <div style="display:inline-flex;align-items:center;gap:6px;margin:8px 0 6px;
+                                  padding:2px 8px;border-radius:999px;background:#EEF2FF;
+                                  font-size:11px;color:#3730A3;font-weight:500">
+                        <span style="width:7px;height:7px;border-radius:50%;background:{SUBSCRIBER_COLOR}"></span>
+                        {count} pré-souscripteur{'s' if count > 1 else ''}
+                      </div>
+                      <div style="font-size:12px;color:#334155">{row['Détail']}</div>
+                    </div>
+                """
+                folium.CircleMarker(
+                    location=[row["lat"], row["lon"]],
+                    radius=radius,
+                    popup=folium.Popup(popup_html, max_width=300),
+                    tooltip=f"{place} — {count} inscrit(s)",
+                    color=SUBSCRIBER_COLOR,
+                    weight=1.5,
+                    fill=True,
+                    fill_color=SUBSCRIBER_COLOR,
+                    fill_opacity=0.35,
+                ).add_to(subs_layer)
 
-    # ------------------- Panneau de détail de la zone cliquée --------------- #
-    if draw_choro:
-        drawing = (map_state or {}).get("last_active_drawing") or {}
-        # On identifie la zone par son code, jamais par un index de ligne :
-        # `last_active_drawing` ne renvoie qu'un objet GeoJSON isolé.
-        code_clique = (drawing.get("properties") or {}).get("code_zone")
-        zone_row = (
-            zones[zones["code_zone"] == code_clique]
-            if code_clique is not None
-            else zones.iloc[0:0]
+            subs_layer.add_to(fmap)
+
+        if len(all_points) > 1:
+            fmap.fit_bounds(all_points.values.tolist(), padding=(30, 30))
+        elif draw_choro:
+            minx, miny, maxx, maxy = zones.total_bounds
+            fmap.fit_bounds([[miny, minx], [maxy, maxx]], padding=(20, 20))
+
+        folium.LayerControl(collapsed=True).add_to(fmap)
+        # `last_active_drawing` seul : tout autre objet retourné (bornes, zoom)
+        # déclencherait un rerun à chaque déplacement de la carte.
+        map_state = st_folium(
+            fmap,
+            use_container_width=True,
+            height=580,
+            returned_objects=["last_active_drawing"] if draw_choro else [],
         )
 
-        if zone_row.empty:
-            st.info(
-                f"Cliquez une {niveau.lower()} sur la carte pour afficher le "
-                "détail de ses localités et l'exporter.",
-                icon=":material/ads_click:",
+        # ------------------- Panneau de détail de la zone cliquée --------------- #
+        if draw_choro:
+            drawing = (map_state or {}).get("last_active_drawing") or {}
+            # On identifie la zone par son code, jamais par un index de ligne :
+            # `last_active_drawing` ne renvoie qu'un objet GeoJSON isolé.
+            code_clique = (drawing.get("properties") or {}).get("code_zone")
+            zone_row = (
+                zones[zones["code_zone"] == code_clique]
+                if code_clique is not None
+                else zones.iloc[0:0]
             )
-        else:
-            nom_clique = str(zone_row.iloc[0]["nom_zone"])
-            nb_clique = int(pd.to_numeric(zone_row.iloc[0]["inscrits"], errors="coerce") or 0)
-            lignes = (
-                zones_detail[zones_detail["code_zone"] == code_clique]
-                if zones_detail is not None and not zones_detail.empty
-                else pd.DataFrame()
-            )
-            st.html(
-                f'<div class="section-title">{html.escape(nom_clique)}</div>'
-                f'<div class="section-sub">{fr_number(nb_clique)} inscrit(s) '
-                f"répartis sur {fr_number(len(lignes))} localité(s) — cliquez un "
-                "en-tête pour trier.</div>"
-            )
-            if lignes.empty:
+
+            if zone_row.empty:
                 st.info(
-                    "Aucune localité rattachée à cette zone avec les filtres "
-                    "actuels.",
-                    icon=":material/search_off:",
+                    f"Cliquez une {niveau.lower()} sur la carte pour afficher le "
+                    "détail de ses localités et l'exporter.",
+                    icon=":material/ads_click:",
                 )
             else:
-                cols = [
-                    c
-                    for c in ["Localité", "Ville", "Région", "inscrits",
-                              "rattachement_approx"]
-                    if c in lignes.columns
-                ]
-                table = lignes[cols].sort_values("inscrits", ascending=False)
-                st.dataframe(
-                    table,
-                    width="stretch",
-                    hide_index=True,
-                    column_config={
-                        "Localité": st.column_config.TextColumn(
-                            "Localité", width="medium"
-                        ),
-                        "Ville": st.column_config.TextColumn("Ville", width="medium"),
-                        "Région": st.column_config.TextColumn("Région", width="medium"),
-                        "inscrits": st.column_config.NumberColumn(
-                            "Inscrits", format="%d"
-                        ),
-                        "rattachement_approx": st.column_config.CheckboxColumn(
-                            "Rattachement approximatif",
-                            help="Zone déduite du nom de la localité, faute de "
-                                 "coordonnées fiables.",
-                        ),
-                    },
+                nom_clique = str(zone_row.iloc[0]["nom_zone"])
+                nb_clique = int(pd.to_numeric(zone_row.iloc[0]["inscrits"], errors="coerce") or 0)
+                lignes = (
+                    zones_detail[zones_detail["code_zone"] == code_clique]
+                    if zones_detail is not None and not zones_detail.empty
+                    else pd.DataFrame()
                 )
-                safe_code = re.sub(r"[^A-Za-z0-9_-]+", "_", str(code_clique))
-                st.download_button(
-                    f"Exporter {nom_clique} (CSV)",
-                    table.to_csv(index=False).encode("utf-8-sig"),
-                    file_name=f"inscrits_{niveau.lower()}_{safe_code}.csv",
-                    mime="text/csv",
-                    icon=":material/download:",
-                    key="export_zone",
+                st.html(
+                    f'<div class="section-title">{html.escape(nom_clique)}</div>'
+                    f'<div class="section-sub">{fr_number(nb_clique)} inscrit(s) '
+                    f"répartis sur {fr_number(len(lignes))} localité(s) — cliquez un "
+                    "en-tête pour trier.</div>"
                 )
-else:
-    st.info(
-        "Installez `folium` et `streamlit-folium` pour la carte détaillée.",
-        icon=":material/info:",
-    )
-    fallback_points = pd.concat(
-        ([etabs_zone[["lat", "lon"]]] if draw_etabs else [])
-        + ([subs_points[["lat", "lon"]]] if draw_subs else [])
-    ) if (draw_etabs or draw_subs) else pd.DataFrame(columns=["lat", "lon"])
-    if len(fallback_points):
-        st.map(fallback_points, size=200)
-
-# --------------------------------- Tableau --------------------------------- #
-st.html(
-    '<div class="section-title">Détail des établissements</div>'
-    f'<div class="section-sub">{len(filtered)} ligne(s) — cliquez un en-tête '
-    "pour trier.</div>"
-)
-
-if filtered.empty:
-    st.info(
-        "Aucun établissement ne correspond aux filtres actuels.",
-        icon=":material/search_off:",
-    )
-else:
-    st.dataframe(
-        filtered[["Province", "Établissement", "Catégorie", "lat", "lon"]],
-        width="stretch",
-        hide_index=True,
-        column_config={
-            "Province": st.column_config.TextColumn("Province / ville", width="medium"),
-            "Établissement": st.column_config.TextColumn("Établissement", width="large"),
-            "Catégorie": st.column_config.TextColumn("Catégorie", width="small"),
-            "lat": st.column_config.NumberColumn("Latitude", format="%.6f"),
-            "lon": st.column_config.NumberColumn("Longitude", format="%.6f"),
-        },
-    )
-
-    st.download_button(
-        "Exporter la sélection (CSV)",
-        filtered.to_csv(index=False).encode("utf-8-sig"),
-        file_name="etablissements.csv",
-        mime="text/csv",
-        icon=":material/download:",
-    )
-
-if not unlocated.empty:
-    with st.expander(
-        f"{len(unlocated)} établissement(s) sans coordonnées exploitables",
-        icon=":material/wrong_location:",
-    ):
-        st.caption(
-            "Ces lignes n'apparaissent pas sur la carte : la cellule de "
-            "coordonnées du Sheet n'est pas au format « latitude, longitude »."
-        )
-        st.dataframe(
-            unlocated[["Province", "Établissement", "Catégorie", "Coordonnées brutes"]],
-            width="stretch",
-            hide_index=True,
-        )
-
-# --------------------- Récapitulatif des pré-souscripteurs ------------------ #
-if has_subscribers:
-    st.html(
-        '<div class="section-title">Pré-souscripteurs eAriary</div>'
-        f'<div class="section-sub">{len(subs_points)} localité(s) — le fichier '
-        "d'inscription ne contient pas de coordonnées : les adresses sont "
-        "géocodées puis agrégées, sans donnée nominative.</div>"
-    )
-
-    if subs_points.empty:
+                if lignes.empty:
+                    st.info(
+                        "Aucune localité rattachée à cette zone avec les filtres "
+                        "actuels.",
+                        icon=":material/search_off:",
+                    )
+                else:
+                    cols = [
+                        c
+                        for c in ["Localité", "Ville", "Région", "inscrits",
+                                  "rattachement_approx"]
+                        if c in lignes.columns
+                    ]
+                    table = lignes[cols].sort_values("inscrits", ascending=False)
+                    st.dataframe(
+                        table,
+                        width="stretch",
+                        hide_index=True,
+                        column_config={
+                            "Localité": st.column_config.TextColumn(
+                                "Localité", width="medium"
+                            ),
+                            "Ville": st.column_config.TextColumn("Ville", width="medium"),
+                            "Région": st.column_config.TextColumn("Région", width="medium"),
+                            "inscrits": st.column_config.NumberColumn(
+                                "Inscrits", format="%d"
+                            ),
+                            "rattachement_approx": st.column_config.CheckboxColumn(
+                                "Rattachement approximatif",
+                                help="Zone déduite du nom de la localité, faute de "
+                                     "coordonnées fiables.",
+                            ),
+                        },
+                    )
+                    safe_code = re.sub(r"[^A-Za-z0-9_-]+", "_", str(code_clique))
+                    st.download_button(
+                        f"Exporter {nom_clique} (CSV)",
+                        table.to_csv(index=False).encode("utf-8-sig"),
+                        file_name=f"inscrits_{niveau.lower()}_{safe_code}.csv",
+                        mime="text/csv",
+                        icon=":material/download:",
+                        key="export_zone",
+                    )
+    else:
         st.info(
-            "Aucun pré-souscripteur géolocalisé ne correspond aux filtres.",
+            "Installez `folium` et `streamlit-folium` pour la carte détaillée.",
+            icon=":material/info:",
+        )
+        fallback_points = pd.concat(
+            ([etabs_zone[["lat", "lon"]]] if draw_etabs else [])
+            + ([subs_points[["lat", "lon"]]] if draw_subs else [])
+        ) if (draw_etabs or draw_subs) else pd.DataFrame(columns=["lat", "lon"])
+        if len(fallback_points):
+            st.map(fallback_points, size=200)
+
+if vue == "Établissements":
+    # --------------------------------- Tableau --------------------------------- #
+    st.html(
+        '<div class="section-title">Détail des établissements</div>'
+        f'<div class="section-sub">{len(filtered)} ligne(s) — cliquez un en-tête '
+        "pour trier.</div>"
+    )
+
+    if filtered.empty:
+        st.info(
+            "Aucun établissement ne correspond aux filtres actuels.",
             icon=":material/search_off:",
         )
     else:
-        recap_cols = ["Localité", "Ville", "Région", "Inscrits"] + [
-            a for a in ACCOUNT_ORDER + ["Non renseigné"] if subs_points[a].sum()
-        ]
-        recap = subs_points[recap_cols]
         st.dataframe(
-            recap,
+            filtered[["Province", "Établissement", "Catégorie", "lat", "lon"]],
             width="stretch",
             hide_index=True,
             column_config={
-                "Localité": st.column_config.TextColumn("Localité", width="medium"),
-                "Ville": st.column_config.TextColumn("Ville", width="medium"),
-                "Région": st.column_config.TextColumn("Région", width="medium"),
-                "Inscrits": st.column_config.ProgressColumn(
-                    "Inscrits",
-                    format="%d",
-                    min_value=0,
-                    max_value=int(subs_points["Inscrits"].max()),
-                ),
+                "Province": st.column_config.TextColumn("Province / ville", width="medium"),
+                "Établissement": st.column_config.TextColumn("Établissement", width="large"),
+                "Catégorie": st.column_config.TextColumn("Catégorie", width="small"),
+                "lat": st.column_config.NumberColumn("Latitude", format="%.6f"),
+                "lon": st.column_config.NumberColumn("Longitude", format="%.6f"),
             },
         )
+
         st.download_button(
-            "Exporter le récapitulatif (CSV)",
-            recap.to_csv(index=False).encode("utf-8-sig"),
-            file_name="pre_souscripteurs_par_localite.csv",
+            "Exporter la sélection (CSV)",
+            filtered.to_csv(index=False).encode("utf-8-sig"),
+            file_name="etablissements.csv",
             mime="text/csv",
             icon=":material/download:",
         )
 
-    sub_unlocated = subs_filtered[subs_filtered["lat"].isna()]
-    if not sub_unlocated.empty:
+    if not unlocated.empty:
         with st.expander(
-            f"{len(sub_unlocated)} pré-souscripteur(s) sans adresse localisable",
+            f"{len(unlocated)} établissement(s) sans coordonnées exploitables",
             icon=":material/wrong_location:",
         ):
             st.caption(
-                "Ces inscriptions n'apparaissent pas sur la carte : soit le "
-                "géocodeur n'a reconnu aucun niveau de l'adresse (introuvable), "
-                "soit celle-ci a été saisie sans ville ni région et le point "
-                "obtenu n'est pas fiable (incertaine)."
+                "Ces lignes n'apparaissent pas sur la carte : la cellule de "
+                "coordonnées du Sheet n'est pas au format « latitude, longitude »."
             )
             st.dataframe(
-                sub_unlocated.groupby(["Adresse", "precision"])
-                .size()
-                .reset_index(name="Inscrits")
-                .sort_values("Inscrits", ascending=False),
+                unlocated[["Province", "Établissement", "Catégorie", "Coordonnées brutes"]],
+                width="stretch",
+                hide_index=True,
+            )
+
+if vue == "Pré-inscrits":
+    # --------------------- Récapitulatif des pré-souscripteurs ------------------ #
+    if has_subscribers:
+        st.html(
+            '<div class="section-title">Pré-souscripteurs eAriary</div>'
+            f'<div class="section-sub">{len(subs_points)} localité(s) — le fichier '
+            "d'inscription ne contient pas de coordonnées : les adresses sont "
+            "géocodées puis agrégées, sans donnée nominative.</div>"
+        )
+
+        if subs_points.empty:
+            st.info(
+                "Aucun pré-souscripteur géolocalisé ne correspond aux filtres.",
+                icon=":material/search_off:",
+            )
+        else:
+            recap_cols = ["Localité", "Ville", "Région", "Inscrits"] + [
+                a for a in ACCOUNT_ORDER + ["Non renseigné"] if subs_points[a].sum()
+            ]
+            recap = subs_points[recap_cols]
+            st.dataframe(
+                recap,
                 width="stretch",
                 hide_index=True,
                 column_config={
-                    "Adresse": st.column_config.TextColumn("Adresse", width="large"),
-                    "precision": st.column_config.TextColumn("Motif", width="small"),
+                    "Localité": st.column_config.TextColumn("Localité", width="medium"),
+                    "Ville": st.column_config.TextColumn("Ville", width="medium"),
+                    "Région": st.column_config.TextColumn("Région", width="medium"),
+                    "Inscrits": st.column_config.ProgressColumn(
+                        "Inscrits",
+                        format="%d",
+                        min_value=0,
+                        max_value=int(subs_points["Inscrits"].max()),
+                    ),
                 },
             )
+            st.download_button(
+                "Exporter le récapitulatif (CSV)",
+                recap.to_csv(index=False).encode("utf-8-sig"),
+                file_name="pre_souscripteurs_par_localite.csv",
+                mime="text/csv",
+                icon=":material/download:",
+            )
 
-# ------------------ Import de la liste des pré-inscrits -------------------- #
-# Le seul endroit de l'application qui écrit sur le disque, et le seul qui
-# accède au réseau au runtime — le géocodage était jusqu'ici réservé au script
-# de `tools/`. Les deux sont contenus dans le bouton d'import : rien ne part et
-# rien ne s'écrit tant qu'il n'a pas été pressé.
-st.html(
-    '<div class="section-title">Importer la liste des pré-inscrits</div>'
-    '<div class="section-sub">Déposez l\'export des inscriptions (CSV ou Excel) : '
-    "les adresses sont uniformisées, les nouvelles géocodées, et la carte se met "
-    "à jour. Seuls les effectifs par adresse et par type de compte sont "
-    "conservés — ni nom, ni téléphone, ni e-mail ne quitte cette page.</div>"
-)
-
-# Bilan du dernier import, déposé avant le rechargement de la page : le message
-# doit survivre au `st.rerun()` qui suit l'écriture des fichiers.
-if bilan := st.session_state.pop("import_bilan", None):
-    st.success(bilan, icon=":material/task_alt:")
-
-fichier_importe = st.file_uploader(
-    "Fichier des pré-inscrits",
-    type=["csv", "xlsx", "xls"],
-    help="Colonnes attendues : une adresse et un type de compte. Les autres "
-         "colonnes sont ignorées. Le séparateur et l'encodage sont détectés.",
-)
-
-
-@st.cache_data(show_spinner=False)
-def lire_import(contenu: bytes, nom: str):
-    """Lecture du fichier déposé, mise en cache sur son contenu.
-
-    Streamlit réexécute le script à chaque clic — sans ce cache, un fichier de
-    plusieurs milliers de lignes serait relu à chaque case cochée.
-    """
-    return pre_inscrits.lire_fichier(contenu, nom)
-
-
-if fichier_importe is not None:
-    try:
-        brut = lire_import(fichier_importe.getvalue(), fichier_importe.name)
-    except Exception as exc:
-        brut = None
-        st.error(f"Fichier illisible : {exc}", icon=":material/error:")
-
-    if brut is not None and brut.empty:
-        st.warning("Le fichier ne contient aucune ligne.", icon=":material/warning:")
-    elif brut is not None:
-        detectee_adresse, detectee_compte = pre_inscrits.colonnes_utiles(brut)
-        colonnes = list(brut.columns)
-
-        # Détection proposée, jamais imposée : un export dont les intitulés ont
-        # changé se rattrape ici, sans toucher au code.
-        choix_col = st.columns(2)
-        col_adresse = choix_col[0].selectbox(
-            "Colonne des adresses",
-            colonnes,
-            index=colonnes.index(detectee_adresse) if detectee_adresse in colonnes else 0,
-        )
-        col_compte = choix_col[1].selectbox(
-            "Colonne du type de compte",
-            ["— aucune —"] + colonnes,
-            index=(colonnes.index(detectee_compte) + 1) if detectee_compte in colonnes else 0,
-        )
-
-        prepare = pre_inscrits.preparer(
-            brut, col_adresse, None if col_compte == "— aucune —" else col_compte
-        )
-        correspondances = pre_inscrits.charger_correspondances()
-        prepare["Adresse"] = pre_inscrits.appliquer_correspondances(
-            prepare["Adresse"], correspondances
-        )
-
-        cache_geo = pre_inscrits.charger_cache_geo()
-        precisions = {a: v.get("precision", "") for a, v in cache_geo.items()}
-        effectifs = pre_inscrits.effectifs_par_adresse(prepare)
-        suggestions = pre_inscrits.suggerer_fusions(effectifs, precisions)
-
-        # Les fusions cochées sont appliquées à blanc dès maintenant : le nombre
-        # d'adresses à géocoder, donc la durée annoncée, doit refléter ce qui va
-        # réellement être fait.
-        retenues = {}
-        for index, suggestion in enumerate(suggestions):
-            if st.session_state.get(f"fusion_{index}"):
-                for variante in suggestion["variantes"]:
-                    retenues[pre_inscrits.cle(variante)] = suggestion["retenue"]
-        adresses_finales = pre_inscrits.appliquer_correspondances(
-            prepare["Adresse"], retenues
-        )
-        a_geocoder = pre_inscrits.adresses_a_geocoder(adresses_finales.unique(), cache_geo)
-
-        ancien = pre_inscrits.lire_agregat()
-        ancien_total = (
-            pd.to_numeric(ancien["Inscrits"], errors="coerce").fillna(0).sum()
-            if not ancien.empty
-            else 0
-        )
-
-        mesures = st.columns(4)
-        mesures[0].metric(
-            "Lignes lues",
-            f"{len(prepare):,}".replace(",", " "),
-            delta=f"{len(prepare) - int(ancien_total):+d} vs liste actuelle" if ancien_total else None,
-            delta_color="off",
-        )
-        mesures[1].metric("Adresses distinctes", f"{adresses_finales.nunique()}")
-        mesures[2].metric(
-            "Libellés uniformisés",
-            f"{int((prepare['Adresse importée'].str.strip() != prepare['Adresse']).sum())}",
-            help="Lignes dont l'adresse a été réécrite : espaces, casse, alias de "
-                 "ville, pays ajouté, e-mail neutralisé.",
-        )
-        mesures[3].metric(
-            "Adresses à géocoder",
-            f"{len(a_geocoder)}",
-            help="Adresses absentes du cache. Nominatim impose une requête par "
-                 "seconde : comptez environ autant de secondes.",
-        )
-
-        resume = pre_inscrits.resume_uniformisation(prepare)
-        if not resume.empty:
+        sub_unlocated = subs_filtered[subs_filtered["lat"].isna()]
+        if not sub_unlocated.empty:
             with st.expander(
-                f"{len(resume)} libellé(s) réécrit(s) par les règles",
-                icon=":material/rule:",
+                f"{len(sub_unlocated)} pré-souscripteur(s) sans adresse localisable",
+                icon=":material/wrong_location:",
             ):
                 st.caption(
-                    "Uniformisation automatique : espaces et virgules, casse des "
-                    "saisies tout en capitales, noms de villes usuels ramenés au "
-                    "nom officiel, « Madagascar » ajouté aux adresses qui portent "
-                    "déjà une ville ou une région, adresses e-mail neutralisées."
+                    "Ces inscriptions n'apparaissent pas sur la carte : soit le "
+                    "géocodeur n'a reconnu aucun niveau de l'adresse (introuvable), "
+                    "soit celle-ci a été saisie sans ville ni région et le point "
+                    "obtenu n'est pas fiable (incertaine)."
                 )
-                st.dataframe(resume, width="stretch", hide_index=True)
+                st.dataframe(
+                    sub_unlocated.groupby(["Adresse", "precision"])
+                    .size()
+                    .reset_index(name="Inscrits")
+                    .sort_values("Inscrits", ascending=False),
+                    width="stretch",
+                    hide_index=True,
+                    column_config={
+                        "Adresse": st.column_config.TextColumn("Adresse", width="large"),
+                        "precision": st.column_config.TextColumn("Motif", width="small"),
+                    },
+                )
 
-        if suggestions:
-            with st.expander(
-                f"{len(suggestions)} rapprochement(s) proposé(s) — à confirmer",
-                icon=":material/merge:",
-            ):
-                st.caption(
-                    "Ces libellés se ressemblent, mais rien ne dit qu'ils désignent "
-                    "le même lieu : « Itaosy » et « Itasy » se ressemblent et sont "
-                    "deux endroits différents. Rien n'est fusionné sans votre "
-                    "accord ; une case cochée vaut pour tous les imports suivants."
-                )
-                for index, suggestion in enumerate(suggestions):
-                    st.checkbox(
-                        f"**{suggestion['retenue']}** ← "
-                        + ", ".join(suggestion["variantes"])
-                        + f"  ·  {suggestion['inscrits']} inscrit(s)  ·  "
-                        + suggestion["motif"],
-                        key=f"fusion_{index}",
+    # ------------------ Import de la liste des pré-inscrits -------------------- #
+    # Le seul endroit de l'application qui écrit sur le disque, et le seul qui
+    # accède au réseau au runtime — le géocodage était jusqu'ici réservé au script
+    # de `tools/`. Les deux sont contenus dans le bouton d'import : rien ne part et
+    # rien ne s'écrit tant qu'il n'a pas été pressé.
+    st.html(
+        '<div class="section-title">Importer la liste des pré-inscrits</div>'
+        '<div class="section-sub">Déposez l\'export des inscriptions (CSV ou Excel) : '
+        "les adresses sont uniformisées, les nouvelles géocodées, et la carte se met "
+        "à jour. Seuls les effectifs par adresse et par type de compte sont "
+        "conservés — ni nom, ni téléphone, ni e-mail ne quitte cette page.</div>"
+    )
+
+    # Bilan du dernier import, déposé avant le rechargement de la page : le message
+    # doit survivre au `st.rerun()` qui suit l'écriture des fichiers.
+    if bilan := st.session_state.pop("import_bilan", None):
+        st.success(bilan, icon=":material/task_alt:")
+
+    fichier_importe = st.file_uploader(
+        "Fichier des pré-inscrits",
+        type=["csv", "xlsx", "xls"],
+        help="Colonnes attendues : une adresse et un type de compte. Les autres "
+             "colonnes sont ignorées. Le séparateur et l'encodage sont détectés.",
+    )
+
+
+    @st.cache_data(show_spinner=False)
+    def lire_import(contenu: bytes, nom: str):
+        """Lecture du fichier déposé, mise en cache sur son contenu.
+
+        Streamlit réexécute le script à chaque clic — sans ce cache, un fichier de
+        plusieurs milliers de lignes serait relu à chaque case cochée.
+        """
+        return pre_inscrits.lire_fichier(contenu, nom)
+
+
+    if fichier_importe is not None:
+        try:
+            brut = lire_import(fichier_importe.getvalue(), fichier_importe.name)
+        except Exception as exc:
+            brut = None
+            st.error(f"Fichier illisible : {exc}", icon=":material/error:")
+
+        if brut is not None and brut.empty:
+            st.warning("Le fichier ne contient aucune ligne.", icon=":material/warning:")
+        elif brut is not None:
+            detectee_adresse, detectee_compte = pre_inscrits.colonnes_utiles(brut)
+            colonnes = list(brut.columns)
+
+            # Détection proposée, jamais imposée : un export dont les intitulés ont
+            # changé se rattrape ici, sans toucher au code.
+            choix_col = st.columns(2)
+            col_adresse = choix_col[0].selectbox(
+                "Colonne des adresses",
+                colonnes,
+                index=colonnes.index(detectee_adresse) if detectee_adresse in colonnes else 0,
+            )
+            col_compte = choix_col[1].selectbox(
+                "Colonne du type de compte",
+                ["— aucune —"] + colonnes,
+                index=(colonnes.index(detectee_compte) + 1) if detectee_compte in colonnes else 0,
+            )
+
+            prepare = pre_inscrits.preparer(
+                brut, col_adresse, None if col_compte == "— aucune —" else col_compte
+            )
+            correspondances = pre_inscrits.charger_correspondances()
+            prepare["Adresse"] = pre_inscrits.appliquer_correspondances(
+                prepare["Adresse"], correspondances
+            )
+
+            cache_geo = pre_inscrits.charger_cache_geo()
+            precisions = {a: v.get("precision", "") for a, v in cache_geo.items()}
+            effectifs = pre_inscrits.effectifs_par_adresse(prepare)
+            suggestions = pre_inscrits.suggerer_fusions(effectifs, precisions)
+
+            # Les fusions cochées sont appliquées à blanc dès maintenant : le nombre
+            # d'adresses à géocoder, donc la durée annoncée, doit refléter ce qui va
+            # réellement être fait.
+            retenues = {}
+            for index, suggestion in enumerate(suggestions):
+                if st.session_state.get(f"fusion_{index}"):
+                    for variante in suggestion["variantes"]:
+                        retenues[pre_inscrits.cle(variante)] = suggestion["retenue"]
+            adresses_finales = pre_inscrits.appliquer_correspondances(
+                prepare["Adresse"], retenues
+            )
+            a_geocoder = pre_inscrits.adresses_a_geocoder(adresses_finales.unique(), cache_geo)
+
+            ancien = pre_inscrits.lire_agregat()
+            ancien_total = (
+                pd.to_numeric(ancien["Inscrits"], errors="coerce").fillna(0).sum()
+                if not ancien.empty
+                else 0
+            )
+
+            mesures = st.columns(4)
+            mesures[0].metric(
+                "Lignes lues",
+                f"{len(prepare):,}".replace(",", " "),
+                delta=f"{len(prepare) - int(ancien_total):+d} vs liste actuelle" if ancien_total else None,
+                delta_color="off",
+            )
+            mesures[1].metric("Adresses distinctes", f"{adresses_finales.nunique()}")
+            mesures[2].metric(
+                "Libellés uniformisés",
+                f"{int((prepare['Adresse importée'].str.strip() != prepare['Adresse']).sum())}",
+                help="Lignes dont l'adresse a été réécrite : espaces, casse, alias de "
+                     "ville, pays ajouté, e-mail neutralisé.",
+            )
+            mesures[3].metric(
+                "Adresses à géocoder",
+                f"{len(a_geocoder)}",
+                help="Adresses absentes du cache. Nominatim impose une requête par "
+                     "seconde : comptez environ autant de secondes.",
+            )
+
+            resume = pre_inscrits.resume_uniformisation(prepare)
+            if not resume.empty:
+                with st.expander(
+                    f"{len(resume)} libellé(s) réécrit(s) par les règles",
+                    icon=":material/rule:",
+                ):
+                    st.caption(
+                        "Uniformisation automatique : espaces et virgules, casse des "
+                        "saisies tout en capitales, noms de villes usuels ramenés au "
+                        "nom officiel, « Madagascar » ajouté aux adresses qui portent "
+                        "déjà une ville ou une région, adresses e-mail neutralisées."
                     )
+                    st.dataframe(resume, width="stretch", hide_index=True)
 
-        if a_geocoder:
-            st.caption(
-                f"{len(a_geocoder)} adresse(s) seront géocodées auprès de "
-                f"Nominatim, à une requête par seconde — environ "
-                f"{max(1, round(len(a_geocoder) * pre_inscrits.PAUSE / 60))} minute(s). "
-                "C'est le seul accès réseau de l'application."
+            if suggestions:
+                with st.expander(
+                    f"{len(suggestions)} rapprochement(s) proposé(s) — à confirmer",
+                    icon=":material/merge:",
+                ):
+                    st.caption(
+                        "Ces libellés se ressemblent, mais rien ne dit qu'ils désignent "
+                        "le même lieu : « Itaosy » et « Itasy » se ressemblent et sont "
+                        "deux endroits différents. Rien n'est fusionné sans votre "
+                        "accord ; une case cochée vaut pour tous les imports suivants."
+                    )
+                    for index, suggestion in enumerate(suggestions):
+                        st.checkbox(
+                            f"**{suggestion['retenue']}** ← "
+                            + ", ".join(suggestion["variantes"])
+                            + f"  ·  {suggestion['inscrits']} inscrit(s)  ·  "
+                            + suggestion["motif"],
+                            key=f"fusion_{index}",
+                        )
+
+            if a_geocoder:
+                st.caption(
+                    f"{len(a_geocoder)} adresse(s) seront géocodées auprès de "
+                    f"Nominatim, à une requête par seconde — environ "
+                    f"{max(1, round(len(a_geocoder) * pre_inscrits.PAUSE / 60))} minute(s). "
+                    "C'est le seul accès réseau de l'application."
+                )
+
+            st.warning(
+                "L'import **remplace** la liste actuelle "
+                f"({int(ancien_total)} inscrit(s)) par celle du fichier déposé. "
+                "Le cache de géocodage, lui, s'enrichit sans rien perdre.",
+                icon=":material/warning:",
             )
 
-        st.warning(
-            "L'import **remplace** la liste actuelle "
-            f"({int(ancien_total)} inscrit(s)) par celle du fichier déposé. "
-            "Le cache de géocodage, lui, s'enrichit sans rien perdre.",
-            icon=":material/warning:",
+            if st.button(
+                "Importer et mettre à jour",
+                icon=":material/publish:",
+                type="primary",
+            ):
+                table = dict(correspondances)
+                table.update(retenues)
+                adresses = pre_inscrits.appliquer_correspondances(prepare["Adresse"], table)
+                resultat = prepare.assign(Adresse=adresses)
+                restants = pre_inscrits.adresses_a_geocoder(adresses.unique(), cache_geo)
+
+                with st.status("Import en cours…", expanded=True) as etat:
+                    if retenues:
+                        st.write(f"Enregistrement de {len(retenues)} rapprochement(s).")
+                    pre_inscrits.enregistrer_correspondances(table)
+
+                    echecs = 0
+                    if restants:
+                        st.write(f"Géocodage de {len(restants)} nouvelle(s) adresse(s)…")
+                        avancement = st.progress(0.0)
+                        ligne = st.empty()
+                        for rang, adresse in enumerate(restants, 1):
+                            trouve = pre_inscrits.geocoder(adresse)
+                            cache_geo[adresse] = {"Adresse": adresse, **trouve}
+                            echecs += trouve["precision"] in ("introuvable", "erreur réseau")
+                            # Écriture à chaque tour : une fermeture d'onglet en
+                            # cours de route ne perd aucune résolution déjà payée.
+                            pre_inscrits.enregistrer_cache_geo(cache_geo)
+                            avancement.progress(rang / len(restants))
+                            ligne.caption(f"[{rang}/{len(restants)}] {adresse} → {trouve['precision']}")
+                        ligne.empty()
+
+                    agregat = pre_inscrits.agreger(resultat)
+                    pre_inscrits.enregistrer_agregat(agregat)
+                    st.write(f"Agrégat écrit : {len(agregat)} ligne(s).")
+                    etat.update(label="Import terminé", state="complete", expanded=False)
+
+                st.session_state["import_bilan"] = (
+                    f"{len(resultat)} inscription(s) importée(s), "
+                    f"{adresses.nunique()} adresse(s) distincte(s), "
+                    f"{len(restants)} géocodée(s)"
+                    + (f", dont {echecs} sans résultat" if echecs else "")
+                    + "."
+                )
+                # Le cache de `load_subscribers` porte sur 5 minutes : sans purge,
+                # la carte afficherait encore l'ancienne liste.
+                st.cache_data.clear()
+                st.rerun()
+
+if vue == "Intégration":
+    # ----------------------- Pages publiques à intégrer ------------------------ #
+    # `static/embed/` est servi par Streamlit lui-même (enableStaticServing dans
+    # .streamlit/config.toml) : les pages publiques se déploient avec l'application,
+    # à la même adresse, sans hébergement séparé à maintenir.
+    _base = (st.get_option("server.baseUrlPath") or "").strip("/")
+    # Chemin absolu depuis la racine du site : `st.iframe` ne reconnaît un chemin
+    # relatif que s'il commence par « / » — sans cette barre, il prend la chaîne
+    # pour du HTML brut et affiche le chemin en toutes lettres.
+    _racine_embed = f"/{_base}/app/static/embed" if _base else "/app/static/embed"
+
+    try:
+        # Seule l'origine nous intéresse : `st.context.url` porte déjà le chemin de
+        # base, que `_racine_embed` répète.
+        _parts = urlsplit(st.context.url)
+        _origine = f"{_parts.scheme}://{_parts.netloc}" if _parts.netloc else ""
+    except Exception:  # contexte indisponible (exécution hors serveur, tests)
+        _origine = ""
+
+    # Deux pages, même dossier : la carte, et le tableau filtrable par région et
+    # par type de marchand. Hauteurs conseillées différentes — le tableau n'a pas
+    # de carte à laisser respirer.
+    EMBED_PAGES = [
+        ("Carte", "index.html", 620, "Carte et liste des établissements, filtres ville et catégorie."),
+        (
+            "Tableau",
+            "tableau.html",
+            520,
+            "Registre triable, filtres région et type de marchand, lien Google Maps par ligne. "
+            "Ni carte ni tuiles : c'est la page à préférer quand l'hôte n'a pas besoin d'une carte.",
+        ),
+    ]
+
+    st.html(
+        '<div class="section-title">Pages publiques à intégrer</div>'
+        '<div class="section-sub">Établissements partenaires, destinés au public et '
+        "à l'intégration dans une autre application. Ces pages ne montrent ni les "
+        "pré-souscripteurs ni les indicateurs internes.</div>"
+    )
+
+    st.caption(
+        "À intégrer sans bordure ni coin arrondi, pour que la page se lise comme "
+        "une section de l'application hôte et non comme un encart rapporté. "
+        "Ajoutez `?header=0` si l'hôte affiche déjà son propre titre."
+    )
+
+    for _titre, _fichier, _hauteur, _sous_titre in EMBED_PAGES:
+        _url = f"{_origine}{_racine_embed}/{_fichier}"
+        st.markdown(f"**{_titre}** — {_sous_titre}")
+        st.link_button(
+            f"Ouvrir la page « {_titre} »",
+            _url,
+            icon=":material/open_in_new:",
         )
-
-        if st.button(
-            "Importer et mettre à jour",
-            icon=":material/publish:",
-            type="primary",
-        ):
-            table = dict(correspondances)
-            table.update(retenues)
-            adresses = pre_inscrits.appliquer_correspondances(prepare["Adresse"], table)
-            resultat = prepare.assign(Adresse=adresses)
-            restants = pre_inscrits.adresses_a_geocoder(adresses.unique(), cache_geo)
-
-            with st.status("Import en cours…", expanded=True) as etat:
-                if retenues:
-                    st.write(f"Enregistrement de {len(retenues)} rapprochement(s).")
-                pre_inscrits.enregistrer_correspondances(table)
-
-                echecs = 0
-                if restants:
-                    st.write(f"Géocodage de {len(restants)} nouvelle(s) adresse(s)…")
-                    avancement = st.progress(0.0)
-                    ligne = st.empty()
-                    for rang, adresse in enumerate(restants, 1):
-                        trouve = pre_inscrits.geocoder(adresse)
-                        cache_geo[adresse] = {"Adresse": adresse, **trouve}
-                        echecs += trouve["precision"] in ("introuvable", "erreur réseau")
-                        # Écriture à chaque tour : une fermeture d'onglet en
-                        # cours de route ne perd aucune résolution déjà payée.
-                        pre_inscrits.enregistrer_cache_geo(cache_geo)
-                        avancement.progress(rang / len(restants))
-                        ligne.caption(f"[{rang}/{len(restants)}] {adresse} → {trouve['precision']}")
-                    ligne.empty()
-
-                agregat = pre_inscrits.agreger(resultat)
-                pre_inscrits.enregistrer_agregat(agregat)
-                st.write(f"Agrégat écrit : {len(agregat)} ligne(s).")
-                etat.update(label="Import terminé", state="complete", expanded=False)
-
-            st.session_state["import_bilan"] = (
-                f"{len(resultat)} inscription(s) importée(s), "
-                f"{adresses.nunique()} adresse(s) distincte(s), "
-                f"{len(restants)} géocodée(s)"
-                + (f", dont {echecs} sans résultat" if echecs else "")
-                + "."
-            )
-            # Le cache de `load_subscribers` porte sur 5 minutes : sans purge,
-            # la carte afficherait encore l'ancienne liste.
-            st.cache_data.clear()
-            st.rerun()
-
-# ----------------------- Pages publiques à intégrer ------------------------ #
-# `static/embed/` est servi par Streamlit lui-même (enableStaticServing dans
-# .streamlit/config.toml) : les pages publiques se déploient avec l'application,
-# à la même adresse, sans hébergement séparé à maintenir.
-_base = (st.get_option("server.baseUrlPath") or "").strip("/")
-# Chemin absolu depuis la racine du site : `st.iframe` ne reconnaît un chemin
-# relatif que s'il commence par « / » — sans cette barre, il prend la chaîne
-# pour du HTML brut et affiche le chemin en toutes lettres.
-_racine_embed = f"/{_base}/app/static/embed" if _base else "/app/static/embed"
-
-try:
-    # Seule l'origine nous intéresse : `st.context.url` porte déjà le chemin de
-    # base, que `_racine_embed` répète.
-    _parts = urlsplit(st.context.url)
-    _origine = f"{_parts.scheme}://{_parts.netloc}" if _parts.netloc else ""
-except Exception:  # contexte indisponible (exécution hors serveur, tests)
-    _origine = ""
-
-# Deux pages, même dossier : la carte, et le tableau filtrable par région et
-# par type de marchand. Hauteurs conseillées différentes — le tableau n'a pas
-# de carte à laisser respirer.
-EMBED_PAGES = [
-    ("Carte", "index.html", 620, "Carte et liste des établissements, filtres ville et catégorie."),
-    (
-        "Tableau",
-        "tableau.html",
-        520,
-        "Registre triable, filtres région et type de marchand, lien Google Maps par ligne. "
-        "Ni carte ni tuiles : c'est la page à préférer quand l'hôte n'a pas besoin d'une carte.",
-    ),
-]
-
-st.html(
-    '<div class="section-title">Pages publiques à intégrer</div>'
-    '<div class="section-sub">Établissements partenaires, destinés au public et '
-    "à l'intégration dans une autre application. Ces pages ne montrent ni les "
-    "pré-souscripteurs ni les indicateurs internes.</div>"
-)
-
-st.caption(
-    "À intégrer sans bordure ni coin arrondi, pour que la page se lise comme "
-    "une section de l'application hôte et non comme un encart rapporté. "
-    "Ajoutez `?header=0` si l'hôte affiche déjà son propre titre."
-)
-
-for _titre, _fichier, _hauteur, _sous_titre in EMBED_PAGES:
-    _url = f"{_origine}{_racine_embed}/{_fichier}"
-    st.markdown(f"**{_titre}** — {_sous_titre}")
-    st.link_button(
-        f"Ouvrir la page « {_titre} »",
-        _url,
-        icon=":material/open_in_new:",
-    )
-    st.code(
-        f'<iframe\n'
-        f'  src="{_url}"\n'
-        f'  title="Établissements partenaires eAriary"\n'
-        f'  width="100%" height="{_hauteur}" style="display:block;border:0"\n'
-        f'  loading="lazy"></iframe>',
-        language="html",
-    )
-    with st.expander(f"Aperçu — {_titre}", icon=":material/preview:"):
-        st.iframe(_url, height=_hauteur)
+        st.code(
+            f'<iframe\n'
+            f'  src="{_url}"\n'
+            f'  title="Établissements partenaires eAriary"\n'
+            f'  width="100%" height="{_hauteur}" style="display:block;border:0"\n'
+            f'  loading="lazy"></iframe>',
+            language="html",
+        )
+        with st.expander(f"Aperçu — {_titre}", icon=":material/preview:"):
+            st.iframe(_url, height=_hauteur)

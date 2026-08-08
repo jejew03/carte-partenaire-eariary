@@ -221,6 +221,19 @@ au moment où `static/embed/build.py` régénère l'instantané.
 
 ## Design
 
+L'application se lit en **quatre vues**, choisies par le sélecteur sous la
+titraille : *Carte* (indicateurs, choroplèthe, carte), *Établissements*
+(tableau et export), *Pré-inscrits* (récapitulatif et import), *Intégration*
+(code des iframes). Les filtres restent dans la barre latérale, communs aux
+quatre — c'est le même jeu de données sous quatre angles, pas quatre pages.
+
+Un sélecteur plutôt que `st.tabs` : celui-ci construit les quatre panneaux à
+chaque exécution, y compris ceux qu'on ne regarde pas. Un tableau mesuré
+pendant que son onglet est masqué s'installe à 49 px de large et n'en bouge
+plus, même après redimensionnement, et la carte se reconstruit à chaque clic
+pour rien. Ici, seule la vue demandée est construite ; en changer relance le
+script, sur des données déjà en cache.
+
 Le thème (couleurs, polices, rayons, bordures, style des tableaux) est défini
 dans `.streamlit/config.toml` ; `app.py` n'ajoute que les quelques règles CSS
 que le thème n'expose pas (en-tête, légende, cartes d'indicateurs).
