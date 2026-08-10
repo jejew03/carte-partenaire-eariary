@@ -389,12 +389,15 @@ Fonds de carte : © OpenStreetMap, © CARTO, Esri — l'attribution est affiché
 dans la carte et doit être conservée. Leaflet est distribué sous licence
 BSD-2-Clause (`vendor/leaflet/LICENSE`).
 
-## Rapport avec `static/embed/`
+## Historique
 
-Ce dossier remplace `static/embed/`, dont il reprend le fond avec un découpage
-différent : feuilles de style séparées (le tableau ne charge plus les styles
-Leaflet), colonnes facultatives du Sheet, rafraîchissement périodique, et
-instantané régénéré par un workflow plutôt qu'à la main.
+Ce dossier remplace `static/embed/`, supprimé du dépôt. Il en reprend le fond
+avec un découpage différent : feuilles de style séparées (le tableau ne charge
+plus les styles Leaflet), colonnes facultatives du Sheet, rafraîchissement
+périodique, et instantané régénéré par un workflow plutôt qu'à la main.
 
-`static/embed/` reste en ligne tant que des intégrateurs pointent sur ses URL,
-mais n'est plus maintenu. C'est ce dossier-ci qui évolue.
+Les anciennes adresses `…/static/embed/index.html` et
+`…/static/embed/tableau.html` **ne répondent plus**. Un intégrateur qui les
+utilise encore doit passer à `…/partenaires/carte.html` et
+`…/partenaires/tableau.html` — noter le renommage de `index.html` en
+`carte.html`.

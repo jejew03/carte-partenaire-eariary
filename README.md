@@ -168,9 +168,9 @@ retombe sur l'ancien rendu en cercles proportionnels.
 | `geo_aggregate.py` | jointure spatiale points → polygones et agrégation par zone |
 | `tools/geocode_souscripteurs.py` | même chaîne, hors ligne, à partir du classeur Excel |
 | `tools/fetch_boundaries.py` | récupération et simplification des limites (réseau) |
-| `static/embed/` | pages publiques à intégrer par iframe — carte et tableau ([documentation](static/embed/README.md)) |
+| `partenaires/` | pages publiques à intégrer par iframe — carte et tableau ([documentation](partenaires/README.md)) |
 | `tests/test_geo_aggregate.py` | tests du moteur d'agrégation |
-| `tests/test_embed_build.py` | tests de la lecture du Sheet et du rattachement à la région |
+| `tests/test_partenaires_build.py` | tests de la lecture du Sheet et du rattachement à la région |
 | `tests/test_pre_inscrits.py` | tests des règles d'import (sans réseau) |
 | `tests/test_import_ui.py` | test de bout en bout de la section d'import, via `AppTest` |
 
@@ -189,35 +189,38 @@ python -m pytest tests/ -q
 
 ## Pages publiques
 
-`static/embed/` contient deux pages autonomes, destinées au public et à
+`partenaires/` contient deux pages autonomes, destinées au public et à
 l'intégration par `<iframe>` dans une autre application. Elles ne montrent ni
 les pré-souscripteurs ni les indicateurs internes.
 
 | Page | Contenu |
 |---|---|
-| `index.html` | carte et liste, filtres ville et catégorie |
+| `carte.html` | carte et liste, filtres ville et catégorie |
 | `tableau.html` | registre trié, filtres **région** et **type de marchand**, lien Google Maps par ligne — ni Leaflet ni tuiles |
 
 Elles sont publiées par GitHub Pages depuis `main` — **ce sont les adresses à
 diffuser**, elles ne demandent aucune connexion :
 
 ```
-https://jejew03.github.io/carte-partenaire-eariary/static/embed/index.html
-https://jejew03.github.io/carte-partenaire-eariary/static/embed/tableau.html
+https://jejew03.github.io/carte-partenaire-eariary/partenaires/carte.html
+https://jejew03.github.io/carte-partenaire-eariary/partenaires/tableau.html
 ```
 
-Streamlit les sert aussi lui-même (`enableStaticServing` dans
-`.streamlit/config.toml`), sous `/app/static/embed/` ; l'application affiche
-ces liens, le code à copier et un aperçu dans sa section « Pages publiques à
-intégrer ». Tant que l'application reste privée, ces secondes adresses exigent
-une connexion. Voir [`static/embed/README.md`](static/embed/README.md)
-pour les paramètres d'URL, les messages `postMessage` et l'identité visuelle,
-qui est **délibérément distincte** de celle de l'application interne.
+L'application affiche ces liens, le code à copier et un aperçu dans sa vue
+« Intégration ». Elle n'héberge aucune copie des pages : il n'existe qu'une
+seule version en ligne. Voir [`partenaires/README.md`](partenaires/README.md)
+pour les paramètres d'URL, les messages `postMessage`, les colonnes du Sheet et
+les conventions de code.
+
+Les pages relisent le Google Sheet toutes les cinq minutes : une ligne ajoutée
+à la feuille y apparaît sans rechargement. Une copie de secours embarquée,
+`partenaires/assets/instantane.js`, est régénérée chaque heure par
+[`.github/workflows/instantane-partenaires.yml`](.github/workflows/instantane-partenaires.yml).
 
 La colonne « Région » du tableau ne vient pas du Sheet, dont la colonne
 « Province » mélange villes et anciennes provinces : elle est déduite des
 coordonnées par appartenance au polygone ADM1 de `data/geo/mdg_adm1.geojson`,
-au moment où `static/embed/build.py` régénère l'instantané.
+au moment où `partenaires/build.py` régénère l'instantané.
 
 ## Design
 

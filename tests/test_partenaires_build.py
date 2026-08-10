@@ -1,9 +1,9 @@
 """
-Tests de la lecture du Sheet utilisée par l'iframe (`static/embed/build.py`).
+Tests de la lecture du Sheet par `partenaires/build.py`.
 
 Aucun accès réseau : les CSV sont écrits à la main. Ces règles sont dupliquées
-en JavaScript dans `static/embed/assets/data.js` pour la relecture en direct — toute
-correction ici doit y être reportée.
+en JavaScript dans `partenaires/assets/donnees.js` pour la relecture en direct —
+toute correction ici doit y être reportée.
 """
 
 import json
@@ -13,16 +13,22 @@ from pathlib import Path
 import pytest
 
 RACINE = Path(__file__).resolve().parent.parent
-sys.path.insert(0, str(RACINE / "static" / "embed"))
+sys.path.insert(0, str(RACINE / "partenaires"))
 
-import build as embed_build  # noqa: E402
+import build as partenaires_build  # noqa: E402
 
 
 ENTETE = "Province,Nom de l'établissement,Catégorie,Latitude / longitude\n"
 
 
 def lire(csv):
-    return embed_build.parse_rows(csv)
+    """Fiches seules : `parse_rows` renvoie aussi les champs facultatifs."""
+    return partenaires_build.parse_rows(csv)[0]
+
+
+def champs(csv):
+    """Champs facultatifs détectés dans la feuille."""
+    return partenaires_build.parse_rows(csv)[1]
 
 
 # --------------------------------------------------------------------------- #
@@ -132,7 +138,7 @@ def test_coordonnees_illisibles_gardent_l_etablissement(brut):
     ],
 )
 def test_variantes_de_coordonnees(brut, lat, lon):
-    assert embed_build.parse_coords(brut) == (lat, lon)
+    assert partenaires_build.parse_coords(brut) == (lat, lon)
 
 
 # --------------------------------------------------------------------------- #
@@ -148,6 +154,57 @@ def test_lignes_sans_nom_ignorees():
 def test_feuille_vide():
     with pytest.raises(ValueError):
         lire("")
+
+
+# --------------------------------------------------------------------------- #
+# Colonnes facultatives
+# --------------------------------------------------------------------------- #
+# Absentes du Sheet aujourd'hui. Elles sont reconnues par leur intitulé seul,
+# jamais par leur position : les pages ne doivent pas présenter une colonne
+# quelconque comme un numéro de téléphone.
+
+ENTETE_ENRICHI = (
+    "Province,Nom de l'établissement,Catégorie,Latitude / longitude,"
+    "Téléphone,Adresse,Horaires,Site web\n"
+)
+
+
+def test_colonnes_facultatives_lues():
+    (etab,) = lire(
+        ENTETE_ENRICHI
+        + 'Toamasina,Chez X,Restaurant,"-18.15, 49.41",034 05 06 07,'
+        "Rue Bord de mer,Lun–Sam 8h–19h,chezx.mg\n"
+    )
+    assert etab["telephone"] == "034 05 06 07"
+    assert etab["adresse"] == "Rue Bord de mer"
+    assert etab["horaires"] == "Lun–Sam 8h–19h"
+    assert etab["site"] == "chezx.mg"
+
+
+def test_cellule_facultative_vide_absente_de_la_fiche():
+    """Une clé absente, et non une chaîne vide : les pages testent la présence."""
+    (etab,) = lire(
+        ENTETE_ENRICHI + 'Toamasina,Chez X,Restaurant,"-18.15, 49.41",,,,\n'
+    )
+    assert "telephone" not in etab
+    assert "adresse" not in etab
+
+
+def test_colonne_entierement_vide_non_annoncee():
+    """Sinon le tableau afficherait une colonne « Contact » sans aucun numéro."""
+    csv = ENTETE_ENRICHI + 'Toamasina,Chez X,Restaurant,"-18.15, 49.41",,Rue A,,\n'
+    assert champs(csv) == ["adresse"]
+
+
+def test_colonnes_facultatives_absentes_du_sheet():
+    assert champs(ENTETE + 'Toamasina,Chez X,Restaurant,"-18.15, 49.41"\n') == []
+
+
+def test_colonne_obligatoire_non_reprise_par_une_facultative():
+    """« Latitude / longitude » reste la colonne des coordonnées."""
+    (etab,) = lire(ENTETE + 'Toamasina,Chez X,Restaurant,"-18.15, 49.41"\n')
+    assert etab["lat"] == -18.15
+    assert "adresse" not in etab
 
 
 # --------------------------------------------------------------------------- #
@@ -185,35 +242,35 @@ def _carre(nom, lon, lat, cote=1.0, trous=()):
 @pytest.fixture
 def deux_carres(tmp_path):
     """Deux régions jointives : Est sur [46,47], Ouest sur [45,46]."""
-    return embed_build.charger_regions(
+    return partenaires_build.charger_regions(
         _geojson(tmp_path / "adm1.geojson", [_carre("Est", 46, -19), _carre("Ouest", 45, -19)])
     )
 
 
 def test_point_dans_le_polygone(deux_carres):
-    assert embed_build.region_de(-18.5, 46.5, deux_carres) == "Est"
-    assert embed_build.region_de(-18.5, 45.5, deux_carres) == "Ouest"
+    assert partenaires_build.region_de(-18.5, 46.5, deux_carres) == "Est"
+    assert partenaires_build.region_de(-18.5, 45.5, deux_carres) == "Ouest"
 
 
 def test_sans_coordonnees_pas_de_region(deux_carres):
-    assert embed_build.region_de(None, None, deux_carres) == ""
-    assert embed_build.region_de(-18.5, None, deux_carres) == ""
+    assert partenaires_build.region_de(None, None, deux_carres) == ""
+    assert partenaires_build.region_de(-18.5, None, deux_carres) == ""
 
 
 def test_sans_limites_pas_de_region():
     """L'absence de `data/geo/` n'est pas une erreur : l'instantané s'en passe."""
-    assert embed_build.charger_regions(Path("/introuvable/adm1.geojson")) == []
-    assert embed_build.region_de(-18.5, 46.5, []) == ""
+    assert partenaires_build.charger_regions(Path("/introuvable/adm1.geojson")) == []
+    assert partenaires_build.region_de(-18.5, 46.5, []) == ""
 
 
 def test_point_juste_hors_du_polygone_est_rattache(deux_carres):
     """Trait de côte simplifié, GPS approximatif : on rattache au plus proche."""
-    assert embed_build.region_de(-18.5, 47.05, deux_carres) == "Est"
+    assert partenaires_build.region_de(-18.5, 47.05, deux_carres) == "Est"
 
 
 def test_point_trop_loin_reste_sans_region(deux_carres):
     """Au-delà de la tolérance, la coordonnée est trop douteuse pour trancher."""
-    assert embed_build.region_de(-18.5, 49.0, deux_carres) == ""
+    assert partenaires_build.region_de(-18.5, 49.0, deux_carres) == ""
 
 
 def test_multipolygone_et_trou(tmp_path):
@@ -235,15 +292,15 @@ def test_multipolygone_et_trou(tmp_path):
         "properties": {"nom_zone": "Atoll"},
         "geometry": {"type": "Polygon", "coordinates": lagon},
     }
-    regions = embed_build.charger_regions(_geojson(tmp_path / "adm1.geojson", [ile, atoll]))
+    regions = partenaires_build.charger_regions(_geojson(tmp_path / "adm1.geojson", [ile, atoll]))
 
-    assert embed_build.region_de(-18.5, 46.5, regions) == "Archipel"
-    assert embed_build.region_de(-12.5, 50.5, regions) == "Archipel"  # second polygone
-    assert embed_build.region_de(-18.5, 40.5, regions) == "Atoll"
+    assert partenaires_build.region_de(-18.5, 46.5, regions) == "Archipel"
+    assert partenaires_build.region_de(-12.5, 50.5, regions) == "Archipel"  # second polygone
+    assert partenaires_build.region_de(-18.5, 40.5, regions) == "Atoll"
     # Le trou est bien exclu : au centre, la terre est trop loin pour trancher…
-    assert embed_build.region_de(-17.5, 41.5, regions) == ""
+    assert partenaires_build.region_de(-17.5, 41.5, regions) == ""
     # … mais un point tout contre sa rive rejoint la région qui l'entoure.
-    assert embed_build.region_de(-17.02, 41.5, regions) == "Atoll"
+    assert partenaires_build.region_de(-17.02, 41.5, regions) == "Atoll"
 
 
 def test_table_ville_region_et_completion(deux_carres):
@@ -253,20 +310,20 @@ def test_table_ville_region_et_completion(deux_carres):
         {"nom": "C", "province": "Tolagnaro", "lat": None, "lon": None},
         {"nom": "D", "province": "Inconnue", "lat": None, "lon": None},
     ]
-    assert embed_build.ajouter_regions(etablissements, deux_carres) == 2
+    assert partenaires_build.ajouter_regions(etablissements, deux_carres) == 2
 
-    table = embed_build.regions_par_ville(etablissements)
+    table = partenaires_build.regions_par_ville(etablissements)
     assert table == {"Tolagnaro": "Est"}
 
     # La fiche sans coordonnée exploitable hérite de la région de sa ville ;
     # celle dont la ville est inconnue reste sans région.
-    assert embed_build.completer_par_ville(etablissements, table) == 1
+    assert partenaires_build.completer_par_ville(etablissements, table) == 1
     assert [e["region"] for e in etablissements] == ["Est", "Est", "Est", ""]
 
 
 def test_limites_du_depot_situent_les_villes_du_sheet():
     """Test d'intégration : vraies limites ADM1, vraies coordonnées du Sheet."""
-    regions = embed_build.charger_regions()
+    regions = partenaires_build.charger_regions()
     if not regions:
         pytest.skip("data/geo/mdg_adm1.geojson absent")
 
@@ -279,7 +336,7 @@ def test_limites_du_depot_situent_les_villes_du_sheet():
         (-18.158589, 49.412152): "Atsinanana",  # Toamasina
     }
     for (lat, lon), region in attendu.items():
-        assert embed_build.region_de(lat, lon, regions) == region
+        assert partenaires_build.region_de(lat, lon, regions) == region
 
 
 # --------------------------------------------------------------------------- #
@@ -289,23 +346,31 @@ def test_limites_du_depot_situent_les_villes_du_sheet():
 
 def test_instantane_est_du_javascript_lisible():
     """Le fichier généré doit rester une simple affectation de variable."""
-    rendu = embed_build.render(lire(ENTETE + 'Toamasina,Chez X,Restaurant,"-18.15, 49.41"\n'), "2026-01-01T00:00:00Z")
+    fiches = lire(ENTETE + 'Toamasina,Chez X,Restaurant,"-18.15, 49.41"\n')
+    rendu = partenaires_build.render(fiches, "2026-01-01T00:00:00Z", {}, [])
     assert rendu.startswith("/*")
-    assert "window.EARIARY_SNAPSHOT = {" in rendu
+    assert "window.EARIARY_PARTENAIRES = {" in rendu
     assert rendu.rstrip().endswith("};")
     assert "Chez X" in rendu  # accents et guillemets non échappés en \uXXXX
 
 
 def test_instantane_porte_la_table_ville_region():
     """La page tableau s'en sert pour les lignes relues en direct du Sheet."""
-    rendu = embed_build.render([], "2026-01-01T00:00:00Z", {"Tolagnaro": "Anosy"})
+    rendu = partenaires_build.render([], "2026-01-01T00:00:00Z", {"Tolagnaro": "Anosy"}, [])
     assert '"regions_par_ville"' in rendu
     assert '"Tolagnaro": "Anosy"' in rendu
 
 
+def test_instantane_annonce_les_champs_facultatifs():
+    """Les pages s'en servent pour décider d'afficher la colonne « Contact »."""
+    rendu = partenaires_build.render([], "2026-01-01T00:00:00Z", {}, ["telephone"])
+    assert '"champs"' in rendu
+    assert '"telephone"' in rendu
+
+
 def test_instantane_du_depot_est_coherent():
     """L'instantané versionné doit être lisible et non vide."""
-    fichier = RACINE / "static" / "embed" / "assets" / "etablissements.js"
+    fichier = RACINE / "partenaires" / "assets" / "instantane.js"
     contenu = fichier.read_text(encoding="utf-8")
-    assert "window.EARIARY_SNAPSHOT" in contenu
+    assert "window.EARIARY_PARTENAIRES" in contenu
     assert '"etablissements"' in contenu

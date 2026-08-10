@@ -1,9 +1,3 @@
-[server]
-# Sert le dossier `static/` sous <url-de-l-app>/app/static/…, ce qui héberge la
-# page publique `static/embed/` sans second déploiement : l'application interne
-# et la page à intégrer vivent au même endroit et se déploient ensemble.
-enableStaticServing = true
-
 [theme]
 base = "light"
 

@@ -21,7 +21,6 @@ import io
 import re
 import unicodedata
 from pathlib import Path
-from urllib.parse import urlsplit
 
 import numpy as np
 import pandas as pd
@@ -46,6 +45,10 @@ except Exception:  # ImportError, mais aussi geopandas absent ou cassé
 SHEET_ID = "1D15egjrBB_9eNCXC-THxZcSqvNtf7ttfssdcVDRu8Yo"
 GID = "0"
 CSV_URL = f"https://docs.google.com/spreadsheets/d/{SHEET_ID}/export?format=csv&gid={GID}"
+
+# Pages publiques à intégrer, publiées par GitHub Pages depuis `partenaires/`.
+# La vue « Intégration » s'en sert pour les liens, le code à copier et l'aperçu.
+PAGES_PUBLIQUES = "https://jejew03.github.io/carte-partenaire-eariary/partenaires"
 
 # Chaque catégorie : (couleur du marqueur Folium, icône Font Awesome 6, teinte
 # exacte du marqueur). La teinte sert à la légende, pour qu'elle corresponde
@@ -1799,28 +1802,18 @@ if vue == "Pré-inscrits":
 
 if vue == "Intégration":
     # ----------------------- Pages publiques à intégrer ------------------------ #
-    # `static/embed/` est servi par Streamlit lui-même (enableStaticServing dans
-    # .streamlit/config.toml) : les pages publiques se déploient avec l'application,
-    # à la même adresse, sans hébergement séparé à maintenir.
-    _base = (st.get_option("server.baseUrlPath") or "").strip("/")
-    # Chemin absolu depuis la racine du site : `st.iframe` ne reconnaît un chemin
-    # relatif que s'il commence par « / » — sans cette barre, il prend la chaîne
-    # pour du HTML brut et affiche le chemin en toutes lettres.
-    _racine_embed = f"/{_base}/app/static/embed" if _base else "/app/static/embed"
-
-    try:
-        # Seule l'origine nous intéresse : `st.context.url` porte déjà le chemin de
-        # base, que `_racine_embed` répète.
-        _parts = urlsplit(st.context.url)
-        _origine = f"{_parts.scheme}://{_parts.netloc}" if _parts.netloc else ""
-    except Exception:  # contexte indisponible (exécution hors serveur, tests)
-        _origine = ""
+    # Les pages vivent dans `partenaires/`, à la racine du dépôt, et sont publiées
+    # par GitHub Pages. L'application n'en héberge aucune copie : il n'existe
+    # qu'une seule version en ligne, et les adresses ci-dessous sont celles que
+    # l'on donne aux intégrateurs — elles n'exigent aucune connexion,
+    # contrairement à cette application.
+    # Voir `partenaires/README.md` pour les paramètres d'URL et les messages.
 
     # Deux pages, même dossier : la carte, et le tableau filtrable par région et
     # par type de marchand. Hauteurs conseillées différentes — le tableau n'a pas
     # de carte à laisser respirer.
     EMBED_PAGES = [
-        ("Carte", "index.html", 620, "Carte et liste des établissements, filtres ville et catégorie."),
+        ("Carte", "carte.html", 620, "Carte et liste des établissements, filtres ville et catégorie."),
         (
             "Tableau",
             "tableau.html",
@@ -1844,7 +1837,7 @@ if vue == "Intégration":
     )
 
     for _titre, _fichier, _hauteur, _sous_titre in EMBED_PAGES:
-        _url = f"{_origine}{_racine_embed}/{_fichier}"
+        _url = f"{PAGES_PUBLIQUES}/{_fichier}"
         st.markdown(f"**{_titre}** — {_sous_titre}")
         st.link_button(
             f"Ouvrir la page « {_titre} »",
