@@ -1,0 +1,67 @@
+# Instantané des partenaires — régénéré depuis le Google Sheet.
+name: Instantané des partenaires
+
+# Les pages `partenaires/` relisent le Sheet elles-mêmes dans le navigateur ;
+# l'instantané versionné n'est là que pour l'affichage immédiat et pour les cas
+# où cette relecture n'aboutit pas (Sheet redevenu privé, hôte dont la politique
+# de sécurité interdit docs.google.com, visiteur hors ligne). Il doit donc
+# suivre le Sheet sans que personne n'ait à y penser.
+on:
+  schedule:
+    # Toutes les heures, à la 17e minute : le haut de l'heure est l'instant le
+    # plus encombré chez GitHub, et les tâches planifiées y sont retardées.
+    - cron: "17 * * * *"
+  # Bouton « Run workflow » dans l'onglet Actions : à utiliser juste après une
+  # grosse saisie dans le Sheet, plutôt que d'attendre l'heure suivante.
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+# Deux exécutions ne doivent pas se marcher dessus : la seconde pousserait sur
+# une branche que la première vient de faire avancer.
+concurrency:
+  group: instantane-partenaires
+  cancel-in-progress: false
+
+jobs:
+  regenerer:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      # `build.py` n'utilise que la bibliothèque standard : rien à installer.
+      - name: Régénérer l'instantané
+        id: build
+        run: |
+          if python partenaires/build.py --check; then
+            echo "maj=non" >> "$GITHUB_OUTPUT"
+          elif python partenaires/build.py; then
+            echo "maj=oui" >> "$GITHUB_OUTPUT"
+          else
+            # Google injoignable ou Sheet repassé en privé : l'instantané
+            # existant reste la meilleure donnée disponible. On avertit sans
+            # faire échouer le workflow — une panne passagère chez Google ne
+            # doit pas remplir la boîte de notifications d'échecs.
+            echo "::warning::Lecture du Google Sheet impossible ; instantané laissé inchangé."
+            echo "maj=non" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Publier la mise à jour
+        if: steps.build.outputs.maj == 'oui'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add partenaires/assets/instantane.js
+          # `--check` a déjà comparé hors date de génération, mais un `git add`
+          # sans modification ferait échouer `git commit` : on s'en assure.
+          if git diff --cached --quiet; then
+            echo "Rien à publier."
+            exit 0
+          fi
+          git commit -m "Met à jour l'instantané des partenaires depuis le Google Sheet"
+          git push
