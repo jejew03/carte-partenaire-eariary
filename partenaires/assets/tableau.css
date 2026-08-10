@@ -1,0 +1,239 @@
+/* Page tableau — complément de `theme.css`, qui porte le thème, l'ossature et
+ * la barre de filtres. Ce fichier n'ajoute que le registre lui-même.
+ *
+ * Même parti pris que la carte : filets d'un pixel, angles vifs, aucune ombre
+ * portée, aucune alternance de fond. Un registre officiel se tient par ses
+ * filets et son alignement, pas par des bandes colorées.
+ */
+
+.app > .table-wrap {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: auto;
+  background: var(--paper);
+  scrollbar-width: thin;
+  scrollbar-color: var(--rule-strong) transparent;
+  -webkit-overflow-scrolling: touch;
+}
+
+.registre {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.85rem;
+}
+
+/* -------------------------------- En-têtes -------------------------------- */
+
+/* Collés en haut : la première colonne se lit encore après deux cents lignes.
+   Le fond doit être opaque, sinon les lignes défilent au travers. */
+.registre thead th {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  padding: 0;
+  border-bottom: 1px solid var(--rule-strong);
+  background: var(--ground);
+  text-align: left;
+  white-space: nowrap;
+}
+
+.registre thead th,
+.registre thead th button,
+.registre thead th .fixe {
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.registre thead th button {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  width: 100%;
+  padding: 0.5rem 0.7rem;
+  border: 0;
+  background: none;
+  font-family: inherit;
+  cursor: pointer;
+}
+.registre thead th button:hover { color: var(--ink); }
+
+/* Le sens du tri se lit au chevron et à l'encre du libellé — jamais à la
+   couleur seule. `aria-sort` porte la même information aux lecteurs d'écran. */
+.registre thead th[aria-sort="ascending"] button,
+.registre thead th[aria-sort="descending"] button { color: var(--ink); }
+.registre thead th[aria-sort="ascending"] button::after,
+.registre thead th[aria-sort="descending"] button::after {
+  content: "";
+  width: 0;
+  height: 0;
+  border-left: 3.5px solid transparent;
+  border-right: 3.5px solid transparent;
+}
+.registre thead th[aria-sort="ascending"] button::after {
+  border-bottom: 4.5px solid currentColor;
+}
+.registre thead th[aria-sort="descending"] button::after {
+  border-top: 4.5px solid currentColor;
+}
+
+/* Colonnes non triables — « Contact », « Localisation » : leur en-tête est un
+   simple libellé, pas un bouton qui ne ferait rien. */
+.registre thead th .fixe { display: block; padding: 0.5rem 0.7rem; }
+.registre thead th:first-child button,
+.registre thead th:first-child .fixe { padding-left: var(--pad); }
+.registre thead th.col-lien .fixe { padding-right: var(--pad); text-align: right; }
+
+/* --------------------------------- Lignes --------------------------------- */
+
+.registre td {
+  padding: 0.5rem 0.7rem;
+  border-bottom: 1px solid var(--rule);
+  vertical-align: baseline;
+}
+.registre td:first-child {
+  padding-left: calc(var(--pad) - 2px);
+  border-left: 2px solid transparent;
+}
+.registre td:last-child { padding-right: var(--pad); }
+
+.registre tbody tr:hover td { background: var(--ground); }
+/* Fiche désignée à l'hôte : filet d'accent en marge, comme la fiche
+   sélectionnée de la liste de la page carte. */
+.registre tbody tr[aria-current="true"] td { background: var(--ground); }
+.registre tbody tr[aria-current="true"] td:first-child { border-left-color: var(--accent); }
+
+.registre .c-nom button.nom {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  font-weight: 600;
+  text-align: left;
+  cursor: pointer;
+}
+.registre .c-nom button.nom:hover { text-decoration: underline; text-underline-offset: 0.2em; }
+
+/* Adresse et horaires, quand le Sheet les porte : sous le nom, en retrait
+   d'encre. Ce sont des précisions sur « où » et « quand », pas des colonnes —
+   leur donner une colonne chacune ferait un registre illisible. */
+.registre .c-nom .sous {
+  margin-top: 0.15rem;
+  font-size: 0.78rem;
+  line-height: 1.35;
+  color: var(--muted);
+  font-weight: 400;
+}
+.registre .c-nom .sous .sep { color: var(--rule-strong); margin: 0 0.35rem; }
+
+.registre .c-type { white-space: nowrap; }
+.registre .c-type .swatch {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  margin-right: 0.45rem;
+  vertical-align: baseline;
+}
+
+.registre .c-region { white-space: nowrap; }
+.registre .c-ville { color: var(--ink-soft); white-space: nowrap; }
+
+/* Colonne « Contact » : présente seulement si le Sheet porte un téléphone ou
+   un site. Un numéro par ligne, en chasse fixe — on le lit chiffre à chiffre
+   et on le recopie. */
+.registre .c-contact { white-space: nowrap; }
+/* Numéro puis site, l'un sous l'autre : sur la même ligne, deux liens voisins
+   se confondent et on ne sait plus lequel appelle. */
+.registre .c-contact .infos {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.2rem;
+}
+.registre .c-contact .tel {
+  font-family: var(--mono);
+  font-size: 0.78rem;
+  color: var(--accent);
+  text-decoration: none;
+  border-bottom: 1px solid currentColor;
+  padding-bottom: 1px;
+}
+
+.registre .c-lien { text-align: right; white-space: nowrap; }
+
+.registre .warn { color: var(--muted); font-size: 0.8rem; }
+
+/* ------------------------------- Responsive ------------------------------- */
+
+/* La barre de la page carte n'a qu'une liste déroulante ; celle-ci en a deux,
+   qui débordent en écran étroit. Recherche sur toute la largeur, les deux
+   filtres côte à côte, le compte et la réinitialisation à la ligne suivante. */
+@media (max-width: 680px) {
+  .tableau .controls .field { flex: 1 1 100%; }
+  .tableau .controls select { flex: 1 1 0; min-width: 0; }
+  .tableau .controls .spacer { display: none; }
+  .tableau .tally { flex: 1 1 100%; }
+}
+
+/* Sous 680 px, cinq ou six colonnes ne tiennent plus : chaque ligne devient un
+   bloc et les en-têtes de colonne repassent en étiquette de champ, via
+   data-label. Un défilement horizontal serait plus simple, mais on ne lit pas
+   un registre en le poussant de gauche à droite. */
+@media (max-width: 680px) {
+  /* Le tableau redevient une suite de blocs. Sans cela il garde sa disposition
+     de tableau, dont la largeur minimale — celle du plus long nom
+     d'établissement — déborde de l'écran et pousse toute la page. */
+  .registre,
+  .registre tbody { display: block; }
+  .registre thead { display: none; }
+  .registre tbody tr {
+    display: block;
+    padding: 0.7rem var(--pad);
+    border-bottom: 1px solid var(--rule);
+    border-left: 2px solid transparent;
+  }
+  .registre tbody tr[aria-current="true"] { border-left-color: var(--accent); }
+  .registre td,
+  .registre td:first-child,
+  .registre td:last-child {
+    display: flex;
+    gap: 0.5rem;
+    padding: 0;
+    border: 0;
+    text-align: left;
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
+  .registre td + td { margin-top: 0.2rem; }
+  .registre td::before {
+    content: attr(data-label);
+    flex: none;
+    width: 6.5rem;
+    font-size: 0.68rem;
+    font-weight: 600;
+    letter-spacing: 0.09em;
+    text-transform: uppercase;
+    white-space: nowrap;
+    color: var(--muted);
+    /* L'étiquette s'aligne sur la première ligne du champ, pas au centre d'un
+       nom qui peut courir sur deux lignes. */
+    line-height: 1.6;
+  }
+  /* Le nom fait office de titre du bloc : l'étiqueter « Établissement »
+     n'apprend rien et, à cette longueur, l'étiquette mange la moitié de la
+     largeur. Les autres champs, eux, ont besoin d'être nommés. */
+  .registre .c-nom { display: block; margin-bottom: 0.25rem; }
+  .registre .c-nom::before { content: none; }
+  .registre .c-nom button.nom { font-size: 0.9rem; }
+  /* En bloc, la largeur manque moins : numéro et site tiennent côte à côte,
+     et l'étiquette « Contact » reste seule dans sa colonne de gauche. */
+  .registre .c-contact { flex-wrap: wrap; }
+  .registre .c-contact .infos { flex-direction: row; flex-wrap: wrap; gap: 0.2rem 0.75rem; }
+}
+
+@media (max-width: 520px) {
+  .registre td::before { width: 5.5rem; }
+}

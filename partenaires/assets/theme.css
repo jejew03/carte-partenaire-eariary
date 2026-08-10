@@ -1,0 +1,339 @@
+/* Registre des partenaires eAriary — socle commun aux deux pages.
+ *
+ * Ce fichier ne porte que ce que la carte et le tableau partagent : le thème,
+ * l'ossature verticale, la titraille, la barre de filtres et la note de
+ * provenance. Le reste vit dans `carte.css` et `tableau.css`, que chaque page
+ * charge seule — le tableau n'a ainsi pas à lire trois cents lignes de styles
+ * Leaflet dont il ne se sert pas.
+ *
+ * Parti pris : registre public, pas widget. Encre sur papier, filets d'un
+ * pixel, angles vifs, un seul accent, titraille en romain à empattements et
+ * étiquettes en petites capitales espacées. Rien qui signale « composant
+ * embarqué » : ni cadre, ni ombre portée, ni pastille d'état colorée — la
+ * provenance des données est une note de bas de page, comme dans une
+ * publication officielle.
+ *
+ * Aucune police n'est téléchargée : les pages doivent rester autonomes, sans
+ * CDN ni politique de sécurité à assouplir chez l'hôte. On compose donc avec
+ * les familles présentes sur les systèmes.
+ */
+
+:root {
+  /* Papier chaud plutôt que gris bleuté : la page ne doit pas se lire comme
+     une interface d'outil posée dans la page de l'hôte. */
+  --paper: #ffffff;
+  --ground: #f5f4f1;
+  --ground-2: #ebe9e4;
+  --rule: #dcd9d2;
+  --rule-strong: #b5b0a6;
+  --ink: #1b1a17;
+  --ink-soft: #45433d;
+  --muted: #78746b;
+  --accent: #1a4066;
+  --accent-soft: #e8edf3;
+  /* Voile posé sur les tuiles, derrière l'attribution et l'échelle. */
+  --veil: rgb(255 255 255 / 0.88);
+
+  --serif: "Iowan Old Style", "Hoefler Text", "Palatino Linotype", Palatino,
+    Georgia, "Times New Roman", serif;
+  --sans: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
+    "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+
+  --radius: 2px;
+  --pad: 1.15rem;
+  color-scheme: light;
+}
+
+/* Thème sombre : automatique, ou forcé par ?theme=sombre / ?theme=clair —
+   l'attribut data-theme sur <html> gagne toujours sur la préférence système. */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="clair"]) {
+    --paper: #141311;
+    --ground: #1c1b18;
+    --ground-2: #24221d;
+    --rule: #33302a;
+    --rule-strong: #524d44;
+    --ink: #eceae5;
+    --ink-soft: #cbc8c1;
+    --muted: #948f86;
+    --accent: #9dbdda;
+    --accent-soft: #212e3a;
+    --veil: rgb(20 19 17 / 0.88);
+    color-scheme: dark;
+  }
+}
+:root[data-theme="sombre"] {
+  --paper: #141311;
+  --ground: #1c1b18;
+  --ground-2: #24221d;
+  --rule: #33302a;
+  --rule-strong: #524d44;
+  --ink: #eceae5;
+  --ink-soft: #cbc8c1;
+  --muted: #948f86;
+  --accent: #9dbdda;
+  --accent-soft: #212e3a;
+  --veil: rgb(20 19 17 / 0.88);
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+
+html, body { height: 100%; margin: 0; }
+
+body {
+  font-family: var(--sans);
+  font-size: 15px;
+  line-height: 1.45;
+  color: var(--ink);
+  background: var(--paper);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+/* Petites capitales espacées : la seule ornementation typographique des
+   pages, réservée aux étiquettes. */
+.eyebrow {
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+}
+
+/* Réservé aux lecteurs d'écran : ce que la mise en page donne à l'œil seul. */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+/* ------------------------------- Ossature -------------------------------- */
+
+/* Colonne flex plutôt que grille : les onglets carte/liste n'existent qu'en
+   écran étroit, et un enfant masqué ne doit pas consommer de rangée. */
+.app {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+}
+.app > .head,
+.app > .bar,
+.app > .source { flex: none; }
+
+/* -------------------------------- Titraille ------------------------------ */
+
+.head {
+  padding: 1rem var(--pad) 0.85rem;
+  border-bottom: 1px solid var(--rule);
+}
+/* header=0 retire toute la titraille, note de source comprise : l'hôte
+   fournit alors son propre titre, et la page se fond dans sa mise en page. */
+.app[data-header="0"] .head,
+.app[data-header="0"] .source { display: none; }
+
+.head h1 {
+  margin: 0;
+  font-family: var(--serif);
+  font-size: 1.22rem;
+  font-weight: 600;
+  line-height: 1.25;
+  letter-spacing: 0;
+}
+.head p {
+  margin: 0.2rem 0 0;
+  max-width: 62ch;
+  font-size: 0.82rem;
+  color: var(--muted);
+}
+
+/* -------------------------------- Filtres -------------------------------- */
+
+.bar {
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+  padding: 0.7rem var(--pad) 0.75rem;
+  border-bottom: 1px solid var(--rule);
+}
+
+.controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.field { position: relative; flex: 1 1 200px; min-width: 160px; }
+.field svg {
+  position: absolute;
+  left: 0.55rem;
+  top: 50%;
+  width: 14px;
+  height: 14px;
+  transform: translateY(-50%);
+  fill: var(--muted);
+  pointer-events: none;
+}
+
+input[type="search"],
+select {
+  width: 100%;
+  padding: 0.4rem 0.6rem;
+  border: 1px solid var(--rule);
+  border-radius: var(--radius);
+  background: var(--paper);
+  color: var(--ink);
+  font: inherit;
+  font-size: 0.85rem;
+}
+input[type="search"] { padding-left: 1.85rem; }
+input[type="search"]::placeholder { color: var(--muted); }
+input[type="search"]::-webkit-search-cancel-button { filter: grayscale(1); }
+select { flex: 0 1 200px; width: auto; min-width: 160px; }
+input[type="search"]:hover,
+select:hover { border-color: var(--rule-strong); }
+
+input:focus-visible,
+select:focus-visible,
+button:focus-visible,
+a:focus-visible,
+[tabindex]:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+
+.controls .spacer { flex: 1 1 0; }
+
+/* Compte et réinitialisation restent solidaires : en écran étroit ils passent
+   à la ligne ensemble plutôt que de comprimer les listes déroulantes. */
+.tally {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.count {
+  font-size: 0.78rem;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.reset {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--ink-soft);
+  font: inherit;
+  font-size: 0.78rem;
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
+  cursor: pointer;
+}
+.reset:hover { color: var(--ink); }
+.reset[hidden] { display: none; }
+
+/* Catégories : légende et filtre à la fois. Le carré de couleur reste toujours
+   à pleine opacité — c'est une clé de lecture, pas un état ; ce sont l'encre
+   du libellé et le filet sous le mot qui portent la sélection, jamais la
+   couleur seule. */
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem 1rem;
+}
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.1rem 0;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  background: none;
+  color: var(--muted);
+  font: inherit;
+  font-size: 0.8rem;
+  cursor: pointer;
+  transition: color 0.12s ease, border-color 0.12s ease;
+}
+.chip:hover { color: var(--ink-soft); }
+.chip[aria-pressed="true"] {
+  color: var(--ink);
+  border-bottom-color: var(--ink);
+  font-weight: 600;
+}
+.chip .swatch { width: 8px; height: 8px; flex: none; }
+.chip .n {
+  font-variant-numeric: tabular-nums;
+  font-weight: 400;
+  color: var(--muted);
+  font-size: 0.74rem;
+}
+
+/* ---------------------------- États et vides ----------------------------- */
+
+.empty {
+  margin: 0;
+  padding: 2.5rem var(--pad);
+  text-align: center;
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+.empty[hidden] { display: none; }
+
+/* --------------------------- Note de provenance -------------------------- */
+
+/* Une mention de source en pied de page, comme dans une publication : elle dit
+   d'où viennent les chiffres et de quand ils datent. Tant qu'aucune donnée
+   n'est chargée, la note n'a rien à dire — un filet vide se remarquerait. */
+.source:empty { display: none; }
+.source {
+  margin: 0;
+  padding: 0.45rem var(--pad) 0.55rem;
+  border-top: 1px solid var(--rule);
+  background: var(--paper);
+  font-size: 0.72rem;
+  line-height: 1.4;
+  color: var(--muted);
+}
+
+/* ------------------------------ Liens sortants --------------------------- */
+
+/* Un seul dessin de lien pour les deux pages : filet sous le mot plutôt que
+   soulignement plein, et le nom du service plutôt qu'une icône seule. */
+.lien {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding-bottom: 1px;
+  border-bottom: 1px solid currentColor;
+  color: var(--accent);
+  font-size: 0.8rem;
+  text-decoration: none;
+}
+.lien svg {
+  width: 10px;
+  height: 10px;
+  fill: currentColor;
+  flex: none;
+}
+
+/* ------------------------------- Responsive ------------------------------ */
+
+@media (max-width: 520px) {
+  :root { --pad: 0.85rem; }
+  .head { padding-top: 0.8rem; }
+  .head h1 { font-size: 1.1rem; }
+  .chip .n { display: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * { transition: none !important; animation: none !important; }
+}

@@ -1,0 +1,262 @@
+/* Page carte — complément de `theme.css`, qui porte le thème, l'ossature et la
+ * barre de filtres. Ce fichier n'ajoute que la carte, la liste latérale et les
+ * retouches apportées à Leaflet.
+ */
+
+.app > .tabs { flex: none; }
+.app > .body { flex: 1 1 auto; }
+
+/* Bascule carte / liste, seulement utile en écran étroit */
+.tabs { display: none; gap: 1.1rem; padding: 0.5rem var(--pad) 0; }
+.tabs button {
+  padding: 0.35rem 0.1rem;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  background: none;
+  color: var(--muted);
+  font: inherit;
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+.tabs button[aria-selected="true"] {
+  color: var(--ink);
+  border-bottom-color: var(--ink);
+}
+
+/* --------------------------------- Corps --------------------------------- */
+
+.body {
+  display: grid;
+  grid-template-columns: 1fr 21rem;
+  min-height: 0;
+}
+.app[data-view="carte"] .body { grid-template-columns: 1fr; }
+.app[data-view="carte"] .list { display: none; }
+.app[data-view="liste"] .body { grid-template-columns: 1fr; }
+.app[data-view="liste"] .map { display: none; }
+
+.map { min-height: 0; background: var(--ground-2); }
+
+.list {
+  min-height: 0;
+  overflow-y: auto;
+  border-left: 1px solid var(--rule);
+  background: var(--paper);
+  scrollbar-width: thin;
+  scrollbar-color: var(--rule-strong) transparent;
+  -webkit-overflow-scrolling: touch;
+}
+.app[data-view="liste"] .list { border-left: 0; }
+
+.group {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  display: flex;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding: 0.45rem var(--pad) 0.4rem;
+  border-bottom: 1px solid var(--rule);
+  background: var(--ground);
+  color: var(--muted);
+}
+.group .n { font-variant-numeric: tabular-nums; font-weight: 400; }
+
+.item {
+  display: block;
+  width: 100%;
+  padding: 0.7rem var(--pad);
+  border: 0;
+  border-bottom: 1px solid var(--rule);
+  border-left: 2px solid transparent;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.item:hover { background: var(--ground); }
+.item[aria-current="true"] {
+  border-left-color: var(--accent);
+  background: var(--ground);
+}
+.item .nom { font-size: 0.88rem; font-weight: 600; line-height: 1.3; }
+.item .meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem;
+  margin-top: 0.28rem;
+  font-size: 0.78rem;
+  color: var(--muted);
+}
+.item .meta .swatch { width: 7px; height: 7px; flex: none; }
+.item .meta .sep { color: var(--rule-strong); }
+
+/* Adresse, horaires, téléphone : présents seulement si le Sheet porte ces
+   colonnes. Une ligne discrète sous la métadonnée, jamais un second bloc —
+   la fiche de liste reste un repère, le détail est dans le popup. */
+.item .infos {
+  margin-top: 0.28rem;
+  font-size: 0.76rem;
+  line-height: 1.4;
+  color: var(--ink-soft);
+}
+.item .infos .champ { display: block; }
+.item .infos .champ + .champ { margin-top: 0.1rem; }
+
+.item .warn {
+  display: inline-block;
+  margin-top: 0.35rem;
+  padding-left: 0.5rem;
+  border-left: 2px solid var(--rule-strong);
+  font-size: 0.74rem;
+  color: var(--muted);
+}
+
+/* ------------------------------ Carte Leaflet ---------------------------- */
+
+.leaflet-container {
+  height: 100%;
+  font-family: var(--sans);
+  background: var(--ground-2);
+}
+.leaflet-container a { color: var(--accent); }
+
+/* Repère : disque plein cerné de blanc, glyphe distinct par catégorie. Le
+   disque se lit comme un symbole de carte ; la goutte, elle, évoque une
+   application de navigation. */
+.pin { background: none; border: 0; }
+.pin svg { display: block; filter: drop-shadow(0 1px 1.5px rgb(0 0 0 / 0.3)); }
+.pin .ring { stroke: var(--ink); }
+.pin.on { z-index: 1000 !important; }
+
+/* Commandes de carte : mêmes filets que le reste de la page, angles vifs,
+   aucune ombre — Leaflet arrondit et ombre tout par défaut. */
+.leaflet-bar,
+.leaflet-control-layers,
+.leaflet-control-scale-line {
+  border: 1px solid var(--rule) !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  background: var(--paper);
+}
+.leaflet-bar a,
+.leaflet-bar a:hover {
+  width: 28px;
+  height: 28px;
+  line-height: 28px;
+  border-radius: 0;
+  border-bottom-color: var(--rule);
+  background: var(--paper);
+  color: var(--ink);
+}
+.leaflet-bar a:hover { background: var(--ground); }
+.leaflet-bar a.leaflet-disabled { background: var(--ground); color: var(--rule-strong); }
+.leaflet-control-layers-toggle { background-color: var(--paper); }
+.leaflet-control-layers-expanded {
+  padding: 0.5rem 0.7rem 0.5rem 0.55rem;
+  color: var(--ink-soft);
+  font-size: 0.78rem;
+}
+.leaflet-control-layers-selector { accent-color: var(--accent); }
+.leaflet-control-scale-line {
+  border-top: 0 !important;
+  padding: 0 0.35rem;
+  color: var(--ink-soft);
+  font-size: 0.66rem;
+  font-variant-numeric: tabular-nums;
+}
+.leaflet-control-attribution {
+  padding: 0 0.4rem;
+  border-top: 1px solid var(--rule);
+  border-left: 1px solid var(--rule);
+  background: var(--veil) !important;
+  color: var(--muted);
+  font-size: 0.65rem;
+}
+/* Le bouton des fonds de carte est une image PNG sombre fournie par Leaflet :
+   c'est le seul élément de commande à inverser en thème sombre — le reste
+   tient déjà par les variables. */
+:root[data-theme="sombre"] .leaflet-control-layers-toggle {
+  filter: invert(1) hue-rotate(180deg);
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="clair"]) .leaflet-control-layers-toggle {
+    filter: invert(1) hue-rotate(180deg);
+  }
+}
+
+.leaflet-popup-content-wrapper {
+  border: 1px solid var(--rule-strong);
+  border-radius: var(--radius);
+  background: var(--paper);
+  color: var(--ink);
+  box-shadow: 0 2px 8px rgb(0 0 0 / 0.12);
+}
+.leaflet-popup-tip {
+  border: 1px solid var(--rule-strong);
+  background: var(--paper);
+  box-shadow: none;
+}
+.leaflet-popup-content { margin: 0.8rem 0.9rem 0.75rem; min-width: 190px; }
+.leaflet-popup-close-button { color: var(--muted) !important; }
+
+.pop .nom { font-size: 0.9rem; font-weight: 600; line-height: 1.3; }
+.pop .tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin-top: 0.4rem;
+  color: var(--muted);
+}
+.pop .tag .swatch { width: 7px; height: 7px; flex: none; }
+.pop .prov { margin-top: 0.3rem; font-size: 0.8rem; color: var(--ink-soft); }
+
+/* Champs facultatifs du Sheet : adresse, horaires, téléphone, site. Présentés
+   en liste de définitions — l'étiquette dit ce qu'est la valeur, ce qu'un
+   simple empilement de lignes ne ferait pas. Le bloc n'existe pas du tout tant
+   que le Sheet ne porte aucune de ces colonnes. */
+.pop .fiche {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 0.15rem 0.5rem;
+  margin: 0.5rem 0 0;
+  padding-top: 0.45rem;
+  border-top: 1px solid var(--rule);
+  font-size: 0.78rem;
+}
+.pop .fiche dt {
+  color: var(--muted);
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  /* L'étiquette s'aligne sur la première ligne de la valeur, pas au centre
+     d'une adresse qui court sur deux lignes. */
+  line-height: 1.75;
+}
+.pop .fiche dd { margin: 0; color: var(--ink-soft); overflow-wrap: anywhere; }
+.pop .fiche a { color: var(--accent); text-decoration: none; border-bottom: 1px solid currentColor; }
+
+.pop .coords {
+  margin-top: 0.35rem;
+  font-family: var(--mono);
+  font-size: 0.7rem;
+  color: var(--muted);
+}
+.pop .lien { margin-top: 0.65rem; }
+
+/* ------------------------------- Responsive ------------------------------ */
+
+@media (max-width: 860px) {
+  .body { grid-template-columns: 1fr; }
+  .app[data-view="split"] .tabs { display: flex; }
+  .app[data-view="split"] .list { display: none; border-left: 0; }
+  .app[data-view="split"][data-onglet="liste"] .map { display: none; }
+  .app[data-view="split"][data-onglet="liste"] .list { display: block; }
+  .head p { display: none; }
+}
