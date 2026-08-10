@@ -168,9 +168,7 @@ retombe sur l'ancien rendu en cercles proportionnels.
 | `geo_aggregate.py` | jointure spatiale points → polygones et agrégation par zone |
 | `tools/geocode_souscripteurs.py` | même chaîne, hors ligne, à partir du classeur Excel |
 | `tools/fetch_boundaries.py` | récupération et simplification des limites (réseau) |
-| `partenaires/` | pages publiques à intégrer par iframe — carte et tableau ([documentation](partenaires/README.md)) |
 | `tests/test_geo_aggregate.py` | tests du moteur d'agrégation |
-| `tests/test_partenaires_build.py` | tests de la lecture du Sheet et du rattachement à la région |
 | `tests/test_pre_inscrits.py` | tests des règles d'import (sans réseau) |
 | `tests/test_import_ui.py` | test de bout en bout de la section d'import, via `AppTest` |
 
@@ -189,9 +187,10 @@ python -m pytest tests/ -q
 
 ## Pages publiques
 
-`partenaires/` contient deux pages autonomes, destinées au public et à
-l'intégration par `<iframe>` dans une autre application. Elles ne montrent ni
-les pré-souscripteurs ni les indicateurs internes.
+Les pages publiques à intégrer vivent dans un **dépôt séparé**,
+[`partenaires-eariary`](https://github.com/jejew03/partenaires-eariary) : elles n'ont ni le cycle de vie, ni le
+public, ni les dépendances de cette application. Deux pages autonomes, qui ne
+montrent ni les pré-souscripteurs ni les indicateurs internes.
 
 | Page | Contenu |
 |---|---|
@@ -202,25 +201,25 @@ Elles sont publiées par GitHub Pages depuis `main` — **ce sont les adresses �
 diffuser**, elles ne demandent aucune connexion :
 
 ```
-https://jejew03.github.io/carte-partenaire-eariary/partenaires/carte.html
-https://jejew03.github.io/carte-partenaire-eariary/partenaires/tableau.html
+https://jejew03.github.io/partenaires-eariary/carte.html
+https://jejew03.github.io/partenaires-eariary/tableau.html
 ```
 
 L'application affiche ces liens, le code à copier et un aperçu dans sa vue
 « Intégration ». Elle n'héberge aucune copie des pages : il n'existe qu'une
-seule version en ligne. Voir [`partenaires/README.md`](partenaires/README.md)
-pour les paramètres d'URL, les messages `postMessage`, les colonnes du Sheet et
-les conventions de code.
+seule version en ligne. Voir le [README du dépôt](https://github.com/jejew03/partenaires-eariary#readme) pour les
+paramètres d'URL, les messages `postMessage`, les colonnes du Sheet et les
+conventions de code.
 
 Les pages relisent le Google Sheet toutes les cinq minutes : une ligne ajoutée
-à la feuille y apparaît sans rechargement. Une copie de secours embarquée,
-`partenaires/assets/instantane.js`, est régénérée chaque heure par
-[`.github/workflows/instantane-partenaires.yml`](.github/workflows/instantane-partenaires.yml).
+à la feuille y apparaît sans rechargement. Une copie de secours embarquée est
+régénérée chaque heure par un workflow de l'autre dépôt.
 
 La colonne « Région » du tableau ne vient pas du Sheet, dont la colonne
 « Province » mélange villes et anciennes provinces : elle est déduite des
-coordonnées par appartenance au polygone ADM1 de `data/geo/mdg_adm1.geojson`,
-au moment où `partenaires/build.py` régénère l'instantané.
+coordonnées par appartenance au polygone ADM1 de `data/geo/mdg_adm1.geojson`.
+**Ce fichier est dupliqué** dans le dépôt des pages, qui en a besoin sans
+dépendre de celui-ci ; les deux sont figés (millésime COD-AB 2018).
 
 ## Design
 

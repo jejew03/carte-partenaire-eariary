@@ -46,9 +46,10 @@ SHEET_ID = "1D15egjrBB_9eNCXC-THxZcSqvNtf7ttfssdcVDRu8Yo"
 GID = "0"
 CSV_URL = f"https://docs.google.com/spreadsheets/d/{SHEET_ID}/export?format=csv&gid={GID}"
 
-# Pages publiques à intégrer, publiées par GitHub Pages depuis `partenaires/`.
+# Pages publiques à intégrer. Elles vivent dans un dépôt séparé,
+# github.com/jejew03/partenaires-eariary, et sont publiées par GitHub Pages.
 # La vue « Intégration » s'en sert pour les liens, le code à copier et l'aperçu.
-PAGES_PUBLIQUES = "https://jejew03.github.io/carte-partenaire-eariary/partenaires"
+PAGES_PUBLIQUES = "https://jejew03.github.io/partenaires-eariary"
 
 # Chaque catégorie : (couleur du marqueur Folium, icône Font Awesome 6, teinte
 # exacte du marqueur). La teinte sert à la légende, pour qu'elle corresponde
@@ -1802,14 +1803,15 @@ if vue == "Pré-inscrits":
 
 if vue == "Intégration":
     # ----------------------- Pages publiques à intégrer ------------------------ #
-    # Les pages vivent dans `partenaires/`, à la racine du dépôt, et sont publiées
-    # par GitHub Pages. L'application n'en héberge aucune copie : il n'existe
-    # qu'une seule version en ligne, et les adresses ci-dessous sont celles que
-    # l'on donne aux intégrateurs — elles n'exigent aucune connexion,
-    # contrairement à cette application.
-    # Voir `partenaires/README.md` pour les paramètres d'URL et les messages.
+    # Les pages vivent dans un dépôt séparé et sont publiées par GitHub Pages.
+    # Cette application n'en héberge aucune copie : il n'existe qu'une seule
+    # version en ligne, et les adresses ci-dessous sont celles que l'on donne
+    # aux intégrateurs — elles n'exigent aucune connexion, contrairement à
+    # cette application.
+    # Documentation, paramètres d'URL et messages :
+    # https://github.com/jejew03/partenaires-eariary
 
-    # Deux pages, même dossier : la carte, et le tableau filtrable par région et
+    # Deux pages, même dépôt : la carte, et le tableau filtrable par région et
     # par type de marchand. Hauteurs conseillées différentes — le tableau n'a pas
     # de carte à laisser respirer.
     EMBED_PAGES = [
