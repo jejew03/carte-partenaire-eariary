@@ -1,25 +1,26 @@
-# Instantané des partenaires — régénéré depuis le Google Sheet.
+# Régénère partenaires/assets/instantane.js depuis le Google Sheet.
+#
+# Les pages relisent le Sheet elles-mêmes dans le navigateur ; l'instantané
+# versionné sert à l'affichage immédiat et aux cas où cette relecture n'aboutit
+# pas (feuille redevenue privée, visiteur hors ligne, politique de sécurité de
+# l'application hôte interdisant docs.google.com). Il doit donc suivre le Sheet
+# sans intervention.
 name: Instantané des partenaires
 
-# Les pages `partenaires/` relisent le Sheet elles-mêmes dans le navigateur ;
-# l'instantané versionné n'est là que pour l'affichage immédiat et pour les cas
-# où cette relecture n'aboutit pas (Sheet redevenu privé, hôte dont la politique
-# de sécurité interdit docs.google.com, visiteur hors ligne). Il doit donc
-# suivre le Sheet sans que personne n'ait à y penser.
 on:
   schedule:
-    # Toutes les heures, à la 17e minute : le haut de l'heure est l'instant le
-    # plus encombré chez GitHub, et les tâches planifiées y sont retardées.
+    # Toutes les heures. La 17e minute et non l'heure pile : les tâches
+    # planifiées au début d'une heure sont souvent retardées par GitHub.
     - cron: "17 * * * *"
-  # Bouton « Run workflow » dans l'onglet Actions : à utiliser juste après une
-  # grosse saisie dans le Sheet, plutôt que d'attendre l'heure suivante.
+  # Bouton « Run workflow » dans l'onglet Actions, pour forcer une mise à jour
+  # après une grosse saisie sans attendre l'heure suivante.
   workflow_dispatch:
 
 permissions:
   contents: write
 
-# Deux exécutions ne doivent pas se marcher dessus : la seconde pousserait sur
-# une branche que la première vient de faire avancer.
+# Empêche deux exécutions simultanées : la seconde pousserait sur une branche
+# que la première vient de faire avancer.
 concurrency:
   group: instantane-partenaires
   cancel-in-progress: false
@@ -34,19 +35,19 @@ jobs:
         with:
           python-version: "3.12"
 
-      # `build.py` n'utilise que la bibliothèque standard : rien à installer.
+      # build.py n'utilise que la bibliothèque standard : rien à installer.
       - name: Régénérer l'instantané
         id: build
         run: |
           if python partenaires/build.py --check; then
+            # Le Sheet n'a pas changé depuis la dernière génération.
             echo "maj=non" >> "$GITHUB_OUTPUT"
           elif python partenaires/build.py; then
             echo "maj=oui" >> "$GITHUB_OUTPUT"
           else
-            # Google injoignable ou Sheet repassé en privé : l'instantané
-            # existant reste la meilleure donnée disponible. On avertit sans
-            # faire échouer le workflow — une panne passagère chez Google ne
-            # doit pas remplir la boîte de notifications d'échecs.
+            # Google injoignable ou feuille privée. L'instantané existant reste
+            # la meilleure donnée disponible : on avertit sans faire échouer le
+            # workflow, pour ne pas notifier une panne passagère toutes les heures.
             echo "::warning::Lecture du Google Sheet impossible ; instantané laissé inchangé."
             echo "maj=non" >> "$GITHUB_OUTPUT"
           fi
@@ -57,8 +58,7 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add partenaires/assets/instantane.js
-          # `--check` a déjà comparé hors date de génération, mais un `git add`
-          # sans modification ferait échouer `git commit` : on s'en assure.
+          # Filet de sécurité : `git commit` échoue s'il n'y a rien à valider.
           if git diff --cached --quiet; then
             echo "Rien à publier."
             exit 0

@@ -1,14 +1,16 @@
 # Registre des partenaires eAriary — pages à intégrer
 
-Deux pages autonomes présentant les établissements qui acceptent eAriary,
-destinées à être posées dans une autre application par une simple balise
-`<iframe>`. Aucune dépendance à Streamlit, à Python au moment de l'affichage,
-ni à un CDN.
+Deux pages autonomes listant les établissements qui acceptent eAriary,
+destinées à être posées dans une autre application par une balise `<iframe>`.
+
+Pas de framework, pas de build, pas de CDN, aucune dépendance à Streamlit :
+du HTML, du CSS et du JavaScript ES5, plus Leaflet embarqué dans le dossier.
+Il suffit de copier `partenaires/` sur un hébergement statique.
 
 | Page | Contenu | Poids réseau |
 |---|---|---|
-| `carte.html` | carte et liste, filtres ville et catégorie | Leaflet embarqué + tuiles |
-| `tableau.html` | registre trié et filtrable par **région** et **type de marchand**, lien Google Maps par ligne | aucun (pas de carte) |
+| `carte.html` | carte et liste, filtres ville et catégorie | Leaflet + tuiles |
+| `tableau.html` | registre triable, filtres région et type de marchand | aucun |
 
 ```html
 <iframe
@@ -26,101 +28,136 @@ ni à un CDN.
   loading="lazy"></iframe>
 ```
 
-`tableau.html` ne charge ni Leaflet ni la moindre tuile : c'est la page à
-préférer quand l'application hôte n'a pas besoin d'une carte, quand la
-connexion est lente, ou quand la liste doit rester lisible au clavier et aux
-lecteurs d'écran.
+Hauteur conseillée : **620 px** pour la carte en vue mixte (420 px pour
+`view=carte`), **520 px** pour le tableau. La page occupe 100 % de la hauteur
+de l'iframe : c'est l'attribut `height` qui commande. Le tableau défile à
+l'intérieur du cadre, en-têtes figés.
 
-**Ni bordure ni coin arrondi autour du cadre.** L'intégration doit se lire
-comme une section de l'application hôte, pas comme un encart rapporté : c'est
-le cadre visible, plus que le contenu, qui fait dire « c'est une iframe ». Si
-l'application affiche déjà son propre titre au-dessus, ajoutez `?header=0` pour
-ne pas empiler deux titrailles.
+Si l'application hôte affiche déjà son propre titre au-dessus, ajoutez
+`?header=0` pour ne pas empiler deux titrailles.
 
-Hauteur conseillée : **620 px** en vue mixte, 420 px suffisent pour
-`view=carte`, **520 px** pour le tableau. La page occupe 100 % de la hauteur de
-l'iframe ; c'est donc l'attribut `height` de l'iframe qui commande. Le tableau
-défile à l'intérieur du cadre, en-têtes de colonnes figés.
-
-Ouvrez [`demo.html`](demo.html) pour voir l'intégration, les variantes de
-paramètres et les messages émis. La page doit être **servie en HTTP** : en
-`file://`, les navigateurs bloquent la relecture du Sheet.
+## Démarrage rapide
 
 ```bash
 python3 -m http.server 8000    # depuis la racine du dépôt
 # puis http://localhost:8000/partenaires/demo.html
 ```
 
-## D'où viennent les données, et quand elles se mettent à jour
+`demo.html` montre l'intégration, les variantes de paramètres et les messages
+échangés avec l'hôte. Servez la page en HTTP : en `file://`, les navigateurs
+bloquent la lecture du Google Sheet.
 
-Tout part d'un seul endroit : le **Google Sheet** du registre. Personne n'a à
-recopier quoi que ce soit — remplir une ligne dans la feuille suffit.
+## Architecture
 
-Deux chemins mènent du Sheet à la page, l'un rapide, l'autre sûr :
+```
+partenaires/
+├── carte.html              page carte : structure HTML seule
+├── tableau.html            page tableau : structure HTML seule
+├── demo.html               exemple d'intégration (hors production)
+├── build.py                génère l'instantané depuis le Sheet
+├── assets/
+│   ├── theme.css           variables, thème, ossature, barre de filtres
+│   ├── carte.css           carte, liste latérale, retouches Leaflet
+│   ├── tableau.css         le registre
+│   ├── categories.js       couleur + glyphe par catégorie   → EARIARY_CATEGORIES
+│   ├── donnees.js          lecture du Sheet, rafraîchissement → EARIARY_DONNEES
+│   ├── instantane.js       copie embarquée (GÉNÉRÉ)          → EARIARY_PARTENAIRES
+│   ├── carte.js            logique de la page carte
+│   └── tableau.js          logique de la page tableau
+└── vendor/leaflet/         Leaflet 1.9.4 (BSD-2-Clause)
+```
 
-1. **Relecture en direct, dans le navigateur.** Chaque page interroge le Sheet
-   à son ouverture, puis **toutes les cinq minutes** tant qu'elle reste
-   affichée. Une ligne ajoutée à la feuille apparaît donc d'elle-même : le
-   tableau se complète, un repère de plus se pose sur la carte, les effectifs
-   des filtres se recalculent — sans que personne ne recharge la page.
-2. **L'instantané embarqué** `assets/instantane.js`, versionné dans le dépôt et
-   **régénéré toutes les heures** par
-   [`.github/workflows/instantane-partenaires.yml`](../.github/workflows/instantane-partenaires.yml).
-   Il s'affiche immédiatement, avant même que le réseau ait répondu, et reste
-   la donnée servie si la relecture en direct n'aboutit pas.
+Trois variables globales, chargées dans cet ordre par les deux pages :
+`EARIARY_PARTENAIRES` (les données embarquées), `EARIARY_CATEGORIES` (les
+couleurs), `EARIARY_DONNEES` (l'accès au Sheet). `carte.js` et `tableau.js` ne
+communiquent pas entre eux ; chacun ne connaît que sa page.
 
-La relecture en direct échoue silencieusement — Sheet redevenu privé, visiteur
-hors ligne, politique de sécurité de l'hôte qui interdit `docs.google.com` — et
-la page continue alors d'afficher l'instantané. C'est pour ce cas que le
-workflow horaire existe : sans lui, la copie de secours vieillirait.
+### Circulation des données
 
-Rien n'est interrogé quand l'onglet est masqué : une iframe posée dans un
-onglet d'arrière-plan n'appelle pas Google pour rien. Au retour du visiteur, la
-relecture est immédiate si le dernier appel remonte à plus d'un intervalle.
+```
+Google Sheet
+   │
+   ├── build.py ──────────► assets/instantane.js ──► affiché au chargement
+   │   (workflow horaire)                            (copie de secours)
+   │
+   └── donnees.js ────────────────────────────────► remplace l'instantané
+       (fetch dans le navigateur, toutes les 5 min)
+```
 
-Un rafraîchissement qui n'apporte rien de neuf ne redessine rien. Un qui
-apporte des lignes **ne recadre pas la carte et ne défait pas la sélection** :
-le visiteur peut avoir zoomé sur un quartier, et lui reprendre son cadrage
-parce qu'une ligne a été ajoutée à l'autre bout de l'île serait insupportable.
+`build.py` et `donnees.js` appliquent **les mêmes règles de lecture** : même
+détection d'en-tête, mêmes mots-clés de colonnes, même format de coordonnées,
+mêmes corrections de libellés. Toute modification de l'un doit être reportée
+dans l'autre.
+
+## Mise à jour des données
+
+Tout part du **Google Sheet**. Remplir une ligne suffit ; il n'y a rien à
+recopier ailleurs.
+
+**1. Relecture en direct.** Chaque page interroge le Sheet à son ouverture,
+puis toutes les 5 minutes tant qu'elle reste affichée. Une ligne ajoutée
+apparaît d'elle-même : le tableau se complète, un repère se pose sur la carte,
+les effectifs des filtres se recalculent — sans rechargement.
+
+- Rien n'est appelé quand l'onglet est masqué. Au retour du visiteur, une
+  relecture est déclenchée si le dernier appel date de plus d'un intervalle.
+- Une relecture qui ne change rien ne redessine rien (comparaison par
+  empreinte, `EARIARY_DONNEES.signature`).
+- Une relecture qui apporte des lignes **ne recadre pas la carte et ne défait
+  pas la sélection** : la fiche sélectionnée est retrouvée par une clé stable
+  (nom + ville + coordonnées) et non par son numéro de ligne, qui se décale dès
+  qu'on insère une ligne dans la feuille.
+- Un échec est silencieux : la page garde ce qu'elle affiche.
+
+**2. Instantané embarqué.** `assets/instantane.js` est versionné dans le dépôt
+et régénéré chaque heure par
+[`.github/workflows/instantane-partenaires.yml`](../.github/workflows/instantane-partenaires.yml).
+Il s'affiche avant que le réseau réponde, et reste la donnée servie si la
+relecture en direct échoue — feuille redevenue privée, visiteur hors ligne,
+application hôte interdisant `docs.google.com`.
 
 ### Régénérer l'instantané à la main
 
 ```bash
-python3 partenaires/build.py            # relit le Sheet et réécrit l'instantané
-python3 partenaires/build.py --check    # code de sortie 1 si l'instantané a vieilli
+python3 partenaires/build.py            # relit le Sheet et réécrit le fichier
+python3 partenaires/build.py --check    # code de sortie 1 si le fichier a vieilli
 ```
 
-Le script n'utilise que la bibliothèque standard — pas besoin du virtualenv du
-projet — et ne réécrit rien si la lecture échoue.
+Bibliothèque standard uniquement : aucune installation, pas besoin du
+virtualenv du projet. Le script ne réécrit rien si la lecture échoue.
 
 Le workflow tourne à la 17e minute de chaque heure et se déclenche aussi à la
-demande, par le bouton « Run workflow » de l'onglet **Actions** : à utiliser
-juste après une grosse saisie, plutôt que d'attendre l'heure suivante. Il ne
-commite que si les données ont réellement changé — la seule date de génération
-ne suffit pas à produire un commit.
+demande (onglet **Actions** → **Run workflow**). Il ne commite que si les
+données ont réellement changé : la seule date de génération ne produit pas de
+commit.
 
 > **À savoir** : GitHub suspend les workflows planifiés après 60 jours sans
-> activité dans le dépôt, et le prévient par courriel. Un `git push`, ou un
-> lancement manuel, les réactive.
+> activité dans le dépôt, et le signale par courriel. Un `git push` ou un
+> lancement manuel les réactive.
 
 ## Colonnes du Google Sheet
 
-Quatre colonnes sont attendues, retrouvées **par leur intitulé** et non par
-leur position — les réordonner dans le Sheet ne casse rien :
+Les colonnes sont retrouvées **par leur intitulé**, pas par leur position : les
+réordonner dans le Sheet ne casse rien. La ligne d'en-tête est repérée par le
+mot « Province » ou « Établissement », ce qui autorise un titre au-dessus.
+
+### Obligatoires
 
 | Colonne | Intitulés reconnus | Rôle |
 |---|---|---|
 | Ville | `Province`, `Ville`, `Région` | groupe la liste, remplit le filtre de ville |
 | Nom | `Nom de l'établissement`, `Enseigne`, `Nom` | le libellé affiché |
 | Type | `Catégorie`, `Type` | couleur, glyphe et filtre de catégorie |
-| Coordonnées | `Latitude / longitude`, `Coord`, `GPS` | `-12.289942, 49.291381` |
+| Coordonnées | `Latitude / longitude`, `Coord`, `GPS` | format `-12.289942, 49.291381` |
 
-### Colonnes facultatives
+Si aucun intitulé ne correspond, ces quatre colonnes retombent sur les
+positions 1 à 4.
 
-Quatre autres sont reconnues **si vous les ajoutez au Sheet**. Tant qu'elles
-n'existent pas — ou tant qu'aucune ligne n'est remplie — les pages sont
-exactement ce qu'elles sont aujourd'hui : aucune colonne vide, aucun champ
-« non renseigné ».
+### Facultatives
+
+Reconnues **si vous les ajoutez au Sheet**. Tant qu'elles n'existent pas — ou
+tant qu'aucune ligne n'est remplie — les pages sont inchangées : ni colonne
+vide, ni mention « non renseigné ».
 
 | Colonne | Intitulés reconnus | Où elle apparaît |
 |---|---|---|
@@ -129,75 +166,68 @@ exactement ce qu'elles sont aujourd'hui : aucune colonne vide, aucun champ
 | Horaires | `Horaires`, `Ouverture`, `Heures` | sous le nom dans le tableau, popup de la carte |
 | Site | `Site`, `Web`, `URL`, `Facebook`, `Lien` | colonne **Contact** du tableau, popup de la carte |
 
-La colonne « Contact » du tableau n'apparaît que si le Sheet porte au moins un
-téléphone ou un site : une colonne vide dirait au public qu'on ne sait pas
-joindre les partenaires. Adresse et horaires, eux, se placent sous le nom
-plutôt qu'en colonnes — un registre de huit colonnes serait illisible dès le
-premier écran étroit.
+Ces colonnes n'ont pas de position de repli : elles ne sont reconnues que par
+leur intitulé, pour qu'une colonne quelconque ne soit jamais présentée comme un
+numéro de téléphone.
 
-Aucune de ces colonnes n'est devinée par sa position : elle n'existe que si son
-intitulé la nomme. Une colonne quelconque ne peut donc pas se retrouver
-présentée comme un numéro de téléphone.
+La colonne « Contact » du tableau n'apparaît que si au moins un téléphone ou un
+site est renseigné. Adresse et horaires se placent sous le nom plutôt qu'en
+colonnes : à six colonnes, le tableau déborde dès le premier écran étroit.
 
 ### Nettoyage appliqué
 
-Mêmes règles que `load_data()` dans `app.py` : ligne d'en-tête détectée par le
-mot « Province » (ou « Établissement »), colonnes retrouvées par mots-clés,
-coordonnées lues au format `-12.289942, 49.291381`.
-
-Deux corrections de libellés, appliquées à l'identique dans `build.py` et
+Deux tables de correction, présentes à l'identique dans `build.py` et
 `assets/donnees.js` :
 
 - catégories : `Supermaché`/`Supermarche` → `Supermarché`, `Epicerie` →
   `Épicerie`, `Hotel` → `Hôtel` ;
 - villes : `Antsirananana` → `Antsiranana`, `Fianaratsoa` → `Fianarantsoa`.
-  L'application Streamlit, à usage interne, affiche ces fautes du Sheet telles
-  quelles ; ces pages-ci s'adressant au public, elles les corrigent. **Le mieux
-  reste de corriger le Sheet, puis de retirer ces deux entrées des deux
-  fichiers.**
 
-Un établissement dont la cellule de coordonnées n'est pas exploitable
+**Le mieux reste de corriger le Sheet, puis de vider ces deux tables dans les
+deux fichiers.**
+
+Une fiche dont la cellule de coordonnées est inexploitable
 (« Introuvable, quartier Amparihy ») **reste dans la liste**, avec la mention
-« Coordonnées indisponibles » et la valeur brute ; il n'apparaît simplement pas
-sur la carte. Le compteur distingue alors « n établissements — m sur la
-carte » ; dans le tableau, « n établissements — m non localisés ».
+« Coordonnées indisponibles » et la valeur brute ; elle n'apparaît simplement
+pas sur la carte. Le compteur le signale : « n établissements — m sur la
+carte », et « n établissements — m non localisés » dans le tableau.
 
 ### Région administrative
 
-Le Sheet ne porte pas la région : sa colonne « Province » mélange des villes
-(Tolagnaro, Sambava) et d'anciennes provinces (Mahajanga, Toamasina). Elle est
-donc déduite des coordonnées, par appartenance au polygone **ADM1** de
-`data/geo/mdg_adm1.geojson` — les mêmes limites que la choroplèthe de
-l'application interne (BNGRC / OCHA, voir `data/geo/SOURCE.md`).
+Le Sheet ne contient pas la région : sa colonne « Province » mélange des villes
+(Tolagnaro, Sambava) et d'anciennes provinces (Mahajanga, Toamasina). La région
+est déduite des coordonnées, par appartenance aux polygones **ADM1** de
+`data/geo/mdg_adm1.geojson` (source : BNGRC / OCHA, voir `data/geo/SOURCE.md`).
 
-Le calcul est fait **par `build.py`** : le navigateur n'a ni les polygones ni de
-quoi les parcourir. `build.py` dépose donc aussi dans l'instantané une table
-`regions_par_ville`, dont les lignes relues en direct se servent pour se
-rattacher par le libellé de leur ville. Conséquences à connaître :
+Le calcul est fait **par `build.py`** : les polygones pèsent plusieurs
+mégaoctets, le navigateur ne les charge pas. `build.py` dépose donc aussi dans
+l'instantané une table `regions_par_ville`, que les lignes relues en direct
+utilisent pour se rattacher par le libellé de leur ville. À savoir :
 
-- une **ville ajoutée au Sheet** depuis le dernier passage du workflow horaire
-  s'affiche sous « Région à préciser » jusqu'à la régénération suivante ; sa
-  ligne reste dans le tableau et le filtre la retrouve sous ce libellé ;
-- un point qui ne tombe dans aucun polygone — trait de côte simplifié à
-  ~880 m, saisie GPS approximative — rejoint la **région la plus proche** dans
-  un rayon de 0,25° (~28 km), et reste sans région au-delà ;
-- un établissement **sans coordonnée exploitable** hérite de la région de sa
-  ville ;
+- une **ville ajoutée au Sheet** depuis le dernier passage du workflow apparaît
+  sous « Région à préciser » jusqu'à la régénération suivante ; sa ligne reste
+  dans le tableau et le filtre la retrouve sous ce libellé ;
+- un point hors de tout polygone — côte simplifiée, saisie GPS approximative —
+  rejoint la **région la plus proche** dans un rayon de 0,25° (~28 km), et
+  reste sans région au-delà ;
+- une fiche **sans coordonnées** hérite de la région de sa ville ;
 - le millésime COD-AB 2018 compte **22 régions et non 23** : le découpage de
-  2021, qui scinde Vatovavy Fitovinany, n'y est pas.
+  2021, qui scinde Vatovavy Fitovinany, n'y figure pas.
 
 Si `data/geo/mdg_adm1.geojson` est absent, `build.py` le signale et génère
-l'instantané sans région ; le tableau affiche alors partout « Région à
-préciser » — il ne tombe pas en panne.
+l'instantané sans région ; les pages affichent alors « Région à préciser »
+partout, sans tomber en panne.
 
-## Paramètres
+## Paramètres d'URL
 
 Ils se passent dans l'URL de l'iframe : `carte.html?view=carte&header=0`.
+Les valeurs accentuées doivent être encodées : `categorie=Restaurant,H%C3%B4tel`.
+
+### Communs aux deux pages
 
 | Paramètre | Valeurs | Défaut | Effet |
 |---|---|---|---|
-| `view` | `split`, `carte`, `liste` | `split` | carte + liste, carte seule, liste seule (page carte) |
-| `header` | `1`, `0` | `1` | affiche ou masque la titraille et la note de source |
+| `header` | `1`, `0` | `1` | affiche ou masque la titraille |
 | `titre` | texte libre | — | remplace le titre par défaut |
 | `theme` | `clair`, `sombre`, `auto` | `clair` | `auto` suit le thème du système du visiteur |
 | `q` | texte | — | remplit la recherche au chargement |
@@ -205,20 +235,18 @@ Ils se passent dans l'URL de l'iframe : `carte.html?view=carte&header=0`.
 | `refresh` | secondes, ou `0` | `300` | période de relecture du Sheet ; plancher à 60 s, `0` la désactive |
 | `origin` | origine exacte | `*` | restreint la cible des `postMessage` |
 
-Les valeurs contenant des accents ou des espaces doivent être encodées :
-`categorie=Restaurant,H%C3%B4tel`.
+### Page carte
 
-### Propres à la carte
+| Paramètre | Valeurs | Défaut | Effet |
+|---|---|---|---|
+| `view` | `split`, `carte`, `liste` | `split` | carte + liste, carte seule, liste seule |
+| `categorie` | catégories séparées par des virgules | — | présélectionne les puces |
+| `province` | une ville | — | présélectionne le filtre de ville |
 
-| Paramètre | Valeurs | Effet |
-|---|---|---|
-| `categorie` | catégories séparées par des virgules | présélectionne les puces (`Restaurant,Hôtel`) |
-| `province` | une ville | présélectionne le filtre de ville |
+Sous 860 px de large, la vue `split` se replie en deux onglets « Carte » /
+« Liste » : inutile de détecter le mobile côté hôte.
 
-Sous 860 px de large, la vue `split` se replie automatiquement en deux onglets
-« Carte » / « Liste » — inutile de détecter le mobile côté hôte.
-
-### Propres au tableau
+### Page tableau
 
 | Paramètre | Valeurs | Défaut | Effet |
 |---|---|---|---|
@@ -228,21 +256,18 @@ Sous 860 px de large, la vue `split` se replie automatiquement en deux onglets
 | `tri` | `nom`, `categorie`, `region`, `province` | `region` | colonne de tri au chargement |
 | `sens` | `asc`, `desc` | `asc` | sens de ce tri |
 
-`region` et `categorie` n'acceptent **qu'une valeur** — le tableau se lit comme
-un registre, deux listes déroulantes y sont plus lisibles qu'une rangée de
-puces. Une liste séparée par des virgules, le format de la page carte, est
-acceptée sans erreur : seule la première valeur est retenue. `ville` n'a pas de
-commande dans l'interface : c'est un cadrage posé par l'hôte, que le visiteur
-ne peut pas défaire.
+`region` et `categorie` n'acceptent qu'**une seule valeur** : deux listes
+déroulantes sont plus lisibles qu'une rangée de puces dans un registre. Une
+liste séparée par des virgules est acceptée sans erreur, seule la première
+valeur est retenue. `ville` n'a pas de commande dans l'interface : c'est un
+cadrage posé par l'hôte, que le visiteur ne peut pas défaire.
 
 Sous 680 px de large, le tableau se replie en blocs — une fiche par
-établissement, chaque champ précédé de son étiquette — plutôt que de se faire
-pousser de gauche à droite.
+établissement, chaque champ précédé de son étiquette.
 
-## Dialogue avec l'application hôte
+## Messages échangés avec l'application hôte
 
-Les deux pages envoient des `postMessage` au parent, avec le même protocole.
-Vérifiez toujours l'expéditeur :
+### De l'iframe vers l'hôte
 
 ```js
 window.addEventListener("message", (event) => {
@@ -251,31 +276,31 @@ window.addEventListener("message", (event) => {
 
   switch (event.data.type) {
     case "pret":      /* { total, visibles, provenance } */ break;
-    case "maj":       /* { total, visibles } — le Sheet a changé */ break;
-    case "filtre":    /* voir ci-dessous — diffère d'une page à l'autre */ break;
+    case "maj":       /* { total, visibles } */ break;
+    case "filtre":    /* voir le tableau ci-dessous */ break;
     case "selection": /* { etablissement: { … } } */ break;
   }
 });
 ```
 
-| Message | Carte | Tableau |
+| Type | Quand | Charge utile |
 |---|---|---|
-| `pret` | `{ total, visibles, provenance }` — émis une seule fois | idem |
-| `maj` | `{ total, visibles }` — à chaque relecture qui change les données | idem |
-| `filtre` | `{ visibles, recherche, province, categories }` | `{ visibles, recherche, region, categorie, tri, sens }` |
-| `selection` | émis au clic sur une fiche ou un repère | émis au clic sur un **nom** ; le lien Google Maps, lui, ouvre un onglet |
+| `pret` | une fois, au premier affichage | `{ total, visibles, provenance }` |
+| `maj` | à chaque relecture qui change les données | `{ total, visibles }` |
+| `filtre` | à chaque changement de filtre | carte : `{ visibles, recherche, province, categories }`<br>tableau : `{ visibles, recherche, region, categorie, tri, sens }` |
+| `selection` | clic sur une fiche ou un repère (carte), sur un nom (tableau) | `{ etablissement }` |
 
 `selection.etablissement` porte toujours `nom, categorie, region, province,
 lat, lon`, et les champs facultatifs (`adresse`, `horaires`, `telephone`,
-`site`) **seulement quand le Sheet les renseigne**.
+`site`) seulement lorsqu'ils sont renseignés.
 
-`provenance` vaut `"instantane"` ou `"direct"` selon que la page affiche la
-copie embarquée ou le Sheet relu. Le champ ne s'appelle pas `source` : celui-ci
-identifie l'iframe dans l'enveloppe du message, et une charge utile ne doit pas
-pouvoir l'écraser.
+`provenance` vaut `"instantane"` ou `"direct"` selon la source affichée. Ce
+champ ne s'appelle pas `source` : `source` identifie l'iframe dans l'enveloppe
+du message, et une charge utile ne doit pas pouvoir l'écraser.
 
-Dans l'autre sens, l'hôte peut demander une relecture immédiate — par exemple
-juste après avoir lui-même écrit dans le Sheet :
+### De l'hôte vers l'iframe
+
+Forcer une relecture immédiate, par exemple après avoir écrit dans le Sheet :
 
 ```js
 iframe.contentWindow.postMessage(
@@ -285,117 +310,78 @@ iframe.contentWindow.postMessage(
 ```
 
 Seules des données publiques circulent. La cible par défaut est `*` ; passez
-`?origin=https://votre-domaine.example` pour la restreindre à votre
-application.
+`?origin=https://votre-domaine.example` pour la restreindre.
 
 ## Déploiement
 
-### En ligne (GitHub Pages)
+### GitHub Pages (en place)
 
-Les pages sont publiées à partir de la branche `main` :
+Publié depuis la branche `main`, à la racine :
 
 ```
 https://jejew03.github.io/carte-partenaire-eariary/partenaires/carte.html
 https://jejew03.github.io/carte-partenaire-eariary/partenaires/tableau.html
 ```
 
-Ce sont **les URL à donner aux intégrateurs** : elles ne demandent aucune
-authentification, contrairement à l'application Streamlit, qui est privée.
-Chaque `git push` sur `main` republie les pages — le commit horaire du workflow
-compris. Le fichier `.nojekyll` à la racine désactive Jekyll, qui filtrerait et
-réécrirait les fichiers.
+Ce sont les URL à donner aux intégrateurs : elles ne demandent aucune
+authentification, contrairement à l'application Streamlit interne. Chaque
+`git push` sur `main` republie les pages, y compris le commit horaire du
+workflow. Le fichier `.nojekyll` à la racine désactive Jekyll.
 
 ### Ailleurs
 
-Copiez le dossier `partenaires/` tel quel sur n'importe quel hébergement
-statique (Nginx, Apache, S3, Netlify, `public/` d'une application Laravel ou
-Symfony, `static/` d'un projet Django…). Les chemins internes sont
-**relatifs** : le dossier fonctionne à la racine comme dans un
-sous-répertoire. Seul `build.py` remonte d'un cran, pour lire
-`data/geo/mdg_adm1.geojson` ; il n'a pas à être déployé.
+Copiez `partenaires/` tel quel sur n'importe quel hébergement statique (Nginx,
+Apache, S3, Netlify, `public/` d'une application Laravel ou Symfony, `static/`
+d'un projet Django…). Les chemins internes sont **relatifs** : le dossier
+fonctionne à la racine comme dans un sous-répertoire.
 
-Si l'application hôte impose une politique de sécurité stricte, les seuls
-domaines à autoriser sont ceux des fonds de carte (`basemaps.cartocdn.com`,
-`tile.openstreetmap.org`, `server.arcgisonline.com`) et `docs.google.com` pour
-la relecture en direct. Sans ce dernier, ajoutez `live=0` : la page servira
-l'instantané, que le workflow horaire maintient à jour.
+`build.py` n'a pas à être déployé : c'est un outil de génération, et il lit
+`../data/geo/mdg_adm1.geojson`, hors du dossier.
 
-## Contenu du dossier
+### Politique de sécurité de l'hôte
 
-| Fichier | Rôle |
-|---|---|
-| `carte.html` | la page carte à mettre dans l'iframe |
-| `tableau.html` | la page tableau à mettre dans l'iframe |
-| `assets/theme.css` | thème, ossature, titraille, barre de filtres — commun aux deux pages |
-| `assets/carte.css` | carte, liste latérale, retouches Leaflet |
-| `assets/tableau.css` | le registre : colonnes, tri, repli en blocs |
-| `assets/donnees.js` | lecture du Sheet, nettoyage, boucle de rafraîchissement |
-| `assets/categories.js` | couleurs et glyphes des types de marchand, communs aux deux pages |
-| `assets/carte.js` | carte, liste, filtres, sélection, messages |
-| `assets/tableau.js` | tableau, tri, filtres région et type, messages |
-| `assets/instantane.js` | copie embarquée des données (**généré** — ne pas modifier) |
-| `vendor/leaflet/` | Leaflet 1.9.4 embarqué (BSD-2-Clause, `LICENSE` inclus) — page carte seule |
-| `build.py` | régénère l'instantané depuis le Google Sheet |
-| `demo.html` | page d'exemple d'intégration, pour les deux pages |
+Domaines à autoriser :
 
-## Identité visuelle
+| Domaine | Pour quoi | Requis |
+|---|---|---|
+| `basemaps.cartocdn.com` | fond de carte par défaut | page carte |
+| `tile.openstreetmap.org` | fond « Plan détaillé » | page carte |
+| `server.arcgisonline.com` | fond « Satellite » | page carte |
+| `docs.google.com` | relecture du Sheet | les deux pages |
 
-Ces pages s'adressent au public, là où l'application Streamlit sert en interne.
-Elles ont donc leur propre identité — institutionnelle et minimale, dans
-l'esprit d'un registre officiel — plutôt que l'apparence par défaut d'un
-composant web :
+Sans `docs.google.com`, ajoutez `live=0` : les pages serviront l'instantané,
+que le workflow horaire maintient à jour.
 
-- **encre sur papier chaud**, pas de gris bleuté ; un seul accent (`#1a4066`),
-  employé pour les liens, le focus et la fiche sélectionnée ;
-- **filets d'un pixel** et angles vifs (rayon 2 px) au lieu de cartes,
-  pastilles et ombres portées ;
-- **titraille en romain à empattements** (familles présentes sur les systèmes,
-  aucune police téléchargée), texte d'interface en `system-ui` ; étiquettes en
-  petites capitales espacées ; chiffres et numéros en chasse fixe ;
-- **la provenance des données est une note de bas de page**, pas un voyant
-  d'état : « Source : registre des partenaires eAriary, mis à jour à 14:32 » ;
-- **commandes de carte redessinées** (zoom, fonds, échelle, attribution) :
-  Leaflet arrondit et ombre tout par défaut, ce qui jure avec le reste ;
-- **repères circulaires** cernés de blanc, à la manière d'un symbole
-  cartographique, plutôt que la goutte des applications de navigation ; le
-  repère sélectionné grossit et prend un cercle d'encre ;
-- **fond de carte accordé au thème** (CARTO clair ou sombre) ;
-- aucun emoji, aucune animation décorative.
+## Conventions de code
 
-Le tableau suit les mêmes règles : filets d'un pixel et aucune alternance de
-fond — un registre officiel se tient par ses filets et son alignement, pas par
-des bandes colorées —, en-têtes de colonnes en petites capitales espacées et
-figés en haut du cadre, sens du tri marqué par un chevron **et** par l'encre du
-libellé, jamais par la couleur seule. Le lien Google Maps porte le nom du
-service plutôt qu'une icône seule, et s'ouvre dans un nouvel onglet
-(`rel="noopener"`) : il pointe sur les coordonnées, pas sur le nom, deux
-enseignes pouvant se ressembler.
+- **JavaScript ES5** (`var`, pas de classes, pas de `let`/`const`) : ces pages
+  sont intégrées dans des applications tierces dont on ne maîtrise pas le parc
+  de navigateurs. Aucun transpileur, aucune étape de build.
+- **Un fichier = une responsabilité.** `donnees.js` ne connaît pas le DOM ;
+  `carte.js` et `tableau.js` ne connaissent pas le CSV.
+- **Toute valeur venant du Sheet passe par `echapper()`** avant d'être insérée
+  en HTML.
+- **Nommage en français**, comme le reste du dépôt.
+- La couleur ne porte jamais seule une information : chaque catégorie a son
+  glyphe, le sens du tri se lit au chevron autant qu'à l'encre du libellé.
+- Une sélection de filtre vide équivaut à « tout afficher ».
 
-La palette de catégories (`assets/categories.js`, partagée par les deux pages)
-reprend les teintes de `CATEGORY_STYLE` (`app.py`) mais les ramène à une clarté
-et une saturation communes : les couleurs d'origine sont celles des marqueurs
-par défaut de Leaflet, et elles se remarquent comme telles. **C'est la seule
-divergence assumée avec l'application interne** — pour la supprimer, il suffit
-de recopier les hex de `app.py` dans `assets/categories.js`.
+### Accessibilité
 
-Règles conservées :
+Chaque fiche de la liste est un `<button>`, avec `aria-current` sur la fiche
+sélectionnée. Le tableau est un vrai `<table>` : `<th scope="col">`, légende
+pour lecteurs d'écran, `aria-sort` sur la colonne de tri, en-têtes cliquables
+qui sont des `<button>`. Tous les champs ont un libellé, les contrastes sont
+conformes AA, le thème sombre est pris en charge, et les transitions sont
+supprimées si `prefers-reduced-motion` est actif.
 
-- un glyphe SVG distinct par catégorie : **la couleur n'est jamais la seule
-  information** ;
-- une sélection de filtre vide équivaut à « tout afficher » ;
-- les catégories servent de filtre **et** de légende, avec l'effectif de
-  chacune ; le carré de couleur reste à pleine opacité même quand le filtre est
-  inactif, la sélection se lisant au libellé et au filet qui le souligne. Dans
-  le tableau, les listes déroulantes portent le même effectif entre
-  parenthèses — filtrer et voir la répartition restent le même geste.
+### Retouches à connaître avant de modifier le style
 
-Accessibilité : liste navigable au clavier (chaque fiche est un `<button>`,
-`aria-current` sur la fiche sélectionnée), libellés sur tous les champs,
-contrastes conformes AA, thème sombre pris en charge, animations supprimées si
-`prefers-reduced-motion` est actif. Le tableau est un vrai `<table>` —
-`<th scope="col">`, légende pour lecteurs d'écran, `aria-sort` sur la colonne
-de tri, en-têtes cliquables qui sont des `<button>` : il s'annonce et se
-parcourt comme un tableau, y compris hors de la souris.
+- `theme.css` porte les variables ; ne redéfinissez pas une couleur ailleurs.
+- Les commandes de Leaflet sont redessinées dans `carte.css` (angles vifs,
+  filets d'un pixel) ; Leaflet arrondit et ombre tout par défaut.
+- Le repère de carte est un SVG généré dans `carte.js` (fonction `icone`), pas
+  une image : sa couleur et son glyphe viennent de `categories.js`.
 
 ## Attribution
 
@@ -405,9 +391,10 @@ BSD-2-Clause (`vendor/leaflet/LICENSE`).
 
 ## Rapport avec `static/embed/`
 
-Ce dossier remplace `static/embed/`, dont il reprend le fond en le découpant
-autrement : feuilles de style séparées (le tableau ne charge plus les styles
+Ce dossier remplace `static/embed/`, dont il reprend le fond avec un découpage
+différent : feuilles de style séparées (le tableau ne charge plus les styles
 Leaflet), colonnes facultatives du Sheet, rafraîchissement périodique, et
-instantané régénéré par un workflow plutôt qu'à la main. `static/embed/` reste
-en place tant que des intégrateurs pointent sur ses URL ; il n'y a rien à y
-faire, mais rien n'y arrive non plus — c'est ce dossier-ci qui est maintenu.
+instantané régénéré par un workflow plutôt qu'à la main.
+
+`static/embed/` reste en ligne tant que des intégrateurs pointent sur ses URL,
+mais n'est plus maintenu. C'est ce dossier-ci qui évolue.

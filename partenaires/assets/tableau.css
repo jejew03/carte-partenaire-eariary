@@ -1,9 +1,7 @@
-/* Page tableau — complément de `theme.css`, qui porte le thème, l'ossature et
- * la barre de filtres. Ce fichier n'ajoute que le registre lui-même.
+/* Styles propres à la page tableau. Charger theme.css avant ce fichier.
  *
- * Même parti pris que la carte : filets d'un pixel, angles vifs, aucune ombre
- * portée, aucune alternance de fond. Un registre officiel se tient par ses
- * filets et son alignement, pas par des bandes colorées.
+ * Le registre se tient par ses filets et son alignement : pas d'alternance de
+ * fond, pas d'ombre portée.
  */
 
 .app > .table-wrap {
@@ -24,13 +22,13 @@
 
 /* -------------------------------- En-têtes -------------------------------- */
 
-/* Collés en haut : la première colonne se lit encore après deux cents lignes.
-   Le fond doit être opaque, sinon les lignes défilent au travers. */
+/* Collés en haut du cadre : les colonnes restent lisibles après deux cents
+   lignes. Le fond doit être opaque, sinon les lignes défilent au travers. */
 .registre thead th {
   position: sticky;
   top: 0;
   z-index: 2;
-  padding: 0;
+  padding: 0; /* le rembourrage est porté par le bouton ou le libellé */
   border-bottom: 1px solid var(--rule-strong);
   background: var(--ground);
   text-align: left;
@@ -47,6 +45,7 @@
   color: var(--muted);
 }
 
+/* Colonnes triables : l'en-tête est un vrai <button>. */
 .registre thead th button {
   display: flex;
   align-items: center;
@@ -60,8 +59,8 @@
 }
 .registre thead th button:hover { color: var(--ink); }
 
-/* Le sens du tri se lit au chevron et à l'encre du libellé — jamais à la
-   couleur seule. `aria-sort` porte la même information aux lecteurs d'écran. */
+/* Le sens du tri se lit au chevron ET à l'encre du libellé, jamais à la
+   couleur seule. aria-sort porte la même information aux lecteurs d'écran. */
 .registre thead th[aria-sort="ascending"] button,
 .registre thead th[aria-sort="descending"] button { color: var(--ink); }
 .registre thead th[aria-sort="ascending"] button::after,
@@ -79,8 +78,7 @@
   border-top: 4.5px solid currentColor;
 }
 
-/* Colonnes non triables — « Contact », « Localisation » : leur en-tête est un
-   simple libellé, pas un bouton qui ne ferait rien. */
+/* Colonnes non triables (Contact, Localisation) : un simple libellé. */
 .registre thead th .fixe { display: block; padding: 0.5rem 0.7rem; }
 .registre thead th:first-child button,
 .registre thead th:first-child .fixe { padding-left: var(--pad); }
@@ -93,6 +91,8 @@
   border-bottom: 1px solid var(--rule);
   vertical-align: baseline;
 }
+/* Le retrait de 2 px compense le filet de sélection, pour que le texte ne se
+   décale pas quand une ligne est sélectionnée. */
 .registre td:first-child {
   padding-left: calc(var(--pad) - 2px);
   border-left: 2px solid transparent;
@@ -100,8 +100,6 @@
 .registre td:last-child { padding-right: var(--pad); }
 
 .registre tbody tr:hover td { background: var(--ground); }
-/* Fiche désignée à l'hôte : filet d'accent en marge, comme la fiche
-   sélectionnée de la liste de la page carte. */
 .registre tbody tr[aria-current="true"] td { background: var(--ground); }
 .registre tbody tr[aria-current="true"] td:first-child { border-left-color: var(--accent); }
 
@@ -117,9 +115,8 @@
 }
 .registre .c-nom button.nom:hover { text-decoration: underline; text-underline-offset: 0.2em; }
 
-/* Adresse et horaires, quand le Sheet les porte : sous le nom, en retrait
-   d'encre. Ce sont des précisions sur « où » et « quand », pas des colonnes —
-   leur donner une colonne chacune ferait un registre illisible. */
+/* Adresse et horaires, quand le Sheet les porte : sous le nom plutôt qu'en
+   colonnes, qui feraient déborder le tableau. */
 .registre .c-nom .sous {
   margin-top: 0.15rem;
   font-size: 0.78rem;
@@ -141,18 +138,18 @@
 .registre .c-region { white-space: nowrap; }
 .registre .c-ville { color: var(--ink-soft); white-space: nowrap; }
 
-/* Colonne « Contact » : présente seulement si le Sheet porte un téléphone ou
-   un site. Un numéro par ligne, en chasse fixe — on le lit chiffre à chiffre
-   et on le recopie. */
+/* Colonne Contact : affichée seulement si le Sheet porte un téléphone ou un
+   site (voir `afficheContact` dans tableau.js). */
 .registre .c-contact { white-space: nowrap; }
-/* Numéro puis site, l'un sous l'autre : sur la même ligne, deux liens voisins
-   se confondent et on ne sait plus lequel appelle. */
+/* Téléphone puis site, l'un sous l'autre : côte à côte, deux liens voisins se
+   confondent. */
 .registre .c-contact .infos {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
   gap: 0.2rem;
 }
+/* Chasse fixe : on lit un numéro chiffre à chiffre. */
 .registre .c-contact .tel {
   font-family: var(--mono);
   font-size: 0.78rem;
@@ -168,9 +165,8 @@
 
 /* ------------------------------- Responsive ------------------------------- */
 
-/* La barre de la page carte n'a qu'une liste déroulante ; celle-ci en a deux,
-   qui débordent en écran étroit. Recherche sur toute la largeur, les deux
-   filtres côte à côte, le compte et la réinitialisation à la ligne suivante. */
+/* Cette barre porte deux listes déroulantes, contre une sur la page carte :
+   elles débordent plus tôt. */
 @media (max-width: 680px) {
   .tableau .controls .field { flex: 1 1 100%; }
   .tableau .controls select { flex: 1 1 0; min-width: 0; }
@@ -179,13 +175,10 @@
 }
 
 /* Sous 680 px, cinq ou six colonnes ne tiennent plus : chaque ligne devient un
-   bloc et les en-têtes de colonne repassent en étiquette de champ, via
-   data-label. Un défilement horizontal serait plus simple, mais on ne lit pas
-   un registre en le poussant de gauche à droite. */
+   bloc, et l'attribut data-label de chaque cellule remplace l'en-tête de
+   colonne. Un défilement horizontal serait plus simple, mais on ne lit pas un
+   registre en le poussant de gauche à droite. */
 @media (max-width: 680px) {
-  /* Le tableau redevient une suite de blocs. Sans cela il garde sa disposition
-     de tableau, dont la largeur minimale — celle du plus long nom
-     d'établissement — déborde de l'écran et pousse toute la page. */
   .registre,
   .registre tbody { display: block; }
   .registre thead { display: none; }
@@ -218,18 +211,15 @@
     text-transform: uppercase;
     white-space: nowrap;
     color: var(--muted);
-    /* L'étiquette s'aligne sur la première ligne du champ, pas au centre d'un
-       nom qui peut courir sur deux lignes. */
+    /* Aligne l'étiquette sur la première ligne du champ. */
     line-height: 1.6;
   }
-  /* Le nom fait office de titre du bloc : l'étiqueter « Établissement »
-     n'apprend rien et, à cette longueur, l'étiquette mange la moitié de la
-     largeur. Les autres champs, eux, ont besoin d'être nommés. */
+  /* Le nom sert de titre au bloc : l'étiqueter « Établissement » n'apprendrait
+     rien et mangerait la moitié de la largeur. */
   .registre .c-nom { display: block; margin-bottom: 0.25rem; }
   .registre .c-nom::before { content: none; }
   .registre .c-nom button.nom { font-size: 0.9rem; }
-  /* En bloc, la largeur manque moins : numéro et site tiennent côte à côte,
-     et l'étiquette « Contact » reste seule dans sa colonne de gauche. */
+  /* En bloc, téléphone et site tiennent côte à côte. */
   .registre .c-contact { flex-wrap: wrap; }
   .registre .c-contact .infos { flex-direction: row; flex-wrap: wrap; gap: 0.2rem 0.75rem; }
 }

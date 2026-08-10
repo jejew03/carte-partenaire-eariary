@@ -1,38 +1,28 @@
-/* Registre des partenaires eAriary — socle commun aux deux pages.
+/* Socle commun aux deux pages : variables, thème, ossature, titraille et barre
+ * de filtres. Les styles propres à chaque page sont dans carte.css et
+ * tableau.css — le tableau n'a ainsi pas à charger les styles de la carte.
  *
- * Ce fichier ne porte que ce que la carte et le tableau partagent : le thème,
- * l'ossature verticale, la titraille, la barre de filtres et la note de
- * provenance. Le reste vit dans `carte.css` et `tableau.css`, que chaque page
- * charge seule — le tableau n'a ainsi pas à lire trois cents lignes de styles
- * Leaflet dont il ne se sert pas.
- *
- * Parti pris : registre public, pas widget. Encre sur papier, filets d'un
- * pixel, angles vifs, un seul accent, titraille en romain à empattements et
- * étiquettes en petites capitales espacées. Rien qui signale « composant
- * embarqué » : ni cadre, ni ombre portée, ni pastille d'état colorée — la
- * provenance des données est une note de bas de page, comme dans une
- * publication officielle.
+ * Parti pris visuel : un registre public, pas un widget. Filets d'un pixel,
+ * angles vifs, un seul accent, aucune ombre portée.
  *
  * Aucune police n'est téléchargée : les pages doivent rester autonomes, sans
- * CDN ni politique de sécurité à assouplir chez l'hôte. On compose donc avec
- * les familles présentes sur les systèmes.
+ * CDN ni domaine à autoriser chez l'application hôte.
  */
 
+/* --------------------------- Variables de thème -------------------------- */
+
 :root {
-  /* Papier chaud plutôt que gris bleuté : la page ne doit pas se lire comme
-     une interface d'outil posée dans la page de l'hôte. */
   --paper: #ffffff;
   --ground: #f5f4f1;
   --ground-2: #ebe9e4;
-  --rule: #dcd9d2;
-  --rule-strong: #b5b0a6;
+  --rule: #dcd9d2; /* filets ordinaires */
+  --rule-strong: #b5b0a6; /* filets appuyés : en-têtes, popups */
   --ink: #1b1a17;
   --ink-soft: #45433d;
   --muted: #78746b;
-  --accent: #1a4066;
+  --accent: #1a4066; /* liens, focus, fiche sélectionnée */
   --accent-soft: #e8edf3;
-  /* Voile posé sur les tuiles, derrière l'attribution et l'échelle. */
-  --veil: rgb(255 255 255 / 0.88);
+  --veil: rgb(255 255 255 / 0.88); /* fond de l'attribution, sur les tuiles */
 
   --serif: "Iowan Old Style", "Hoefler Text", "Palatino Linotype", Palatino,
     Georgia, "Times New Roman", serif;
@@ -41,12 +31,12 @@
   --mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
 
   --radius: 2px;
-  --pad: 1.15rem;
+  --pad: 1.15rem; /* marge horizontale de toutes les sections */
   color-scheme: light;
 }
 
-/* Thème sombre : automatique, ou forcé par ?theme=sombre / ?theme=clair —
-   l'attribut data-theme sur <html> gagne toujours sur la préférence système. */
+/* Thème sombre : suivi du système, sauf si ?theme=clair ou ?theme=sombre a
+   posé un attribut data-theme sur <html>, qui l'emporte toujours. */
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="clair"]) {
     --paper: #141311;
@@ -78,6 +68,8 @@
   color-scheme: dark;
 }
 
+/* -------------------------------- Général -------------------------------- */
+
 * { box-sizing: border-box; }
 
 html, body { height: 100%; margin: 0; }
@@ -92,8 +84,7 @@ body {
   text-rendering: optimizeLegibility;
 }
 
-/* Petites capitales espacées : la seule ornementation typographique des
-   pages, réservée aux étiquettes. */
+/* Petites capitales espacées, pour les étiquettes. */
 .eyebrow {
   font-size: 0.68rem;
   font-weight: 600;
@@ -101,7 +92,7 @@ body {
   text-transform: uppercase;
 }
 
-/* Réservé aux lecteurs d'écran : ce que la mise en page donne à l'œil seul. */
+/* Visible des seuls lecteurs d'écran. */
 .sr-only {
   position: absolute;
   width: 1px;
@@ -115,8 +106,8 @@ body {
 
 /* ------------------------------- Ossature -------------------------------- */
 
-/* Colonne flex plutôt que grille : les onglets carte/liste n'existent qu'en
-   écran étroit, et un enfant masqué ne doit pas consommer de rangée. */
+/* Colonne flex et non grille : les onglets carte/liste n'existent qu'en écran
+   étroit, et un enfant masqué ne doit pas occuper de rangée. */
 .app {
   display: flex;
   flex-direction: column;
@@ -124,8 +115,7 @@ body {
   min-height: 0;
 }
 .app > .head,
-.app > .bar,
-.app > .source { flex: none; }
+.app > .bar { flex: none; }
 
 /* -------------------------------- Titraille ------------------------------ */
 
@@ -133,10 +123,9 @@ body {
   padding: 1rem var(--pad) 0.85rem;
   border-bottom: 1px solid var(--rule);
 }
-/* header=0 retire toute la titraille, note de source comprise : l'hôte
-   fournit alors son propre titre, et la page se fond dans sa mise en page. */
-.app[data-header="0"] .head,
-.app[data-header="0"] .source { display: none; }
+
+/* ?header=0 : l'application hôte fournit son propre titre. */
+.app[data-header="0"] .head { display: none; }
 
 .head h1 {
   margin: 0;
@@ -153,7 +142,7 @@ body {
   color: var(--muted);
 }
 
-/* -------------------------------- Filtres -------------------------------- */
+/* ---------------------------- Barre de filtres --------------------------- */
 
 .bar {
   display: flex;
@@ -193,7 +182,7 @@ select {
   font: inherit;
   font-size: 0.85rem;
 }
-input[type="search"] { padding-left: 1.85rem; }
+input[type="search"] { padding-left: 1.85rem; } /* place pour la loupe */
 input[type="search"]::placeholder { color: var(--muted); }
 input[type="search"]::-webkit-search-cancel-button { filter: grayscale(1); }
 select { flex: 0 1 200px; width: auto; min-width: 160px; }
@@ -211,8 +200,8 @@ a:focus-visible,
 
 .controls .spacer { flex: 1 1 0; }
 
-/* Compte et réinitialisation restent solidaires : en écran étroit ils passent
-   à la ligne ensemble plutôt que de comprimer les listes déroulantes. */
+/* Compte et bouton de réinitialisation restent solidaires : en écran étroit
+   ils passent à la ligne ensemble. */
 .tally {
   display: flex;
   align-items: center;
@@ -240,10 +229,10 @@ a:focus-visible,
 .reset:hover { color: var(--ink); }
 .reset[hidden] { display: none; }
 
-/* Catégories : légende et filtre à la fois. Le carré de couleur reste toujours
-   à pleine opacité — c'est une clé de lecture, pas un état ; ce sont l'encre
-   du libellé et le filet sous le mot qui portent la sélection, jamais la
-   couleur seule. */
+/* Puces de catégorie (page carte) : filtre et légende à la fois. Le carré de
+   couleur reste toujours à pleine opacité — c'est une clé de lecture de la
+   carte, pas un état. La sélection se lit à l'encre du libellé et au filet
+   sous le mot, jamais à la couleur seule. */
 .chips {
   display: flex;
   flex-wrap: wrap;
@@ -277,7 +266,7 @@ a:focus-visible,
   font-size: 0.74rem;
 }
 
-/* ---------------------------- États et vides ----------------------------- */
+/* ------------------------------- Liste vide ------------------------------ */
 
 .empty {
   margin: 0;
@@ -288,26 +277,9 @@ a:focus-visible,
 }
 .empty[hidden] { display: none; }
 
-/* --------------------------- Note de provenance -------------------------- */
-
-/* Une mention de source en pied de page, comme dans une publication : elle dit
-   d'où viennent les chiffres et de quand ils datent. Tant qu'aucune donnée
-   n'est chargée, la note n'a rien à dire — un filet vide se remarquerait. */
-.source:empty { display: none; }
-.source {
-  margin: 0;
-  padding: 0.45rem var(--pad) 0.55rem;
-  border-top: 1px solid var(--rule);
-  background: var(--paper);
-  font-size: 0.72rem;
-  line-height: 1.4;
-  color: var(--muted);
-}
-
 /* ------------------------------ Liens sortants --------------------------- */
 
-/* Un seul dessin de lien pour les deux pages : filet sous le mot plutôt que
-   soulignement plein, et le nom du service plutôt qu'une icône seule. */
+/* Un seul dessin de lien pour les deux pages. */
 .lien {
   display: inline-flex;
   align-items: center;

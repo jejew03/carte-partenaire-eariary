@@ -1,14 +1,12 @@
-/* Instantané du registre des partenaires eAriary.
+/* FICHIER GÉNÉRÉ — NE PAS MODIFIER À LA MAIN.
  *
- * Fichier généré — ne pas modifier à la main :
- *     python partenaires/build.py
+ * Produit par partenaires/build.py, régénéré chaque heure par
+ * .github/workflows/instantane-partenaires.yml.
  *
- * Régénéré toutes les heures par
- * .github/workflows/instantane-partenaires.yml. Les pages l'affichent
- * immédiatement, puis relisent le Google Sheet et remplacent ces
- * données dès qu'il répond. */
+ * Copie de secours du Google Sheet : les pages l'affichent au
+ * chargement, puis la remplacent par le Sheet relu en direct. */
 window.EARIARY_PARTENAIRES = {
-  "genere_le": "2026-08-10T04:21:34Z",
+  "genere_le": "2026-08-10T05:22:37Z",
   "champs": [],
   "regions_par_ville": {
     "Antsiranana": "Diana",

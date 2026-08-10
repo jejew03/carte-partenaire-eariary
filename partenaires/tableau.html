@@ -7,12 +7,12 @@
   <meta name="description" content="Liste des établissements qui acceptent le paiement eAriary à Madagascar, filtrable par région et par type de marchand.">
   <meta name="robots" content="noindex">
 
-  <!-- Aucune carte ici : ni Leaflet, ni tuiles, ni fond à télécharger. La page
-       partage le thème de la carte et n'ajoute que le registre. -->
+  <!-- Pas de carte ici : ni Leaflet, ni tuiles à télécharger. -->
   <link rel="stylesheet" href="assets/theme.css">
   <link rel="stylesheet" href="assets/tableau.css">
 </head>
 <body>
+  <!-- data-header est posé par assets/tableau.js d'après le paramètre ?header. -->
   <div class="app tableau" id="app" data-header="1">
 
     <header class="head">
@@ -30,6 +30,7 @@
                  aria-label="Rechercher un établissement" autocomplete="off">
         </label>
 
+        <!-- Options ajoutées par tableau.js à partir des données. -->
         <select id="region" aria-label="Filtrer par région">
           <option value="">Toutes les régions</option>
         </select>
@@ -51,6 +52,7 @@
         <caption class="sr-only">Établissements partenaires eAriary, triables par colonne</caption>
         <thead>
           <tr>
+            <!-- data-tri = clé de tri lue par tableau.js. -->
             <th scope="col" data-tri="nom" aria-sort="none">
               <button type="button">Établissement</button>
             </th>
@@ -63,9 +65,8 @@
             <th scope="col" data-tri="province" aria-sort="none">
               <button type="button">Ville</button>
             </th>
-            <!-- Colonne révélée par le script uniquement si le Google Sheet
-                 porte un téléphone ou un site : une colonne « Contact » vide
-                 dirait au public qu'on ne sait pas joindre les partenaires. -->
+            <!-- Colonne révélée par tableau.js si le Sheet porte un téléphone
+                 ou un site ; masquée sinon. -->
             <th scope="col" class="col-contact" id="th-contact" hidden>
               <span class="fixe">Contact</span>
             </th>
@@ -81,6 +82,8 @@
 
   </div>
 
+  <!-- Ordre imposé : instantane.js et categories.js définissent les variables
+       globales que donnees.js et tableau.js utilisent. -->
   <script src="assets/instantane.js"></script>
   <script src="assets/categories.js"></script>
   <script src="assets/donnees.js"></script>

@@ -1,13 +1,16 @@
-/* Registre des partenaires eAriary — page carte.
+/* Page carte : carte Leaflet + liste latérale + filtres.
  *
- * Carte, liste latérale et filtres. Le paramétrage passe par la chaîne de
- * requête de l'iframe (voir README) : l'application hôte n'a aucun script à
- * charger, aucun état à gérer.
+ * Dépendances chargées avant ce fichier (voir carte.html) :
+ *   vendor/leaflet/leaflet.js   la carte
+ *   assets/instantane.js        window.EARIARY_PARTENAIRES
+ *   assets/categories.js        window.EARIARY_CATEGORIES
+ *   assets/donnees.js           window.EARIARY_DONNEES
  *
- * Les données viennent de `donnees.js` : l'instantané d'abord, puis le Google
- * Sheet relu et re-relu tant que la page reste ouverte. Un rafraîchissement
- * qui n'apporte rien de neuf ne redessine rien ; un qui apporte des lignes ne
- * doit ni recadrer la carte ni défaire la sélection du visiteur.
+ * Le paramétrage se fait par la chaîne de requête de l'iframe (voir README) :
+ * l'application hôte n'a aucun script à charger ni état à gérer.
+ *
+ * Écrit en ES5 (var, pas de classes) : ces pages sont intégrées dans des
+ * applications tierces dont on ne maîtrise pas le parc de navigateurs.
  */
 
 (function (global) {
@@ -16,21 +19,21 @@
   var L = global.L;
   var doc = global.document;
 
-  /* Couleurs et glyphes vivent dans `categories.js`, que le tableau partage :
-     un même type de commerce se lit pareil sur les deux pages. */
-  function styleDe(categorie) {
-    return global.EARIARY_CATEGORIES.styleDe(categorie);
-  }
+  // Champs facultatifs du Sheet, présents dans une fiche seulement s'ils sont
+  // renseignés. Ordre d'affichage dans le popup.
+  var CHAMPS_FACULTATIFS = ["adresse", "horaires", "telephone", "site"];
 
   /* ------------------------------ Paramètres ------------------------------ */
 
   var params = new URLSearchParams(global.location.search);
 
+  /** Valeur d'un paramètre d'URL, ou `defaut` s'il est absent ou vide. */
   function param(nom, defaut) {
     var valeur = params.get(nom);
     return valeur === null || valeur === "" ? defaut : valeur;
   }
 
+  /** Paramètre lu comme une liste séparée par des virgules. */
   function liste(nom) {
     return param(nom, "")
       .split(",")
@@ -40,28 +43,30 @@
       .filter(Boolean);
   }
 
-  /* Période de relecture du Sheet, en secondes. Plancher à 60 s : au-delà de
-     ce rythme on interrogerait Google plus souvent que le Sheet ne change, et
-     une iframe posée sur une page à fort trafic se ferait limiter. `0` fige la
-     page sur ce qu'elle a chargé au démarrage. */
+  /** Valeur si elle fait partie des valeurs admises, sinon la première. */
+  function parmi(nom, admises) {
+    var valeur = param(nom, admises[0]);
+    return admises.indexOf(valeur) !== -1 ? valeur : admises[0];
+  }
+
+  /**
+   * Période de relecture du Sheet, en millisecondes.
+   * Plancher à 60 s pour ne pas interroger Google plus vite que le Sheet ne
+   * change ; `refresh=0` désactive la relecture périodique.
+   */
   function periode() {
-    var brut = param("refresh", "300");
-    var secondes = Number(brut);
+    var secondes = Number(param("refresh", "300"));
     if (!isFinite(secondes) || secondes <= 0) return 0;
     return Math.max(secondes, 60) * 1000;
   }
 
   var options = {
-    vue: ["split", "carte", "liste"].indexOf(param("view", "split")) !== -1
-      ? param("view", "split")
-      : "split",
+    vue: parmi("view", ["split", "carte", "liste"]),
     entete: param("header", "1") !== "0",
-    // Clair par défaut : la page est un document public, elle doit avoir la
-    // même apparence pour tout le monde plutôt que de suivre le réglage
-    // système du visiteur. `?theme=auto` rétablit ce suivi.
-    theme: ["auto", "clair", "sombre"].indexOf(param("theme", "clair")) !== -1
-      ? param("theme", "clair")
-      : "clair",
+    // Thème clair par défaut : la page est un document public, son apparence
+    // ne doit pas dépendre du réglage système du visiteur. `theme=auto` le
+    // rétablit.
+    theme: parmi("theme", ["clair", "sombre", "auto"]),
     direct: param("live", "1") !== "0",
     periode: periode(),
     titre: param("titre", ""),
@@ -74,23 +79,17 @@
   /* --------------------------------- État --------------------------------- */
 
   var etat = {
-    tous: [],
-    visibles: [],
-    // Index dans `tous` pour le DOM, et clé stable pour retrouver la même
-    // fiche après un rafraîchissement — l'index, lui, bouge dès qu'une ligne
-    // est insérée dans le Sheet.
-    selection: null,
-    selectionCle: null,
-    source: "instantane",
-    genereLe: "",
-    majLe: null,
-    onglet: "carte",
+    tous: [], // toutes les fiches
+    visibles: [], // fiches retenues par les filtres
+    selection: null, // index dans `tous`, ou null
+    selectionCle: null, // clé stable de la fiche sélectionnée (voir cleDe)
+    source: "instantane", // "instantane" ou "direct"
+    onglet: "carte", // onglet actif en écran étroit
   };
 
   var el = {
     app: doc.getElementById("app"),
     titre: doc.getElementById("titre"),
-    source: doc.getElementById("source"),
     recherche: doc.getElementById("recherche"),
     province: doc.getElementById("province"),
     chips: doc.getElementById("chips"),
@@ -101,12 +100,18 @@
     onglets: doc.getElementById("onglets"),
   };
 
-  var carte = null;
-  var couche = null;
+  var carte = null; // L.Map
+  var couche = null; // L.LayerGroup contenant les repères
   var marqueurs = {}; // index dans `tous` -> L.Marker
 
   /* ------------------------------ Utilitaires ----------------------------- */
 
+  /** Couleur et glyphe d'une catégorie (assets/categories.js). */
+  function styleDe(categorie) {
+    return global.EARIARY_CATEGORIES.styleDe(categorie);
+  }
+
+  /** Échappement HTML. À appliquer à toute valeur venant du Sheet. */
   function echapper(texte) {
     return String(texte).replace(/[&<>"']/g, function (c) {
       return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c];
@@ -115,18 +120,21 @@
 
   var collateur = new Intl.Collator("fr", { sensitivity: "base", numeric: true });
 
+  /** Tri alphabétique français (accents ignorés). */
   function trierFr(valeurs) {
     return valeurs.slice().sort(collateur.compare);
   }
 
-  /* Recherche insensible aux accents : « hotel » trouve « Hôtel ». */
+  /** Minuscules sans accents : « hotel » doit trouver « Hôtel ». */
   var pliage = global.EARIARY_DONNEES.plier;
 
+  /**
+   * Envoie un message à l'application hôte.
+   * `source` et `type` sont posés en dernier : c'est sur eux que l'hôte
+   * reconnaît l'iframe, une charge utile ne doit pas pouvoir les écraser.
+   */
   function annoncer(type, charge) {
     if (global.parent === global) return;
-    // Les clés de l'enveloppe sont posées en dernier : c'est sur `source` que
-    // l'hôte reconnaît l'iframe, et une charge utile ne doit pas pouvoir
-    // l'écraser — d'où aussi `provenance` plutôt que `source` dans « pret ».
     var message = {};
     Object.keys(charge || {}).forEach(function (cle) {
       message[cle] = charge[cle];
@@ -136,31 +144,30 @@
     try {
       global.parent.postMessage(message, options.origine);
     } catch (e) {
-      /* origine refusée par l'hôte : la page reste fonctionnelle sans. */
+      // Origine refusée par l'hôte : la page reste utilisable sans messages.
     }
   }
 
   /* --------------------------- Champs facultatifs ------------------------- */
-  /* Adresse, horaires, téléphone, site : absents du Sheet aujourd'hui. Chaque
-     fonction ci-dessous ne produit quelque chose que si la valeur existe, si
-     bien que la page est strictement identique tant que les colonnes ne sont
-     pas remplies. */
 
+  /** Lien téléphonique : `tel:` n'accepte ni espaces ni parenthèses. */
   function telHref(valeur) {
-    // Un `tel:` ne supporte ni espaces ni parenthèses ; le libellé affiché,
-    // lui, garde la mise en forme saisie dans le Sheet.
     return "tel:" + String(valeur).replace(/[^\d+]/g, "");
   }
 
+  /**
+   * URL d'un site.
+   * Sans protocole, le lien serait relatif à l'iframe : on préfixe en https.
+   * Ce préfixe neutralise aussi une valeur du type « javascript:… », qui
+   * devient un nom d'hôte inoffensif.
+   */
   function siteHref(valeur) {
     var texte = String(valeur).trim();
     if (/^https?:\/\//i.test(texte)) return texte;
-    // Sans protocole, le lien serait relatif à l'iframe. On préfixe en https
-    // plutôt que de recopier la cellule : une valeur exotique — « javascript: »
-    // et consorts — devient alors un nom d'hôte inoffensif plutôt qu'un schéma.
     return "https://" + texte.replace(/^\/+/, "");
   }
 
+  /** Libellé d'un site : sans protocole, tronqué. */
   function libelleSite(valeur) {
     var texte = String(valeur).trim().replace(/^https?:\/\//i, "").replace(/\/$/, "");
     return texte.length > 34 ? texte.slice(0, 33) + "…" : texte;
@@ -171,8 +178,10 @@
     '<path d="M14 3v2h3.6l-9.8 9.8 1.4 1.4L19 6.4V10h2V3h-7Z"/>' +
     '<path d="M5 5h5V3H3v18h18v-7h-2v5H5V5Z"/></svg>';
 
-  /* Liste de définitions des champs renseignés, ou chaîne vide s'il n'y en a
-     aucun — auquel cas le popup n'affiche même pas le filet de séparation. */
+  /**
+   * Bloc <dl> des champs facultatifs renseignés, ou "" s'il n'y en a aucun —
+   * auquel cas le popup n'affiche même pas le filet de séparation.
+   */
   function ficheHtml(etablissement) {
     var lignes = [];
     if (etablissement.adresse) {
@@ -215,15 +224,16 @@
 
   /* --------------------------------- Carte -------------------------------- */
 
-  /* Disque cerné de blanc, centré sur le point : un symbole de carte, là où la
-     goutte évoque une application de navigation. La fiche sélectionnée grossit
-     et prend un cercle d'encre — un changement de taille et de forme, pas
-     seulement de couleur. */
+  /**
+   * Repère de carte : disque coloré cerné de blanc, avec le glyphe de la
+   * catégorie. Le repère sélectionné est plus grand et cerné d'un anneau : la
+   * sélection se voit à la taille et à la forme, pas seulement à la couleur.
+   */
   function icone(etablissement, actif) {
     var style = styleDe(etablissement.categorie);
     var taille = actif ? 30 : 24;
     var centre = taille / 2;
-    var echelle = actif ? 0.82 : 0.66;
+    var echelle = actif ? 0.82 : 0.66; // les glyphes sont dessinés dans 13 × 13
     var decalage = (taille - 13 * echelle) / 2;
     var svg =
       '<svg width="' + taille + '" height="' + taille + '" viewBox="0 0 ' +
@@ -247,6 +257,7 @@
     });
   }
 
+  /** Contenu du popup d'un repère. */
   function popup(etablissement) {
     var style = styleDe(etablissement.categorie);
     return (
@@ -279,9 +290,9 @@
     );
   }
 
+  /** Crée la carte, ses fonds et le groupe de repères. */
   function initCarte() {
-    // Madagascar en entier au démarrage ; fitBounds resserre dès qu'il y a des
-    // points à montrer.
+    // Vue initiale : Madagascar en entier. `dessinerCarte` resserre ensuite.
     carte = L.map("carte", {
       center: [-18.9, 46.9],
       zoom: 5,
@@ -290,8 +301,7 @@
       attributionControl: true,
     });
 
-    // Fond accordé au thème : le fond clair de CARTO sous une interface sombre
-    // éblouit et trahit un composant posé là sans y penser.
+    // Fond assorti au thème : un fond clair sous une interface sombre éblouit.
     var sombre =
       doc.documentElement.dataset.theme === "sombre" ||
       (options.theme === "auto" &&
@@ -330,9 +340,11 @@
     couche = L.layerGroup().addTo(carte);
   }
 
-  /* `recadrer` est faux lors d'un rafraîchissement : le visiteur a peut-être
-     zoomé sur un quartier, et lui reprendre son cadrage parce qu'une ligne a
-     été ajoutée au Sheet à l'autre bout de l'île serait insupportable. */
+  /**
+   * Redessine les repères des fiches visibles.
+   * `recadrer` vaut false lors d'une relecture du Sheet : le visiteur a pu
+   * zoomer, on ne lui reprend pas son cadrage.
+   */
   function dessinerCarte(recadrer) {
     couche.clearLayers();
     marqueurs = {};
@@ -365,6 +377,7 @@
 
   /* --------------------------------- Liste -------------------------------- */
 
+  /** Adresse et téléphone sous la ligne de métadonnées, s'ils existent. */
   function infosHtml(etablissement) {
     var champs = [];
     if (etablissement.adresse) {
@@ -376,6 +389,7 @@
     return champs.length ? '<div class="infos">' + champs.join("") + "</div>" : "";
   }
 
+  /** Une fiche de la liste latérale. C'est un <button> : navigable au clavier. */
   function ligne(etablissement) {
     var style = styleDe(etablissement.categorie);
     var bouton = doc.createElement("button");
@@ -387,6 +401,7 @@
       etablissement.id === etat.selection ? "true" : "false"
     );
 
+    // Une fiche sans coordonnées reste dans la liste, mais n'a pas de repère.
     var sansPoint =
       etablissement.lat === null
         ? '<div class="warn">Coordonnées indisponibles' +
@@ -417,11 +432,11 @@
     return bouton;
   }
 
+  /** Redessine la liste, groupée par ville. */
   function dessinerListe() {
     el.liste.textContent = "";
     el.vide.hidden = etat.visibles.length > 0;
 
-    // Groupé par ville, villes et établissements triés à la française.
     var parProvince = {};
     etat.visibles.forEach(function (etablissement) {
       (parProvince[etablissement.province] =
@@ -454,8 +469,12 @@
 
   /* -------------------------------- Filtres -------------------------------- */
 
+  /**
+   * (Re)construit la liste des villes et les puces de catégorie.
+   * Les sélections en cours sont conservées : cette fonction est aussi appelée
+   * après une relecture du Sheet.
+   */
   function dessinerFiltres() {
-    // Villes
     var provinces = trierFr(
       Object.keys(
         etat.tous.reduce(function (acc, e) {
@@ -479,7 +498,8 @@
     if (options.provinces.length === 1 && !choisie) choisie = options.provinces[0];
     el.province.value = provinces.indexOf(choisie) !== -1 ? choisie : "";
 
-    // Puces de catégorie : filtre et légende à la fois.
+    // Les puces servent de filtre ET de légende : elles portent l'effectif de
+    // chaque catégorie.
     var comptes = etat.tous.reduce(function (acc, e) {
       acc[e.categorie] = (acc[e.categorie] || 0) + 1;
       return acc;
@@ -515,6 +535,7 @@
     });
   }
 
+  /** Catégories actuellement sélectionnées. */
   function categoriesActives() {
     return Array.prototype.slice
       .call(el.chips.querySelectorAll('.chip[aria-pressed="true"]'))
@@ -523,22 +544,26 @@
       });
   }
 
+  /** Le popup de la fiche sélectionnée est-il ouvert ? */
   function popupOuvert() {
     var marqueur = etat.selection === null ? null : marqueurs[etat.selection];
     return Boolean(marqueur && marqueur.isPopupOpen && marqueur.isPopupOpen());
   }
 
+  /**
+   * Applique les filtres, met à jour le compteur, redessine liste et carte.
+   * `reglages.recadrer` vaut false lors d'une relecture du Sheet.
+   */
   function appliquer(reglages) {
     var recadrer = !reglages || reglages.recadrer !== false;
-    var rouvrir = popupOuvert();
+    var rouvrirPopup = popupOuvert();
 
     var recherche = pliage(el.recherche.value.trim());
     var province = el.province.value;
     var categories = categoriesActives();
     el.chips.dataset.actives = categories.join("|");
 
-    // Une sélection vide vaut « tout afficher » — même règle que l'application
-    // interne.
+    // Aucun filtre sélectionné = tout afficher.
     etat.visibles = etat.tous.filter(function (e) {
       if (province && e.province !== province) return false;
       if (categories.length && categories.indexOf(e.categorie) === -1) return false;
@@ -564,6 +589,7 @@
 
     el.reset.hidden = !(recherche || province || categories.length);
 
+    // La fiche sélectionnée peut être exclue par les filtres.
     if (
       etat.selection !== null &&
       !etat.visibles.some(function (e) {
@@ -577,9 +603,8 @@
     dessinerListe();
     dessinerCarte(recadrer);
 
-    // Le popup rouvert n'est pas une nouveauté pour l'hôte : on le rétablit
-    // sans réémettre de message « selection ».
-    if (rouvrir && etat.selection !== null && marqueurs[etat.selection]) {
+    // Rouvrir un popup n'est pas une nouvelle sélection : pas de message.
+    if (rouvrirPopup && etat.selection !== null && marqueurs[etat.selection]) {
       marqueurs[etat.selection].openPopup();
     }
 
@@ -593,16 +618,35 @@
 
   /* ------------------------------- Sélection ------------------------------- */
 
+  /** Champs transmis à l'application hôte (données publiques uniquement). */
+  function fichePublique(etablissement) {
+    var fiche = {
+      nom: etablissement.nom,
+      categorie: etablissement.categorie,
+      region: etablissement.region,
+      province: etablissement.province,
+      lat: etablissement.lat,
+      lon: etablissement.lon,
+    };
+    CHAMPS_FACULTATIFS.forEach(function (cle) {
+      if (etablissement[cle]) fiche[cle] = etablissement[cle];
+    });
+    return fiche;
+  }
+
+  /**
+   * Sélectionne une fiche : liste et carte désignent toujours la même.
+   * `opts.recentrer` déplace la carte, `opts.ouvrirPopup` ouvre le popup.
+   */
   function selectionner(id, opts) {
-    etat.selection = id;
     var etablissement = etat.tous[id];
-    etat.selectionCle = etablissement ? etablissement.cle : null;
+    if (!etablissement) return;
+    etat.selection = id;
+    etat.selectionCle = etablissement.cle;
 
     Array.prototype.slice.call(el.liste.querySelectorAll(".item")).forEach(function (item) {
       var actif = item.dataset.id === String(id);
       item.setAttribute("aria-current", actif ? "true" : "false");
-      // Le clic peut venir d'un marqueur : la liste suit la carte, et
-      // inversement, pour que les deux vues désignent toujours la même fiche.
       if (actif) item.scrollIntoView({ block: "nearest" });
     });
 
@@ -613,7 +657,7 @@
 
     var marqueur = marqueurs[id];
     if (marqueur) {
-      // En écran étroit, la carte peut être masquée : on l'affiche d'abord.
+      // En écran étroit, la carte peut être masquée par l'onglet « Liste ».
       if (el.app.dataset.view === "split" && el.app.dataset.onglet === "liste") {
         basculer("carte");
       }
@@ -625,74 +669,10 @@
       if (!opts || opts.ouvrirPopup !== false) marqueur.openPopup();
     }
 
-    if (!etablissement) return;
-    annoncer("selection", {
-      etablissement: fichePublique(etablissement),
-    });
+    annoncer("selection", { etablissement: fichePublique(etablissement) });
   }
 
-  /* Ce qui sort de l'iframe : des données publiques, et seulement les champs
-     que le Sheet porte réellement. */
-  function fichePublique(etablissement) {
-    var fiche = {
-      nom: etablissement.nom,
-      categorie: etablissement.categorie,
-      region: etablissement.region,
-      province: etablissement.province,
-      lat: etablissement.lat,
-      lon: etablissement.lon,
-    };
-    ["adresse", "horaires", "telephone", "site"].forEach(function (cle) {
-      if (etablissement[cle]) fiche[cle] = etablissement[cle];
-    });
-    return fiche;
-  }
-
-  /* ---------------------------- Note de provenance ------------------------- */
-
-  /* Une mention de source en pied de page, comme dans une publication : elle
-     dit d'où viennent les chiffres et de quand ils datent. */
-  function dateLongue(iso) {
-    var date = new Date(iso);
-    if (isNaN(date.getTime())) return "";
-    try {
-      return new Intl.DateTimeFormat("fr-FR", {
-        day: "numeric",
-        month: "long",
-        year: "numeric",
-      }).format(date);
-    } catch (e) {
-      return String(iso).slice(0, 10);
-    }
-  }
-
-  function heure(date) {
-    try {
-      return new Intl.DateTimeFormat("fr-FR", {
-        hour: "2-digit",
-        minute: "2-digit",
-      }).format(date);
-    } catch (e) {
-      return "";
-    }
-  }
-
-  function majSource() {
-    if (etat.source === "direct") {
-      var h = etat.majLe ? heure(etat.majLe) : "";
-      el.source.textContent =
-        "Source : registre des partenaires eAriary" +
-        (h ? ", mis à jour à " + h : ", consulté à l’instant") +
-        ".";
-      return;
-    }
-    var jour = etat.genereLe ? dateLongue(etat.genereLe) : "";
-    el.source.textContent =
-      "Source : registre des partenaires eAriary" +
-      (jour ? ", relevé du " + jour : "") +
-      ".";
-  }
-
+  /** Bascule entre les onglets Carte et Liste (écran étroit uniquement). */
   function basculer(onglet) {
     etat.onglet = onglet;
     el.app.dataset.onglet = onglet;
@@ -702,14 +682,18 @@
     if (onglet === "carte" && carte) carte.invalidateSize();
   }
 
-  /* ------------------------------- Démarrage ------------------------------- */
+  /* ------------------------------- Chargement ------------------------------ */
 
-  /* Clé stable d'une fiche : ce qui l'identifie indépendamment de sa position
-     dans le Sheet. L'index, lui, se décale dès qu'une ligne est insérée. */
+  /**
+   * Clé stable d'une fiche : identifie la même fiche d'une relecture à
+   * l'autre. L'index, lui, se décale dès qu'une ligne est insérée dans le
+   * Sheet.
+   */
   function cleDe(e) {
-    return [e.nom, e.province, e.lat, e.lon].join(" ");
+    return [e.nom, e.province, e.lat, e.lon].join(" ");
   }
 
+  /** Ajoute un identifiant et une clé stable à chaque fiche. */
   function indexer(etablissements) {
     return etablissements.map(function (e, index) {
       var fiche = {
@@ -722,7 +706,7 @@
         lon: typeof e.lon === "number" ? e.lon : null,
         coordonnees_brutes: e.coordonnees_brutes || "",
       };
-      ["adresse", "horaires", "telephone", "site"].forEach(function (cle) {
+      CHAMPS_FACULTATIFS.forEach(function (cle) {
         if (e[cle]) fiche[cle] = e[cle];
       });
       fiche.cle = cleDe(fiche);
@@ -730,15 +714,13 @@
     });
   }
 
+  /** Remplace le jeu de données affiché, en conservant l'état du visiteur. */
   function charger(donnees, reglages) {
     var recadrer = !reglages || reglages.recadrer !== false;
     etat.tous = indexer(donnees.etablissements);
     etat.source = donnees.source;
-    etat.genereLe = donnees.genereLe || "";
-    if (donnees.source === "direct") etat.majLe = new Date();
 
-    // La fiche sélectionnée survit au rafraîchissement si elle est toujours
-    // dans le Sheet ; elle disparaît proprement sinon.
+    // La fiche sélectionnée survit si elle est toujours dans le Sheet.
     etat.selection = null;
     if (etat.selectionCle) {
       etat.tous.forEach(function (e) {
@@ -747,24 +729,13 @@
       if (etat.selection === null) etat.selectionCle = null;
     }
 
-    majSource();
     dessinerFiltres();
     appliquer({ recadrer: recadrer });
   }
 
-  function demarrer() {
-    if (options.theme !== "auto") {
-      doc.documentElement.dataset.theme = options.theme;
-    }
-    el.app.dataset.view = options.vue;
-    el.app.dataset.header = options.entete ? "1" : "0";
-    el.app.dataset.onglet = "carte";
-    if (options.titre) el.titre.textContent = options.titre;
-    el.recherche.value = options.recherche;
-    el.chips.dataset.actives = options.categories.join("|");
+  /* ------------------------------- Démarrage ------------------------------- */
 
-    initCarte();
-
+  function brancherEvenements() {
     el.recherche.addEventListener("input", function () {
       appliquer();
     });
@@ -785,21 +756,39 @@
         basculer(b.dataset.onglet);
       });
     });
+
     global.addEventListener("resize", function () {
       if (carte) carte.invalidateSize();
     });
     // L'iframe peut être posée dans un onglet masqué de l'application hôte :
-    // la carte se dessine alors sur un conteneur de taille nulle et reste grise
-    // jusqu'à ce qu'on la prévienne de sa nouvelle taille.
+    // la carte se dessine alors dans un conteneur de taille nulle et reste
+    // grise tant qu'on ne la prévient pas de sa nouvelle taille.
     if (typeof ResizeObserver === "function") {
       new ResizeObserver(function () {
         if (carte) carte.invalidateSize();
       }).observe(doc.getElementById("carte"));
     }
+  }
 
+  function demarrer() {
+    if (options.theme !== "auto") {
+      doc.documentElement.dataset.theme = options.theme;
+    }
+    el.app.dataset.view = options.vue;
+    el.app.dataset.header = options.entete ? "1" : "0";
+    el.app.dataset.onglet = "carte";
+    if (options.titre) el.titre.textContent = options.titre;
+    el.recherche.value = options.recherche;
+    el.chips.dataset.actives = options.categories.join("|");
+
+    initCarte();
+    brancherEvenements();
+
+    // 1. Affichage immédiat de l'instantané embarqué.
     var snap = global.EARIARY_DONNEES.instantane();
     if (snap) charger(snap, { recadrer: true });
 
+    // « pret » n'est envoyé qu'une fois, quelle que soit la source retenue.
     var pret = false;
     function annoncerPret() {
       if (pret) return;
@@ -817,11 +806,11 @@
       return;
     }
 
+    // 2. Relecture du Sheet, puis à intervalle régulier.
     var suivi = global.EARIARY_DONNEES.suivre({
       intervalle: options.periode,
       surDonnees: function (donnees, contexte) {
-        // Au premier chargement la carte se cadre sur les points ; ensuite
-        // jamais, pour ne pas reprendre au visiteur le cadrage qu'il a choisi.
+        // On ne cadre la carte qu'au tout premier affichage.
         charger(donnees, { recadrer: contexte.premier && !snap });
         if (!contexte.premier) {
           annoncer("maj", {
@@ -832,8 +821,7 @@
         annoncerPret();
       },
       surEchec: function (erreur, contexte) {
-        // Silencieux : l'instantané reste affiché, et la note de source dit
-        // bien qu'il s'agit d'un relevé daté.
+        // Échec silencieux : l'instantané reste affiché.
         if (contexte.premier && !snap) {
           el.vide.textContent =
             "Données indisponibles — la source n'a pas répondu et aucune copie n'est embarquée.";

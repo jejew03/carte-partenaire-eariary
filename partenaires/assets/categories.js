@@ -1,17 +1,18 @@
-/* Catégories de marchands : couleur et glyphe.
+/* Couleur et glyphe de chaque catégorie de marchand.
  *
- * Partagé par les deux pages publiques — la carte (`index.html`) et le tableau
- * (`tableau.html`) — pour qu'un même type de commerce s'y lise de la même
- * façon. Une catégorie absente de la table prend le style neutre : le Sheet
- * peut en introduire une sans que la page ait à être touchée.
+ * Expose window.EARIARY_CATEGORIES, partagé par carte.js et tableau.js pour
+ * qu'un même type de commerce se lise pareil sur les deux pages.
  *
- * Palette propre aux pages publiques : mêmes teintes de départ que
- * `CATEGORY_STYLE` (app.py), ramenées à une clarté et une saturation communes
- * pour former une série cohérente. Les couleurs vives d'origine viennent des
- * marqueurs par défaut de Leaflet ; elles se voient comme telles.
+ * Une catégorie absente de la table reçoit le style neutre : le Sheet peut en
+ * introduire une nouvelle sans qu'il y ait à toucher au code.
  *
- * Chaque catégorie a aussi son glyphe : la couleur ne porte jamais seule
- * l'information. Glyphes dessinés dans un carré de 13, en blanc.
+ * Chaque catégorie a son propre glyphe : la couleur ne porte jamais seule
+ * l'information. Les glyphes sont dessinés en blanc dans un carré de 13 × 13,
+ * et mis à l'échelle par carte.js.
+ *
+ * Ces teintes reprennent celles de CATEGORY_STYLE (app.py) en les ramenant à
+ * une clarté et une saturation communes. Pour aligner exactement les deux,
+ * recopier ici les valeurs hexadécimales de app.py.
  */
 
 (function (global) {
@@ -55,11 +56,13 @@
     },
   };
 
+  // Style des catégories inconnues.
   var DEFAUT = { couleur: "#6B6862", glyphe: '<circle cx="6.5" cy="6.5" r="3.4"/>' };
 
   global.EARIARY_CATEGORIES = {
     styles: CATEGORIES,
     defaut: DEFAUT,
+    /** Style d'une catégorie ; jamais null. */
     styleDe: function (categorie) {
       return CATEGORIES[categorie] || DEFAUT;
     },

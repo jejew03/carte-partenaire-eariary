@@ -1,12 +1,13 @@
-/* Page carte — complément de `theme.css`, qui porte le thème, l'ossature et la
- * barre de filtres. Ce fichier n'ajoute que la carte, la liste latérale et les
- * retouches apportées à Leaflet.
+/* Styles propres à la page carte : onglets, carte, liste latérale et
+ * retouches apportées à Leaflet. Charger theme.css avant ce fichier.
  */
 
 .app > .tabs { flex: none; }
 .app > .body { flex: 1 1 auto; }
 
-/* Bascule carte / liste, seulement utile en écran étroit */
+/* --------------------------- Onglets carte/liste -------------------------- */
+/* Affichés seulement en écran étroit (voir la section Responsive). */
+
 .tabs { display: none; gap: 1.1rem; padding: 0.5rem var(--pad) 0; }
 .tabs button {
   padding: 0.35rem 0.1rem;
@@ -27,10 +28,11 @@
 }
 
 /* --------------------------------- Corps --------------------------------- */
+/* data-view est posé par carte.js d'après le paramètre ?view. */
 
 .body {
   display: grid;
-  grid-template-columns: 1fr 21rem;
+  grid-template-columns: 1fr 21rem; /* carte | liste */
   min-height: 0;
 }
 .app[data-view="carte"] .body { grid-template-columns: 1fr; }
@@ -51,6 +53,7 @@
 }
 .app[data-view="liste"] .list { border-left: 0; }
 
+/* En-tête de groupe : une ville, avec son effectif. Reste collé en haut. */
 .group {
   position: sticky;
   top: 0;
@@ -65,6 +68,7 @@
 }
 .group .n { font-variant-numeric: tabular-nums; font-weight: 400; }
 
+/* Une fiche de la liste. C'est un <button> : navigable au clavier. */
 .item {
   display: block;
   width: 100%;
@@ -96,9 +100,8 @@
 .item .meta .swatch { width: 7px; height: 7px; flex: none; }
 .item .meta .sep { color: var(--rule-strong); }
 
-/* Adresse, horaires, téléphone : présents seulement si le Sheet porte ces
-   colonnes. Une ligne discrète sous la métadonnée, jamais un second bloc —
-   la fiche de liste reste un repère, le détail est dans le popup. */
+/* Adresse et téléphone, si le Sheet les porte. Le détail complet est dans le
+   popup ; la fiche de liste reste un repère. */
 .item .infos {
   margin-top: 0.28rem;
   font-size: 0.76rem;
@@ -108,6 +111,7 @@
 .item .infos .champ { display: block; }
 .item .infos .champ + .champ { margin-top: 0.1rem; }
 
+/* Fiche sans coordonnées exploitables. */
 .item .warn {
   display: inline-block;
   margin-top: 0.35rem;
@@ -126,16 +130,15 @@
 }
 .leaflet-container a { color: var(--accent); }
 
-/* Repère : disque plein cerné de blanc, glyphe distinct par catégorie. Le
-   disque se lit comme un symbole de carte ; la goutte, elle, évoque une
-   application de navigation. */
+/* Repère : disque plein cerné de blanc, avec le glyphe de la catégorie. Le SVG
+   est produit par la fonction `icone` de carte.js. */
 .pin { background: none; border: 0; }
 .pin svg { display: block; filter: drop-shadow(0 1px 1.5px rgb(0 0 0 / 0.3)); }
-.pin .ring { stroke: var(--ink); }
-.pin.on { z-index: 1000 !important; }
+.pin .ring { stroke: var(--ink); } /* anneau du repère sélectionné */
+.pin.on { z-index: 1000 !important; } /* au-dessus des repères voisins */
 
-/* Commandes de carte : mêmes filets que le reste de la page, angles vifs,
-   aucune ombre — Leaflet arrondit et ombre tout par défaut. */
+/* Commandes de carte : Leaflet arrondit et ombre tout par défaut, ce qui jure
+   avec le reste de la page. */
 .leaflet-bar,
 .leaflet-control-layers,
 .leaflet-control-scale-line {
@@ -178,9 +181,9 @@
   color: var(--muted);
   font-size: 0.65rem;
 }
+
 /* Le bouton des fonds de carte est une image PNG sombre fournie par Leaflet :
-   c'est le seul élément de commande à inverser en thème sombre — le reste
-   tient déjà par les variables. */
+   seule commande à inverser en thème sombre, le reste suit les variables. */
 :root[data-theme="sombre"] .leaflet-control-layers-toggle {
   filter: invert(1) hue-rotate(180deg);
 }
@@ -189,6 +192,8 @@
     filter: invert(1) hue-rotate(180deg);
   }
 }
+
+/* --------------------------------- Popup --------------------------------- */
 
 .leaflet-popup-content-wrapper {
   border: 1px solid var(--rule-strong);
@@ -216,13 +221,11 @@
 .pop .tag .swatch { width: 7px; height: 7px; flex: none; }
 .pop .prov { margin-top: 0.3rem; font-size: 0.8rem; color: var(--ink-soft); }
 
-/* Champs facultatifs du Sheet : adresse, horaires, téléphone, site. Présentés
-   en liste de définitions — l'étiquette dit ce qu'est la valeur, ce qu'un
-   simple empilement de lignes ne ferait pas. Le bloc n'existe pas du tout tant
-   que le Sheet ne porte aucune de ces colonnes. */
+/* Champs facultatifs du Sheet : adresse, horaires, téléphone, site. Le bloc
+   n'est pas produit du tout tant qu'aucun n'est renseigné. */
 .pop .fiche {
   display: grid;
-  grid-template-columns: auto 1fr;
+  grid-template-columns: auto 1fr; /* étiquette | valeur */
   gap: 0.15rem 0.5rem;
   margin: 0.5rem 0 0;
   padding-top: 0.45rem;
@@ -235,12 +238,16 @@
   font-weight: 600;
   letter-spacing: 0.06em;
   text-transform: uppercase;
-  /* L'étiquette s'aligne sur la première ligne de la valeur, pas au centre
+  /* Aligne l'étiquette sur la première ligne de la valeur, et non au centre
      d'une adresse qui court sur deux lignes. */
   line-height: 1.75;
 }
 .pop .fiche dd { margin: 0; color: var(--ink-soft); overflow-wrap: anywhere; }
-.pop .fiche a { color: var(--accent); text-decoration: none; border-bottom: 1px solid currentColor; }
+.pop .fiche a {
+  color: var(--accent);
+  text-decoration: none;
+  border-bottom: 1px solid currentColor;
+}
 
 .pop .coords {
   margin-top: 0.35rem;
@@ -252,6 +259,8 @@
 
 /* ------------------------------- Responsive ------------------------------ */
 
+/* Sous 860 px, la vue « split » se replie en deux onglets : la liste et la
+   carte ne tiennent plus côte à côte. */
 @media (max-width: 860px) {
   .body { grid-template-columns: 1fr; }
   .app[data-view="split"] .tabs { display: flex; }
