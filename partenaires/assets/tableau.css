@@ -163,6 +163,40 @@
 
 .registre .warn { color: var(--muted); font-size: 0.8rem; }
 
+/* --------------------------- Largeurs de colonnes ------------------------- */
+
+/* Sous 1024 px, la répartition automatique du navigateur convient : le contenu
+   remplit la largeur disponible. Au-delà, l'excédent revient en totalité à la
+   colonne Établissement — la seule qui puisse s'étirer, les autres étant en
+   `nowrap` — et creuse un vide de plusieurs centaines de pixels avant la
+   région. On passe donc en largeurs fixes.
+   Deux jeux de valeurs selon la présence de la colonne Contact, signalée par
+   l'attribut data-contact que pose tableau.js. */
+@media (min-width: 1024px) {
+  .registre { table-layout: fixed; }
+
+  /* En disposition fixe, seule la première rangée détermine les largeurs :
+     les poser sur les en-têtes suffit. */
+  .app[data-contact="0"] .registre .col-nom { width: 40%; }
+  .app[data-contact="0"] .registre .col-region { width: 17%; }
+  .app[data-contact="0"] .registre .col-ville { width: 16%; }
+  .app[data-contact="0"] .registre .col-type { width: 15%; }
+  .app[data-contact="0"] .registre .col-lien { width: 12%; }
+
+  .app[data-contact="1"] .registre .col-nom { width: 30%; }
+  .app[data-contact="1"] .registre .col-region { width: 15%; }
+  .app[data-contact="1"] .registre .col-ville { width: 14%; }
+  .app[data-contact="1"] .registre .col-type { width: 13%; }
+  .app[data-contact="1"] .registre .col-contact { width: 17%; }
+  .app[data-contact="1"] .registre .col-lien { width: 11%; }
+
+  /* Filet de sécurité : en largeur fixe, une valeur plus longue que sa colonne
+     déborderait sur la voisine. Région et ville passent à la ligne plutôt que
+     de se chevaucher — cas qui ne se présente pas avec les données actuelles. */
+  .registre .c-region,
+  .registre .c-ville { white-space: normal; }
+}
+
 /* ------------------------------- Responsive ------------------------------- */
 
 /* Cette barre porte deux listes déroulantes, contre une sur la page carte :

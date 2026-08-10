@@ -12,8 +12,11 @@
   <link rel="stylesheet" href="assets/tableau.css">
 </head>
 <body>
-  <!-- data-header est posé par assets/tableau.js d'après le paramètre ?header. -->
-  <div class="app tableau" id="app" data-header="1">
+  <!-- data-header suit le paramètre ?header ; data-contact indique si la
+       colonne Contact est affichée. Les deux sont posés par assets/tableau.js,
+       et servent de sélecteurs au CSS. La valeur initiale de data-contact
+       évite un tableau à colonnes égales le temps du premier rendu. -->
+  <div class="app tableau" id="app" data-header="1" data-contact="0">
 
     <header class="head">
       <h1 id="titre">Établissements partenaires eAriary</h1>
@@ -55,16 +58,16 @@
             <!-- data-tri = clé de tri lue par tableau.js. L'ordre des colonnes
                  doit rester le même que celui des cellules produites par la
                  fonction `ligne` de tableau.js. -->
-            <th scope="col" data-tri="nom" aria-sort="none">
+            <th scope="col" class="col-nom" data-tri="nom" aria-sort="none">
               <button type="button">Établissement</button>
             </th>
-            <th scope="col" data-tri="region" aria-sort="none">
+            <th scope="col" class="col-region" data-tri="region" aria-sort="none">
               <button type="button">Région</button>
             </th>
-            <th scope="col" data-tri="province" aria-sort="none">
+            <th scope="col" class="col-ville" data-tri="province" aria-sort="none">
               <button type="button">Ville</button>
             </th>
-            <th scope="col" data-tri="categorie" aria-sort="none">
+            <th scope="col" class="col-type" data-tri="categorie" aria-sort="none">
               <button type="button">Type</button>
             </th>
             <!-- Colonne révélée par tableau.js si le Sheet porte un téléphone

@@ -312,7 +312,11 @@
 
   /** Redessine le corps du tableau. */
   function dessinerLignes() {
-    el.thContact.hidden = !afficheContact();
+    var contact = afficheContact();
+    el.thContact.hidden = !contact;
+    // Lu par tableau.css : les largeurs de colonnes des grands écrans
+    // diffèrent selon que la colonne Contact occupe ou non une part du tableau.
+    el.app.dataset.contact = contact ? "1" : "0";
     el.lignes.textContent = "";
     el.vide.hidden = etat.visibles.length > 0;
 
