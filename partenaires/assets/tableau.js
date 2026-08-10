@@ -22,8 +22,9 @@
   // ville -> région. La ligne reste dans le tableau sous ce libellé.
   var REGION_VIDE = "Région à préciser";
 
-  // Colonnes triables, par ordre d'apparition dans le tableau.
-  var TRIS = ["nom", "categorie", "region", "province"];
+  // Colonnes triables. La première valeur est le tri appliqué par défaut ; les
+  // autres suivent l'ordre d'apparition dans le tableau.
+  var TRIS = ["region", "nom", "province", "categorie"];
 
   // Champs facultatifs du Sheet, présents dans une fiche seulement s'ils sont
   // renseignés.
@@ -79,7 +80,7 @@
     // Cadrage posé par l'hôte : aucune commande dans l'interface, le visiteur
     // ne peut pas le défaire.
     ville: valeurUnique("ville"),
-    tri: parmi("tri", ["region", "nom", "categorie", "province"]),
+    tri: parmi("tri", TRIS),
     sens: param("sens", "asc") === "desc" ? "desc" : "asc",
     origine: param("origin", "*"),
   };
@@ -275,6 +276,8 @@
       etablissement.id === etat.selection ? "true" : "false"
     );
 
+    // L'ordre des cellules doit rester le même que celui des <th> de
+    // tableau.html.
     tr.innerHTML =
       '<td class="c-nom" data-label="Établissement">' +
       '<button type="button" class="nom">' +
@@ -282,17 +285,17 @@
       "</button>" +
       sousLigne(etablissement) +
       "</td>" +
-      '<td class="c-type" data-label="Type">' +
-      '<span class="swatch" style="background:' +
-      style.couleur +
-      '"></span>' +
-      echapper(etablissement.categorie) +
-      "</td>" +
       '<td class="c-region" data-label="Région">' +
       echapper(etablissement.region || REGION_VIDE) +
       "</td>" +
       '<td class="c-ville" data-label="Ville">' +
       echapper(etablissement.province) +
+      "</td>" +
+      '<td class="c-type" data-label="Type">' +
+      '<span class="swatch" style="background:' +
+      style.couleur +
+      '"></span>' +
+      echapper(etablissement.categorie) +
       "</td>" +
       (afficheContact()
         ? '<td class="c-contact" data-label="Contact">' + contact(etablissement) + "</td>"

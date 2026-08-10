@@ -52,18 +52,20 @@
         <caption class="sr-only">Établissements partenaires eAriary, triables par colonne</caption>
         <thead>
           <tr>
-            <!-- data-tri = clé de tri lue par tableau.js. -->
+            <!-- data-tri = clé de tri lue par tableau.js. L'ordre des colonnes
+                 doit rester le même que celui des cellules produites par la
+                 fonction `ligne` de tableau.js. -->
             <th scope="col" data-tri="nom" aria-sort="none">
               <button type="button">Établissement</button>
-            </th>
-            <th scope="col" data-tri="categorie" aria-sort="none">
-              <button type="button">Type</button>
             </th>
             <th scope="col" data-tri="region" aria-sort="none">
               <button type="button">Région</button>
             </th>
             <th scope="col" data-tri="province" aria-sort="none">
               <button type="button">Ville</button>
+            </th>
+            <th scope="col" data-tri="categorie" aria-sort="none">
+              <button type="button">Type</button>
             </th>
             <!-- Colonne révélée par tableau.js si le Sheet porte un téléphone
                  ou un site ; masquée sinon. -->

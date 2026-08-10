@@ -219,6 +219,12 @@
   .registre .c-nom { display: block; margin-bottom: 0.25rem; }
   .registre .c-nom::before { content: none; }
   .registre .c-nom button.nom { font-size: 0.9rem; }
+  /* La cellule devient un conteneur flex : son `gap` remplace la marge du
+     carré de couleur, qui ferait double espace. `baseline` réaligne le carré
+     sur le libellé, que `stretch` posait en haut de la ligne. */
+  .registre .c-type { align-items: baseline; }
+  .registre .c-type .swatch { margin-right: 0; }
+
   /* En bloc, téléphone et site tiennent côte à côte. */
   .registre .c-contact { flex-wrap: wrap; }
   .registre .c-contact .infos { flex-direction: row; flex-wrap: wrap; gap: 0.2rem 0.75rem; }

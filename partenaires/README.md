@@ -253,7 +253,7 @@ Sous 860 px de large, la vue `split` se replie en deux onglets « Carte » /
 | `region` | une région | — | présélectionne le filtre de région (`Anosy`) |
 | `categorie` | un type | — | présélectionne le filtre de type (`Restaurant`) |
 | `ville` | une ville | — | restreint le tableau à cette ville, sans commande visible |
-| `tri` | `nom`, `categorie`, `region`, `province` | `region` | colonne de tri au chargement |
+| `tri` | `nom`, `region`, `province`, `categorie` | `region` | colonne de tri au chargement |
 | `sens` | `asc`, `desc` | `asc` | sens de ce tri |
 
 `region` et `categorie` n'acceptent qu'**une seule valeur** : deux listes
